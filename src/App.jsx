@@ -1,5 +1,6 @@
 import './App.css'
 import { BuscadorPrestadores } from './components/BuscadorPrestadores'
+import { calificacionesMock } from './data/calificacionesMock'
 import { prestadoresMock } from './data/prestadoresMock'
 
 function App() {
@@ -7,7 +8,10 @@ function App() {
     <main>
       <h1>ServiMap</h1>
       <p>Frontend de ServiMap</p>
-      <BuscadorPrestadores prestadores={prestadoresMock} />
+      <BuscadorPrestadores
+        prestadores={prestadoresMock}
+        calificaciones={calificacionesMock}
+      />
     </main>
   )
 }

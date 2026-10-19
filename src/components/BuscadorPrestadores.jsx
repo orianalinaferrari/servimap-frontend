@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { filtrarPrestadores } from '../utils/filtrarPrestadores'
 import { DetallePrestador } from './DetallePrestador'
 
-export function BuscadorPrestadores({ prestadores }) {
+export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
   const [termino, setTermino] = useState('')
   const [prestadorSeleccionadoId, setPrestadorSeleccionadoId] = useState(null)
 
@@ -16,6 +16,7 @@ export function BuscadorPrestadores({ prestadores }) {
     return (
       <DetallePrestador
         prestador={prestadorSeleccionado}
+        calificaciones={calificaciones}
         onVolver={() => setPrestadorSeleccionadoId(null)}
       />
     )
