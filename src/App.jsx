@@ -1,14 +1,15 @@
 import './App.css'
+import AppRoutes from './routes/AppRoutes'
 import { BuscadorPrestadores } from './components/BuscadorPrestadores'
 import { prestadoresMock } from './data/prestadoresMock'
 
 function App() {
   return (
-    <main>
-      <h1>ServiMap</h1>
-      <p>Frontend de ServiMap</p>
+    <>
+      <AppRoutes />
+
       <BuscadorPrestadores prestadores={prestadoresMock} />
-    </main>
+    </>
   )
 }
 

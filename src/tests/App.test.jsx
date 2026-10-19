@@ -1,11 +1,18 @@
+﻿import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import App from '../App'
 
 describe('App', () => {
-  test('muestra el nombre de ServiMap', () => {
-    render(<App />)
+  it('muestra la página de registro', () => {
+    render(
+      <MemoryRouter initialEntries={['/registro']}>
+        <App />
+      </MemoryRouter>
+    )
 
-    expect(screen.getByRole('heading', { name: 'ServiMap' })).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { name: 'Crear cuenta' }).textContent
+    ).toBe('Crear cuenta')
   })
 })
