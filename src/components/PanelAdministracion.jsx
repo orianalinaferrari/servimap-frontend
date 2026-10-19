@@ -1,11 +1,16 @@
 import { useState } from 'react'
+import { ModeracionComentarios } from './ModeracionComentarios'
 
 const SECCIONES = [
   { id: 'comentarios', nombre: 'Moderación de comentarios' },
   { id: 'oficios', nombre: 'Administración de oficios' },
 ]
 
-export function PanelAdministracion() {
+export function PanelAdministracion({
+  prestadores = [],
+  calificaciones = [],
+  onModerar = () => {},
+}) {
   const [seccionActiva, setSeccionActiva] = useState('comentarios')
 
   return (
@@ -25,7 +30,13 @@ export function PanelAdministracion() {
         ))}
       </nav>
 
-      {seccionActiva === 'comentarios' && <p>Próximamente: moderación de comentarios.</p>}
+      {seccionActiva === 'comentarios' && (
+        <ModeracionComentarios
+          prestadores={prestadores}
+          calificaciones={calificaciones}
+          onModerar={onModerar}
+        />
+      )}
       {seccionActiva === 'oficios' && <p>Próximamente: administración de oficios.</p>}
     </section>
   )

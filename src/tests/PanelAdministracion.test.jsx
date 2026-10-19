@@ -17,7 +17,7 @@ describe('PanelAdministracion', () => {
   test('muestra la sección de comentarios por defecto', () => {
     render(<PanelAdministracion />)
 
-    expect(screen.getByText(/moderación de comentarios\./)).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Comentarios publicados' })).toBeTruthy()
   })
 
   test('cambia de sección al hacer clic', () => {
