@@ -1,12 +1,7 @@
-import './App.css'
+import AppRoutes from './routes/AppRoutes'
 
 function App() {
-  return (
-    <main>
-      <h1>ServiMap</h1>
-      <p>Frontend de ServiMap</p>
-    </main>
-  )
+  return <AppRoutes />
 }
 
 export default App
