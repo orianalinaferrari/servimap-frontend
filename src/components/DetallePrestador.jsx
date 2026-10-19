@@ -1,4 +1,6 @@
-export function DetallePrestador({ prestador, onVolver }) {
+import { ReputacionPrestador } from './ReputacionPrestador'
+
+export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
   return (
     <article>
       <button type="button" onClick={onVolver}>
@@ -17,12 +19,7 @@ export function DetallePrestador({ prestador, onVolver }) {
 
       <p>{prestador.disponible ? 'Disponible' : 'No disponible'}</p>
 
-      <p>
-        {prestador.calificacionPromedio === null
-          ? 'Sin calificaciones'
-          : `Calificación: ${prestador.calificacionPromedio.toFixed(1)} / 5`}
-      </p>
-      <p>Trabajos finalizados: {prestador.trabajosFinalizados}</p>
+      <ReputacionPrestador prestador={prestador} calificaciones={calificaciones} />
 
       <h3>Contacto</h3>
       <ul>

@@ -1,6 +1,7 @@
 import './App.css'
 import AppRoutes from './routes/AppRoutes'
 import { BuscadorPrestadores } from './components/BuscadorPrestadores'
+import { calificacionesMock } from './data/calificacionesMock'
 import { prestadoresMock } from './data/prestadoresMock'
 
 function App() {
@@ -8,7 +9,10 @@ function App() {
     <>
       <AppRoutes />
 
-      <BuscadorPrestadores prestadores={prestadoresMock} />
+      <BuscadorPrestadores
+        prestadores={prestadoresMock}
+        calificaciones={calificacionesMock}
+      />
     </>
   )
 }
