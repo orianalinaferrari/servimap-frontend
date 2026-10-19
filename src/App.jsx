@@ -4,9 +4,16 @@ import { BuscadorPrestadores } from './components/BuscadorPrestadores'
 import { PanelAdministracion } from './components/PanelAdministracion'
 import { calificacionesMock } from './data/calificacionesMock'
 import { prestadoresMock } from './data/prestadoresMock'
+import { moderarCalificacion } from './utils/reputacion'
 
 function App() {
   const [vista, setVista] = useState('busqueda')
+  const [calificaciones, setCalificaciones] = useState(calificacionesMock)
+
+  function handleModerar(id, motivo) {
+    const hoy = new Date().toLocaleDateString('en-CA')
+    setCalificaciones(moderarCalificacion(calificaciones, id, motivo, hoy))
+  }
 
   return (
     <main>
@@ -31,12 +38,15 @@ function App() {
       </nav>
 
       {vista === 'busqueda' && (
-        <BuscadorPrestadores
+        <BuscadorPrestadores prestadores={prestadoresMock} calificaciones={calificaciones} />
+      )}
+      {vista === 'admin' && (
+        <PanelAdministracion
           prestadores={prestadoresMock}
-          calificaciones={calificacionesMock}
+          calificaciones={calificaciones}
+          onModerar={handleModerar}
         />
       )}
-      {vista === 'admin' && <PanelAdministracion />}
     </main>
   )
 }
