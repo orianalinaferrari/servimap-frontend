@@ -112,3 +112,106 @@ main > nav button[aria-pressed='true'] {
     flex: 1 1 100%;
   }
 }
+
+/* ===== F-25: Ficha del prestador ===== */
+
+.detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  text-align: left;
+}
+
+.boton-volver {
+  align-self: flex-start;
+  justify-self: start;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+}
+
+.detalle h2,
+.detalle h3,
+.detalle h4 {
+  margin: 8px 0 0;
+}
+
+.detalle-datos,
+.reputacion {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.estado-disponible {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.estado-no-disponible {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.estrellas {
+  color: #f59e0b;
+  letter-spacing: 2px;
+}
+
+.lista-comentarios,
+.contacto-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comentario {
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+
+.comentario-fecha {
+  font-size: 14px;
+}
+
+.contacto-lista a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+/* Tablet y computador: datos y reputación lado a lado */
+@media (min-width: 768px) {
+  .detalle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+    align-items: start;
+  }
+
+  .detalle > *:not(.detalle-datos):not(.reputacion) {
+    grid-column: 1 / -1;
+  }
+
+  .contacto-lista {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
