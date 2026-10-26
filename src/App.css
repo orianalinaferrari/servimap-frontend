@@ -1,27 +1,11 @@
 /* ===== F-25: Buscador de prestadores ===== */
 
-.buscador {
+.buscador-prestadores {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 16px;
   text-align: left;
-}
-
-.buscador-campo {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.buscador-campo input {
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font: inherit;
 }
 
 .lista-prestadores {
@@ -81,36 +65,31 @@
   }
 }
 
-main > nav {
+/* ===== F-25: Menú de navegación ===== */
+
+header nav {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  align-items: center;
+  gap: 4px;
   padding: 0 16px;
-  margin-top: 16px;
+  color: var(--border);
 }
 
-main > nav button {
+header nav a {
+  display: inline-flex;
+  align-items: center;
   min-height: 44px;
-  padding: 8px 16px;
-  border: 1px solid var(--accent-border);
+  padding: 0 12px;
   border-radius: 999px;
-  background: var(--bg);
   color: var(--accent);
-  font: inherit;
   font-weight: 600;
-  cursor: pointer;
+  text-decoration: none;
 }
 
-main > nav button[aria-pressed='true'] {
-  background: var(--accent);
-  color: #fff;
-}
-
-@media (max-width: 480px) {
-  main > nav button {
-    flex: 1 1 100%;
-  }
+header nav a:hover {
+  background: var(--accent-bg);
 }
 
 /* ===== F-25: Ficha del prestador ===== */
@@ -344,4 +323,24 @@ main > nav button[aria-pressed='true'] {
   .boton-cancelar {
     flex: 0 0 auto;
   }
+}
+
+/* ===== F-25: Botón de solicitar servicio ===== */
+
+.boton-solicitar {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 8px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton-solicitar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

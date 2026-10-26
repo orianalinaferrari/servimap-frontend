@@ -1,0 +1,75 @@
+﻿.filtros-prestadores {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.filtros-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.filtros-campo label {
+  font-weight: 600;
+}
+
+.filtros-campo input,
+.filtros-campo select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+}
+
+.filtros-disponibilidad {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+  cursor: pointer;
+}
+
+.filtros-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.filtros-acciones button {
+  padding: 0.7rem 1rem;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+}
+
+.filtros-acciones button:hover {
+  background: #e2e8f0;
+}
+
+.filtros-acciones p {
+  margin: 0;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .filtros-prestadores {
+    padding: 1rem;
+  }
+}
