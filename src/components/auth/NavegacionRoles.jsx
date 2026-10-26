@@ -28,7 +28,11 @@ function NavegacionRoles() {
       )}
 
       {rol === ROLES.PRESTADOR && (
-        <Link to="/prestador">Mi panel de prestador</Link>
+        <>
+          <Link to="/prestador">Mi panel de prestador</Link>
+          {' | '}
+          <Link to="/prestador/perfil">Mi perfil</Link>
+        </>
       )}
 
       {rol === ROLES.ADMINISTRADOR && (
