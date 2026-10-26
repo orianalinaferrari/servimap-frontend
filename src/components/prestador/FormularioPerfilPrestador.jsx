@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 
 import { useState } from 'react'
 import { validarPerfilPrestador } from '../../utils/perfilPrestador'
@@ -40,7 +41,6 @@ export function FormularioPerfilPrestador({
     { name: 'apellido', label: 'Apellido' },
     { name: 'telefono', label: 'Teléfono' },
     { name: 'email', label: 'Correo electrónico' },
-    { name: 'oficios', label: 'Oficios (separados por coma)' },
     { name: 'ubicacion', label: 'Ubicación' },
   ]
 
@@ -73,6 +73,17 @@ export function FormularioPerfilPrestador({
       ))}
 
       <div>
+        <h3>Oficios asociados</h3>
+        <p>{datos.oficios || 'Sin oficios asociados'}</p>
+        <Link to="/prestador/oficios">
+          Administrar mis oficios
+        </Link>
+        {errores.oficios && (
+          <p role="alert">{errores.oficios}</p>
+        )}
+      </div>
+
+      <div>
         <label htmlFor="descripcion">
           Descripción profesional
         </label>
@@ -94,4 +105,3 @@ export function FormularioPerfilPrestador({
     </form>
   )
 }
-

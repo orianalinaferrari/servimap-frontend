@@ -32,6 +32,8 @@ function NavegacionRoles() {
           <Link to="/prestador">Mi panel de prestador</Link>
           {' | '}
           <Link to="/prestador/perfil">Mi perfil</Link>
+          {' | '}
+          <Link to="/prestador/oficios">Mis oficios</Link>
         </>
       )}
 

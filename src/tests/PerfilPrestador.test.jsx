@@ -1,3 +1,4 @@
+import { MemoryRouter } from 'react-router-dom'
 
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
@@ -38,11 +39,11 @@ describe('F-05 Perfil de prestador', () => {
     const guardar = vi.fn()
 
     render(
-      <FormularioPerfilPrestador
+      <MemoryRouter><FormularioPerfilPrestador
         perfil={perfil}
         onGuardar={guardar}
         onCancelar={() => {}}
-      />
+      /></MemoryRouter>
     )
 
     fireEvent.change(screen.getByLabelText('Nombre'), {
@@ -62,11 +63,11 @@ describe('F-05 Perfil de prestador', () => {
     const guardar = vi.fn()
 
     render(
-      <FormularioPerfilPrestador
+      <MemoryRouter><FormularioPerfilPrestador
         perfil={{ ...perfil, nombre: '' }}
         onGuardar={guardar}
         onCancelar={() => {}}
-      />
+      /></MemoryRouter>
     )
 
     fireEvent.click(

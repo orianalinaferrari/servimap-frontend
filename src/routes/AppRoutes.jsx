@@ -1,4 +1,4 @@
-
+﻿
 import { Routes, Route } from 'react-router-dom'
 import Registro from '../pages/Registro'
 import Login from '../pages/Login'
@@ -8,6 +8,8 @@ import AccesoDenegado from '../pages/AccesoDenegado'
 import RutaProtegida from '../components/auth/RutaProtegida'
 import { ROLES } from '../utils/roles'
 import PerfilPrestador from '../pages/PerfilPrestador'
+
+import OficiosPrestador from '../pages/OficiosPrestador'
 
 function AppRoutes({ panelAdministracion }) {
   return (
@@ -39,6 +41,14 @@ function AppRoutes({ panelAdministracion }) {
         element={
           <RutaProtegida rolesPermitidos={[ROLES.PRESTADOR]}>
             <PerfilPrestador />
+          </RutaProtegida>
+        }
+      />
+      <Route
+        path="/prestador/oficios"
+        element={
+          <RutaProtegida rolesPermitidos={[ROLES.PRESTADOR]}>
+            <OficiosPrestador />
           </RutaProtegida>
         }
       />
