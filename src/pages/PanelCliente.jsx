@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom'
 
 function PanelCliente() {
@@ -10,7 +9,15 @@ function PanelCliente() {
         Desde acá vas a poder acceder a las funcionalidades
         disponibles para tu rol.
       </p>
-      <Link to="/">Buscar prestadores</Link>
+
+      <nav aria-label="Opciones del cliente">
+        <p>
+          <Link to="/">Buscar prestadores</Link>
+        </p>
+        <p>
+          <Link to="/cliente/solicitudes">Mis solicitudes</Link>
+        </p>
+      </nav>
     </section>
   )
 }

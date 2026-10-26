@@ -1,8 +1,9 @@
-﻿
+
 import { Routes, Route } from 'react-router-dom'
 import Registro from '../pages/Registro'
 import Login from '../pages/Login'
 import PanelCliente from '../pages/PanelCliente'
+import SolicitudesCliente from '../pages/SolicitudesCliente'
 import PanelPrestador from '../pages/PanelPrestador'
 import AccesoDenegado from '../pages/AccesoDenegado'
 import RutaProtegida from '../components/auth/RutaProtegida'
@@ -23,6 +24,14 @@ function AppRoutes({ panelAdministracion }) {
         element={
           <RutaProtegida rolesPermitidos={[ROLES.CLIENTE]}>
             <PanelCliente />
+          </RutaProtegida>
+        }
+      />
+      <Route
+        path="/cliente/solicitudes"
+        element={
+          <RutaProtegida rolesPermitidos={[ROLES.CLIENTE]}>
+            <SolicitudesCliente />
           </RutaProtegida>
         }
       />
@@ -76,4 +85,3 @@ function AppRoutes({ panelAdministracion }) {
 }
 
 export default AppRoutes
-
