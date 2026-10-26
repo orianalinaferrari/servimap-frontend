@@ -74,6 +74,7 @@ function SolicitudesCliente() {
   const [mensaje, setMensaje] = useState('')
   const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null)
   const [cancelandoId, setCancelandoId] = useState(null)
+  const [confirmandoId, setConfirmandoId] = useState(null)
 
   const cargarSolicitudes = useCallback(async () => {
     setCargando(true)
@@ -151,6 +152,7 @@ function SolicitudesCliente() {
     }
 
     setSolicitudSeleccionada(null)
+    setConfirmandoId(null)
     setMensaje('La cancelación fue confirmada por el servidor.')
     setCancelandoId(null)
     await cargarSolicitudes()
@@ -236,6 +238,7 @@ function SolicitudesCliente() {
                           setSolicitudSeleccionada(
                             mostrandoDetalle ? null : solicitud
                           )
+                          setConfirmandoId(null)
                         }}
                       >
                         {mostrandoDetalle ? 'Ocultar detalle' : 'Ver detalle'}
@@ -247,7 +250,10 @@ function SolicitudesCliente() {
                         type="button"
                         className="solicitudes-cliente-cancelar"
                         disabled={cancelandoId !== null}
-                        onClick={() => setSolicitudSeleccionada(solicitud)}
+                        onClick={() => {
+                          setSolicitudSeleccionada(solicitud)
+                          setConfirmandoId(solicitud.id)
+                        }}
                       >
                         Preparar cancelación
                       </button>
@@ -258,10 +264,13 @@ function SolicitudesCliente() {
                     <>
                       <DetalleSolicitud
                         solicitud={solicitud}
-                        onCerrar={() => setSolicitudSeleccionada(null)}
+                        onCerrar={() => {
+                          setSolicitudSeleccionada(null)
+                          setConfirmandoId(null)
+                        }}
                       />
 
-                      {acciones.cancelar && (
+                      {acciones.cancelar && confirmandoId === solicitud.id && (
                         <div className="solicitudes-cliente-confirmacion">
                           <p>
                             ¿Querés cancelar esta solicitud? Esta acción
@@ -282,7 +291,10 @@ function SolicitudesCliente() {
                           <button
                             type="button"
                             disabled={cancelandoId !== null}
-                            onClick={() => setSolicitudSeleccionada(null)}
+                            onClick={() => {
+                              setSolicitudSeleccionada(null)
+                              setConfirmandoId(null)
+                            }}
                           >
                             Volver
                           </button>
