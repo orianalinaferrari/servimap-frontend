@@ -12,7 +12,8 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
   const [termino, setTermino] = useState('')
   const [filtros, setFiltros] = useState({ ...FILTROS_INICIALES })
   const [prestadorSeleccionadoId, setPrestadorSeleccionadoId] = useState(null)
-
+  const precioNegativo =
+    filtros.precioMaximo !== '' && Number(filtros.precioMaximo) < 0
   const opciones = obtenerOpcionesFiltros(prestadores)
   const resultados = aplicarFiltrosPrestadores(prestadores, termino, filtros)
 
@@ -97,7 +98,11 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
               placeholder="Sin límite"
               value={filtros.precioMaximo}
               onChange={(evento) => actualizarFiltro('precioMaximo', evento.target.value)}
+              aria-invalid={precioNegativo}
             />
+            {precioNegativo && (
+              <p role="alert">El precio máximo no puede ser negativo.</p>
+            )}
           </div>
 
           <div className="filtros-campo">
