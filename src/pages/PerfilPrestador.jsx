@@ -42,12 +42,20 @@ export default function PerfilPrestador() {
     }
 
     try {
+      const perfilActual = obtenerPerfil(usuario)
+
+      const perfilActualizado = {
+        ...perfilActual,
+        ...nuevosDatos,
+        oficios: perfilActual.oficios,
+      }
+
       localStorage.setItem(
         `servimap-perfil-${usuario.id}`,
-        JSON.stringify(nuevosDatos)
+        JSON.stringify(perfilActualizado)
       )
 
-      setPerfil(nuevosDatos)
+      setPerfil(perfilActualizado)
       setEditando(false)
       setMensaje('Cambios guardados en este navegador.')
     } catch {
@@ -77,4 +85,3 @@ export default function PerfilPrestador() {
     </main>
   )
 }
-

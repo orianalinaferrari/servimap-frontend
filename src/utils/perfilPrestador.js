@@ -1,3 +1,4 @@
+import { validarOficios } from './oficiosPrestador'
 
 export function crearPerfilInicial(usuario = {}) {
   return {
@@ -35,8 +36,10 @@ export function validarPerfilPrestador(perfil) {
     errores.email = 'Ingresá un correo válido'
   }
 
-  if (!perfil.oficios.trim()) {
-    errores.oficios = 'Ingresá al menos un oficio'
+  const errorOficios = validarOficios(perfil.oficios)
+
+  if (errorOficios) {
+    errores.oficios = errorOficios
   }
 
   if (!perfil.ubicacion.trim()) {
@@ -45,4 +48,3 @@ export function validarPerfilPrestador(perfil) {
 
   return errores
 }
-
