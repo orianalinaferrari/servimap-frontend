@@ -5,6 +5,7 @@ import { afterEach, describe, expect, test } from 'vitest'
 import App from '../App'
 import { calificacionesMock } from '../data/calificacionesMock'
 import { moderarCalificacion } from '../utils/reputacion'
+import { AuthProvider } from '../context/AuthContext'
 
 afterEach(cleanup)
 
@@ -37,9 +38,11 @@ describe('moderarCalificacion', () => {
 describe('Moderación de comentarios', () => {
   test('no permite confirmar sin motivo', () => {
     render(
-      <MemoryRouter initialEntries={['/registro']}>
-        <App />
-      </MemoryRouter>
+      <MemoryRouter initialEntries={['/']}>
+        <AuthProvider>
+         <App />
+       </AuthProvider>
+     </MemoryRouter>
     )
 
     fireEvent.click(
@@ -60,7 +63,9 @@ describe('Moderación de comentarios', () => {
   test('el comentario moderado deja de verse en el detalle del prestador', () => {
     render(
       <MemoryRouter initialEntries={['/registro']}>
-        <App />
+        <AuthProvider>
+          <App />
+       </AuthProvider>
       </MemoryRouter>
     )
 
