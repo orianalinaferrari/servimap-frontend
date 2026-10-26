@@ -1,0 +1,82 @@
+/* ===== F-25: Buscador de prestadores ===== */
+
+.buscador {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  text-align: left;
+}
+
+.buscador-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.buscador-campo input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.lista-prestadores {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.tarjeta-prestador {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.tarjeta-prestador h3 {
+  margin: 0 0 8px;
+}
+
+.boton-nombre {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.boton-nombre:hover {
+  text-decoration: underline;
+}
+
+.tarjeta-precio {
+  margin-top: 8px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* Tablet: 2 columnas */
+@media (min-width: 640px) {
+  .lista-prestadores {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Computador: 3 columnas */
+@media (min-width: 1024px) {
+  .lista-prestadores {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
