@@ -215,3 +215,133 @@ main > nav button[aria-pressed='true'] {
     flex-wrap: wrap;
   }
 }
+
+/* ===== F-25: Panel de administración y moderación ===== */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  text-align: left;
+}
+
+.panel-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.panel-nav button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+}
+
+.panel-nav button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.moderacion h3 {
+  margin: 16px 0 8px;
+}
+
+.lista-moderacion {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.tarjeta-moderacion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.tarjeta-oculta {
+  background: var(--code-bg);
+}
+
+.form-moderacion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-moderacion input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.form-moderacion-botones {
+  display: flex;
+  gap: 8px;
+}
+
+.boton-ocultar,
+.boton-confirmar,
+.boton-cancelar {
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton-ocultar {
+  align-self: flex-start;
+  border: 1px solid #b91c1c;
+  background: transparent;
+  color: #b91c1c;
+}
+
+.boton-confirmar {
+  flex: 1;
+  border: 0;
+  background: #b91c1c;
+  color: #fff;
+}
+
+.boton-confirmar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.boton-cancelar {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+/* Tablet y computador: tarjetas en 2 columnas */
+@media (min-width: 768px) {
+  .lista-moderacion {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .boton-confirmar,
+  .boton-cancelar {
+    flex: 0 0 auto;
+  }
+}

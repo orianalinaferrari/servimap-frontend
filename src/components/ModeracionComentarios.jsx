@@ -25,14 +25,14 @@ export function ModeracionComentarios({ prestadores, calificaciones, onModerar }
   }
 
   return (
-    <section>
+    <section className="moderacion">
       <h3>Comentarios publicados</h3>
       {publicadas.length === 0 ? (
         <p>No hay comentarios para moderar</p>
       ) : (
-        <ul>
+        <ul className="lista-moderacion">
           {publicadas.map((calificacion) => (
-            <li key={calificacion.id}>
+            <li key={calificacion.id} className="tarjeta-moderacion">
               <p>
                 <strong>{calificacion.clienteNombre}</strong> sobre{' '}
                 {nombrePrestador(calificacion.prestadorId)} – {calificacion.puntaje}/5
@@ -40,7 +40,7 @@ export function ModeracionComentarios({ prestadores, calificaciones, onModerar }
               <p>{calificacion.comentario ?? 'Sin comentario'}</p>
 
               {seleccionadaId === calificacion.id ? (
-                <form onSubmit={confirmar}>
+                <form className="form-moderacion" onSubmit={confirmar}>
                   <label htmlFor={`motivo-${calificacion.id}`}>Motivo de la moderación</label>
                   <input
                     id={`motivo-${calificacion.id}`}
@@ -48,16 +48,23 @@ export function ModeracionComentarios({ prestadores, calificaciones, onModerar }
                     value={motivo}
                     onChange={(evento) => setMotivo(evento.target.value)}
                   />
-                  <button type="submit" disabled={motivo.trim() === ''}>
-                    Confirmar
-                  </button>
-                  <button type="button" onClick={cancelar}>
-                    Cancelar
-                  </button>
+                  <div className="form-moderacion-botones">
+                    <button
+                      type="submit"
+                      className="boton-confirmar"
+                      disabled={motivo.trim() === ''}
+                    >
+                      Confirmar
+                    </button>
+                    <button type="button" className="boton-cancelar" onClick={cancelar}>
+                      Cancelar
+                    </button>
+                  </div>
                 </form>
               ) : (
                 <button
                   type="button"
+                  className="boton-ocultar"
                   aria-label={`Ocultar comentario de ${calificacion.clienteNombre}`}
                   onClick={() => setSeleccionadaId(calificacion.id)}
                 >
@@ -73,9 +80,9 @@ export function ModeracionComentarios({ prestadores, calificaciones, onModerar }
       {ocultas.length === 0 ? (
         <p>No hay comentarios ocultos</p>
       ) : (
-        <ul>
+        <ul className="lista-moderacion">
           {ocultas.map((calificacion) => (
-            <li key={calificacion.id}>
+            <li key={calificacion.id} className="tarjeta-moderacion tarjeta-oculta">
               <p>
                 <strong>{calificacion.clienteNombre}</strong> sobre{' '}
                 {nombrePrestador(calificacion.prestadorId)}

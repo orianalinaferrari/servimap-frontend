@@ -14,10 +14,10 @@ export function PanelAdministracion({
   const [seccionActiva, setSeccionActiva] = useState('comentarios')
 
   return (
-    <section>
+    <section className="panel">
       <h2>Panel de administración</h2>
 
-      <nav aria-label="Secciones de administración">
+      <nav className="panel-nav" aria-label="Secciones de administración">
         {SECCIONES.map((seccion) => (
           <button
             key={seccion.id}
