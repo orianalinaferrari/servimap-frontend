@@ -1,6 +1,19 @@
+﻿import { useState } from 'react'
 import { ReputacionPrestador } from './ReputacionPrestador'
+import { FormularioSolicitud } from './FormularioSolicitud'
 
 export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
+  const [mostrandoSolicitud, setMostrandoSolicitud] = useState(false)
+
+  if (mostrandoSolicitud) {
+    return (
+      <FormularioSolicitud
+        prestador={prestador}
+        onCancelar={() => setMostrandoSolicitud(false)}
+      />
+    )
+  }
+
   return (
     <article>
       <button type="button" onClick={onVolver}>
@@ -18,6 +31,14 @@ export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
       </p>
 
       <p>{prestador.disponible ? 'Disponible' : 'No disponible'}</p>
+
+      <button
+        type="button"
+        onClick={() => setMostrandoSolicitud(true)}
+        disabled={!prestador.disponible}
+      >
+        Solicitar servicio
+      </button>
 
       <ReputacionPrestador prestador={prestador} calificaciones={calificaciones} />
 
