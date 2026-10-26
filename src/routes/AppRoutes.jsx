@@ -5,6 +5,7 @@ import Login from '../pages/Login'
 import PanelCliente from '../pages/PanelCliente'
 import SolicitudesCliente from '../pages/SolicitudesCliente'
 import PanelPrestador from '../pages/PanelPrestador'
+import SolicitudesPrestador from '../pages/SolicitudesPrestador'
 import AccesoDenegado from '../pages/AccesoDenegado'
 import RutaProtegida from '../components/auth/RutaProtegida'
 import { ROLES } from '../utils/roles'
@@ -45,6 +46,14 @@ function AppRoutes({ panelAdministracion }) {
         }
       />
 
+      <Route
+        path="/prestador/solicitudes"
+        element={
+          <RutaProtegida rolesPermitidos={[ROLES.PRESTADOR]}>
+            <SolicitudesPrestador />
+          </RutaProtegida>
+        }
+      />
       <Route
         path="/prestador/perfil"
         element={
