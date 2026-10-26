@@ -1,0 +1,90 @@
+﻿.crear-solicitud {
+  max-width: 680px;
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.crear-solicitud h2 {
+  margin-top: 1rem;
+}
+
+.crear-solicitud form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-top: 1.5rem;
+}
+
+.crear-solicitud-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.crear-solicitud-campo label {
+  font-weight: 600;
+}
+
+.crear-solicitud-campo input,
+.crear-solicitud-campo select,
+.crear-solicitud-campo textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.crear-solicitud-campo [aria-invalid="true"] {
+  border-color: #b91c1c;
+}
+
+.crear-solicitud-error,
+.crear-solicitud-error-texto {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.crear-solicitud-mensaje {
+  padding: 0.9rem;
+  border-radius: 8px;
+}
+
+.crear-solicitud-exito {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.crear-solicitud-error {
+  color: #b91c1c;
+}
+
+.crear-solicitud-acciones {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.crear-solicitud-acciones button,
+.crear-solicitud-volver {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #94a3b8;
+  cursor: pointer;
+}
+
+.crear-solicitud-acciones button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .crear-solicitud {
+    padding: 1rem;
+  }
+}
