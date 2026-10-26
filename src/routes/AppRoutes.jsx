@@ -1,15 +1,59 @@
+
 import { Routes, Route } from 'react-router-dom'
 import Registro from '../pages/Registro'
 import Login from '../pages/Login'
+import PanelCliente from '../pages/PanelCliente'
+import PanelPrestador from '../pages/PanelPrestador'
+import AccesoDenegado from '../pages/AccesoDenegado'
+import RutaProtegida from '../components/auth/RutaProtegida'
+import { ROLES } from '../utils/roles'
 
-function AppRoutes() {
+function AppRoutes({ panelAdministracion }) {
   return (
     <Routes>
       <Route path="/" element={null} />
       <Route path="/registro" element={<Registro />} />
       <Route path="/login" element={<Login />} />
+
+      <Route
+        path="/cliente"
+        element={
+          <RutaProtegida rolesPermitidos={[ROLES.CLIENTE]}>
+            <PanelCliente />
+          </RutaProtegida>
+        }
+      />
+
+      <Route
+        path="/prestador"
+        element={
+          <RutaProtegida rolesPermitidos={[ROLES.PRESTADOR]}>
+            <PanelPrestador />
+          </RutaProtegida>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <RutaProtegida rolesPermitidos={[ROLES.ADMINISTRADOR]}>
+            {panelAdministracion}
+          </RutaProtegida>
+        }
+      />
+
+      <Route
+        path="/acceso-denegado"
+        element={<AccesoDenegado />}
+      />
+
+      <Route
+        path="*"
+        element={<h1>Página no encontrada</h1>}
+      />
     </Routes>
   )
 }
 
 export default AppRoutes
+

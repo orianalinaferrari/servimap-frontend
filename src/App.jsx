@@ -1,20 +1,26 @@
 
 import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import AppRoutes from './routes/AppRoutes'
 import { BuscadorPrestadores } from './components/BuscadorPrestadores'
 import { PanelAdministracion } from './components/PanelAdministracion'
+import NavegacionRoles from './components/auth/NavegacionRoles'
 import { calificacionesMock } from './data/calificacionesMock'
 import { prestadoresMock } from './data/prestadoresMock'
 import { moderarCalificacion } from './utils/reputacion'
 import { useAuth } from './context/useAuth'
 
 function App() {
-  const [vista, setVista] = useState('busqueda')
   const [calificaciones, setCalificaciones] = useState(calificacionesMock)
-  const { usuario, autenticado, cargando, logout } = useAuth()
   const [cerrandoSesion, setCerrandoSesion] = useState(false)
   const [errorSesion, setErrorSesion] = useState('')
+
+  const { usuario, autenticado, cargando, logout } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const esInicio = location.pathname === '/'
 
   function handleModerar(id, motivo) {
     const hoy = new Date().toLocaleDateString('en-CA')
@@ -32,7 +38,7 @@ function App() {
 
     try {
       await logout()
-      setVista('busqueda')
+      navigate('/')
     } catch (error) {
       setErrorSesion(
         error instanceof Error
@@ -44,77 +50,65 @@ function App() {
     }
   }
 
+  const panelAdministracion = (
+    <PanelAdministracion
+      prestadores={prestadoresMock}
+      calificaciones={calificaciones}
+      onModerar={handleModerar}
+    />
+  )
+
   return (
     <>
-      <AppRoutes />
-
-      <main>
+      <header>
         <h1>ServiMap</h1>
-        <p>Frontend de ServiMap</p>
 
-        <div>
-          {cargando ? (
-            <p>Verificando sesión...</p>
-          ) : autenticado ? (
-            <>
-              <p>
-                Sesión iniciada
-                {usuario?.nombre ? `: ${usuario.nombre}` : ''}
-              </p>
-              <button
-                type="button"
-                onClick={handleCerrarSesion}
-                disabled={cerrandoSesion}
-              >
-                {cerrandoSesion
-                  ? 'Cerrando sesión...'
-                  : 'Cerrar sesión'}
-              </button>
-            </>
-          ) : (
+        <NavegacionRoles />
+
+        {cargando ? (
+          <p role="status">Verificando sesión...</p>
+        ) : autenticado ? (
+          <div>
             <p>
-              <a href="/login">Iniciar sesión</a>
+              Sesión iniciada
+              {usuario?.nombre ? `: ${usuario.nombre}` : ''}
             </p>
-          )}
-        </div>
+
+            <button
+              type="button"
+              onClick={handleCerrarSesion}
+              disabled={cerrandoSesion}
+            >
+              {cerrandoSesion
+                ? 'Cerrando sesión...'
+                : 'Cerrar sesión'}
+            </button>
+          </div>
+        ) : null}
 
         {errorSesion && <p role="alert">{errorSesion}</p>}
+      </header>
 
-        <nav aria-label="Navegación principal">
-          <button
-            type="button"
-            aria-pressed={vista === 'busqueda'}
-            onClick={() => setVista('busqueda')}
-          >
-            Buscar prestadores
-          </button>
+      <AppRoutes panelAdministracion={panelAdministracion} />
 
-          <button
-            type="button"
-            aria-pressed={vista === 'admin'}
-            onClick={() => setVista('admin')}
-          >
-            Administración
-          </button>
-        </nav>
+      {esInicio && (
+        <main>
+          <h2>Encontrá prestadores de servicios</h2>
+          <p>Buscá profesionales disponibles en ServiMap.</p>
 
-        {vista === 'busqueda' && (
           <BuscadorPrestadores
             prestadores={prestadoresMock}
             calificaciones={calificaciones}
           />
-        )}
 
-        {vista === 'admin' && (
-          <PanelAdministracion
-            prestadores={prestadoresMock}
-            calificaciones={calificaciones}
-            onModerar={handleModerar}
-          />
-        )}
-      </main>
+          <p>
+            <Link to="/login">Acceder a mi cuenta</Link>
+          </p>
+        </main>
+      )}
     </>
   )
 }
 
 export default App
+

@@ -1,26 +1,14 @@
 
-import { AuthProvider } from '../context/AuthContext'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, test } from 'vitest'
-import App from '../App'
 import { PanelAdministracion } from '../components/PanelAdministracion'
+import { renderConAdministrador } from './helpers/renderConAdministrador'
 
 afterEach(cleanup)
 
 describe('PanelAdministracion', () => {
-  test('abre el panel desde el menú principal', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </MemoryRouter>
-    )
-
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Administración' })
-    )
+  test('abre el panel desde la ruta de administración', () => {
+    renderConAdministrador('/admin')
 
     expect(
       screen.getByRole('heading', { name: 'Panel de administración' })
