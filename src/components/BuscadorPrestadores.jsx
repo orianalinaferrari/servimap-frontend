@@ -1,3 +1,4 @@
+﻿import { MapaPrestadores } from './mapa/MapaPrestadores'
 import { useState } from 'react'
 import { filtrarPrestadores } from '../utils/filtrarPrestadores'
 import { DetallePrestador } from './DetallePrestador'
@@ -32,6 +33,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
         onChange={(evento) => setTermino(evento.target.value)}
         placeholder="Nombre, oficio o zona"
       />
+      <MapaPrestadores prestadores={resultados} onSeleccionar={setPrestadorSeleccionadoId} />
       {resultados.length === 0 ? (
         <p>No se encontraron prestadores para "{termino}"</p>
       ) : (
@@ -49,7 +51,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
               <p>{prestador.oficios.join(', ')}</p>
               <p>{prestador.zonaCobertura}</p>
               <p>
-                ${prestador.precioMin.toLocaleString('es-AR')} – $
+                ${prestador.precioMin.toLocaleString('es-AR')} â€“ $
                 {prestador.precioMax.toLocaleString('es-AR')}
               </p>
             </li>
