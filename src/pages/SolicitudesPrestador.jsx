@@ -1,3 +1,4 @@
+import EstadoSolicitud from '../components/EstadoSolicitud'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -6,7 +7,6 @@ import {
   rechazarSolicitudPrestador,
 } from '../services/solicitudesPrestadorService'
 import {
-  obtenerEtiquetaEstado,
   obtenerAccionesSolicitudPrestador,
   ordenarSolicitudesPorFecha,
 } from '../utils/solicitudesPrestador'
@@ -52,7 +52,7 @@ function DetalleSolicitudPrestador({ solicitud, onCerrar }) {
 
       <dl>
         <dt>Estado</dt>
-        <dd>{obtenerEtiquetaEstado(solicitud.estado)}</dd>
+        <dd><EstadoSolicitud estado={solicitud.estado} /></dd>
 
         <dt>Cliente</dt>
         <dd>{obtenerNombreCliente(solicitud)}</dd>
@@ -272,7 +272,7 @@ function SolicitudesPrestador() {
                     <h3>{mostrarValor(solicitud.servicio)}</h3>
 
                     <span className="solicitudes-prestador-estado">
-                      {obtenerEtiquetaEstado(solicitud.estado)}
+                      <EstadoSolicitud estado={solicitud.estado} />
                     </span>
                   </div>
 

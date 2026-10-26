@@ -1,3 +1,4 @@
+import EstadoSolicitud from '../components/EstadoSolicitud'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -5,7 +6,6 @@ import {
   cancelarSolicitudCliente,
 } from '../services/solicitudesClienteService'
 import {
-  obtenerEtiquetaEstado,
   obtenerAccionesSolicitud,
   ordenarSolicitudesPorFecha,
 } from '../utils/solicitudesCliente'
@@ -43,7 +43,7 @@ function DetalleSolicitud({ solicitud, onCerrar }) {
 
       <dl>
         <dt>Estado</dt>
-        <dd>{obtenerEtiquetaEstado(solicitud.estado)}</dd>
+        <dd><EstadoSolicitud estado={solicitud.estado} /></dd>
 
         <dt>Prestador</dt>
         <dd>{obtenerNombrePrestador(solicitud)}</dd>
@@ -215,7 +215,7 @@ function SolicitudesCliente() {
                     </h3>
 
                     <span className="solicitudes-cliente-estado">
-                      {obtenerEtiquetaEstado(solicitud.estado)}
+                      <EstadoSolicitud estado={solicitud.estado} />
                     </span>
                   </div>
 
