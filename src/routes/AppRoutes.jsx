@@ -10,7 +10,7 @@ import AccesoDenegado from '../pages/AccesoDenegado'
 import RutaProtegida from '../components/auth/RutaProtegida'
 import { ROLES } from '../utils/roles'
 import PerfilPrestador from '../pages/PerfilPrestador'
-
+import PaginaNoEncontrada from '../pages/PaginaNoEncontrada'
 import OficiosPrestador from '../pages/OficiosPrestador'
 
 function AppRoutes({ panelAdministracion }) {
@@ -87,7 +87,7 @@ function AppRoutes({ panelAdministracion }) {
 
       <Route
         path="*"
-        element={<h1>Página no encontrada</h1>}
+        element={<PaginaNoEncontrada />}
       />
     </Routes>
   )
