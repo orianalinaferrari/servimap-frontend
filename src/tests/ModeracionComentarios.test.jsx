@@ -1,11 +1,9 @@
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, describe, expect, test } from 'vitest'
-import App from '../App'
 import { calificacionesMock } from '../data/calificacionesMock'
 import { moderarCalificacion } from '../utils/reputacion'
-import { AuthProvider } from '../context/AuthContext'
+import { renderConAdministrador } from './helpers/renderConAdministrador'
 
 afterEach(cleanup)
 
@@ -37,17 +35,9 @@ describe('moderarCalificacion', () => {
 
 describe('Moderación de comentarios', () => {
   test('no permite confirmar sin motivo', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <AuthProvider>
-         <App />
-       </AuthProvider>
-     </MemoryRouter>
-    )
+    renderConAdministrador('/admin')
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Administración' })
-    )
+
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -61,17 +51,9 @@ describe('Moderación de comentarios', () => {
   })
 
   test('el comentario moderado deja de verse en el detalle del prestador', () => {
-    render(
-      <MemoryRouter initialEntries={['/registro']}>
-        <AuthProvider>
-          <App />
-       </AuthProvider>
-      </MemoryRouter>
-    )
+    renderConAdministrador('/admin')
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Administración' })
-    )
+
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -95,7 +77,7 @@ describe('Moderación de comentarios', () => {
     ).toBeTruthy()
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Buscar prestadores' })
+      screen.getByRole('link', { name: 'Inicio' })
     )
 
     fireEvent.click(
