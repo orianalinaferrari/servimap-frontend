@@ -81,51 +81,53 @@ function Login() {
 
   return (
     <main className="login-pagina">
-      <h1>Iniciar sesión</h1>
-      <p>Ingresá tus datos para acceder a ServiMap.</p>
+      <div className="login-tarjeta">
+        <h1>Iniciar sesión</h1>
+        <p>Ingresá tus datos para acceder a ServiMap.</p>
 
-      <form onSubmit={manejarEnvio} noValidate>
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          value={formulario.email}
-          onChange={manejarCambio}
-          aria-invalid={Boolean(errores.email)}
-        />
-        {errores.email && (
-          <p role="alert">{errores.email}</p>
-        )}
+        <form onSubmit={manejarEnvio} noValidate>
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            value={formulario.email}
+            onChange={manejarCambio}
+            aria-invalid={Boolean(errores.email)}
+          />
+          {errores.email && (
+            <p role="alert">{errores.email}</p>
+          )}
 
-        <label htmlFor="contrasena">Contraseña</label>
-        <input
-          id="contrasena"
-          name="contrasena"
-          type="password"
-          autoComplete="current-password"
-          value={formulario.contrasena}
-          onChange={manejarCambio}
-          aria-invalid={Boolean(errores.contrasena)}
-        />
-        {errores.contrasena && (
-          <p role="alert">{errores.contrasena}</p>
-        )}
+          <label htmlFor="contrasena">Contraseña</label>
+          <input
+            id="contrasena"
+            name="contrasena"
+            type="password"
+            autoComplete="current-password"
+            value={formulario.contrasena}
+            onChange={manejarCambio}
+            aria-invalid={Boolean(errores.contrasena)}
+          />
+          {errores.contrasena && (
+            <p role="alert">{errores.contrasena}</p>
+          )}
 
-        {errorServidor && (
-          <p role="alert">{errorServidor}</p>
-        )}
+          {errorServidor && (
+            <p role="alert">{errorServidor}</p>
+          )}
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Ingresando...' : 'Iniciar sesión'}
-        </button>
-      </form>
+          <button type="submit" disabled={enviando}>
+            {enviando ? 'Ingresando...' : 'Iniciar sesión'}
+          </button>
+        </form>
 
-      <p>
-        ¿Todavía no tenés cuenta?{' '}
-        <Link to="/registro">Crear cuenta</Link>
-      </p>
+        <p>
+          ¿Todavía no tenés cuenta?{' '}
+          <Link to="/registro">Crear cuenta</Link>
+        </p>
+      </div>
     </main>
   )
 }
