@@ -262,3 +262,161 @@ describe('F-12 - Pantalla de solicitudes del cliente', () => {
     ).toBeTruthy()
   })
 })
+
+describe('F-15 - Cancelación de solicitud', () => {
+  test('ver detalle no abre la confirmación de cancelación', async () => {
+    vi.mocked(obtenerSolicitudesCliente).mockResolvedValue([pendiente])
+
+    mostrarPantalla()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Ver detalle' })
+    )
+
+    expect(
+      screen.getByText('Reparar una pérdida de agua en la cocina.')
+    ).toBeTruthy()
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'Confirmar cancelación',
+      })
+    ).toBeNull()
+
+    expect(cancelarSolicitudCliente).not.toHaveBeenCalled()
+  })
+
+  test('preparar cancelación muestra una confirmación explícita', async () => {
+    vi.mocked(obtenerSolicitudesCliente).mockResolvedValue([pendiente])
+
+    mostrarPantalla()
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Preparar cancelación',
+      })
+    )
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Confirmar cancelación',
+      })
+    ).toBeTruthy()
+
+    expect(cancelarSolicitudCliente).not.toHaveBeenCalled()
+  })
+
+  test('volver abandona la cancelación sin llamar al servicio', async () => {
+    vi.mocked(obtenerSolicitudesCliente).mockResolvedValue([pendiente])
+
+    mostrarPantalla()
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Preparar cancelación',
+      })
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Volver' })
+    )
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'Confirmar cancelación',
+      })
+    ).toBeNull()
+
+    expect(cancelarSolicitudCliente).not.toHaveBeenCalled()
+  })
+
+  test('una solicitud finalizada no permite cancelar', async () => {
+    vi.mocked(obtenerSolicitudesCliente).mockResolvedValue([
+      { ...pendiente, estado: 'FINALIZADA' },
+    ])
+
+    mostrarPantalla()
+
+    expect(await screen.findByText('Finalizada')).toBeTruthy()
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'Preparar cancelación',
+      })
+    ).toBeNull()
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'Confirmar cancelación',
+      })
+    ).toBeNull()
+  })
+})
+
+describe('F-15 - Validaciones de integración', () => {
+  test('conserva el éxito e informa si falla la recarga posterior', async () => {
+    vi.mocked(obtenerSolicitudesCliente)
+      .mockResolvedValueOnce([pendiente])
+      .mockRejectedValueOnce(new Error('No se pudo actualizar el listado'))
+
+    vi.mocked(cancelarSolicitudCliente).mockResolvedValue(null)
+
+    mostrarPantalla()
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Preparar cancelación',
+      })
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirmar cancelación',
+      })
+    )
+
+    expect(
+      await screen.findByText('No se pudo actualizar el listado')
+    ).toBeTruthy()
+
+    expect(
+      screen.getByText('La cancelación fue confirmada por el servidor.')
+    ).toBeTruthy()
+
+    expect(cancelarSolicitudCliente).toHaveBeenCalledTimes(1)
+  })
+
+  test('un conflicto de estado no informa una cancelación exitosa', async () => {
+    vi.mocked(obtenerSolicitudesCliente).mockResolvedValue([pendiente])
+
+    vi.mocked(cancelarSolicitudCliente).mockRejectedValue(
+      new Error('La solicitud cambió de estado y ya no permite esta operación.')
+    )
+
+    mostrarPantalla()
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Preparar cancelación',
+      })
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirmar cancelación',
+      })
+    )
+
+    expect(
+      await screen.findByText(
+        'La solicitud cambió de estado y ya no permite esta operación.'
+      )
+    ).toBeTruthy()
+
+    expect(
+      screen.queryByText('La cancelación fue confirmada por el servidor.')
+    ).toBeNull()
+
+    expect(cancelarSolicitudCliente).toHaveBeenCalledTimes(1)
+  })
+})
