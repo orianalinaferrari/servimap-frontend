@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 
 function PanelPrestador() {
   return (
@@ -8,6 +9,18 @@ function PanelPrestador() {
         Esta sección reúne los accesos correspondientes
         al rol Prestador.
       </p>
+
+      <nav aria-label="Opciones del prestador">
+        <p>
+          <Link to="/prestador/perfil">Mi perfil</Link>
+        </p>
+        <p>
+          <Link to="/prestador/oficios">Mis oficios</Link>
+        </p>
+        <p>
+          <Link to="/prestador/solicitudes">Solicitudes recibidas</Link>
+        </p>
+      </nav>
     </section>
   )
 }
