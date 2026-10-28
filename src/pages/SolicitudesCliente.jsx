@@ -4,11 +4,15 @@ import { Link } from 'react-router-dom'
 import {
   obtenerSolicitudesCliente,
   cancelarSolicitudCliente,
+  confirmarFinalizacionCliente,
 } from '../services/solicitudesClienteService'
 import {
   obtenerAccionesSolicitud,
   ordenarSolicitudesPorFecha,
 } from '../utils/solicitudesCliente'
+import {
+  puedeConfirmarFinalizacion,
+} from '../utils/finalizacionSolicitud'
 import '../styles/SolicitudesCliente.css'
 
 function mostrarValor(valor) {
@@ -75,6 +79,8 @@ function SolicitudesCliente() {
   const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null)
   const [cancelandoId, setCancelandoId] = useState(null)
   const [confirmandoId, setConfirmandoId] = useState(null)
+  const [finalizacionPreparadaId, setFinalizacionPreparadaId] = useState(null)
+  const [finalizandoId, setFinalizandoId] = useState(null)
 
   const cargarSolicitudes = useCallback(async () => {
     setCargando(true)
@@ -155,6 +161,41 @@ function SolicitudesCliente() {
     setConfirmandoId(null)
     setMensaje('La cancelación fue confirmada por el servidor.')
     setCancelandoId(null)
+    await cargarSolicitudes()
+  }
+
+  async function confirmarFinalizacion(solicitud) {
+    if (
+      !puedeConfirmarFinalizacion(solicitud) ||
+      finalizandoId !== null ||
+      cancelandoId !== null ||
+      finalizacionPreparadaId !== solicitud.id
+    ) {
+      return
+    }
+
+    setMensaje('')
+    setError('')
+    setFinalizandoId(solicitud.id)
+
+    try {
+      await confirmarFinalizacionCliente(solicitud.id)
+    } catch (errorFinalizacion) {
+      setError(
+        errorFinalizacion instanceof Error
+          ? errorFinalizacion.message
+          : 'No se pudo confirmar la finalización.'
+      )
+      setFinalizandoId(null)
+      return
+    }
+
+    setSolicitudSeleccionada(null)
+    setConfirmandoId(null)
+    setFinalizacionPreparadaId(null)
+    setFinalizandoId(null)
+    setMensaje('La finalización fue confirmada por el servidor.')
+
     await cargarSolicitudes()
   }
 
@@ -245,6 +286,20 @@ function SolicitudesCliente() {
                       </button>
                     )}
 
+                    {puedeConfirmarFinalizacion(solicitud) && (
+                      <button
+                        type="button"
+                        disabled={finalizandoId !== null || cancelandoId !== null}
+                        onClick={() => {
+                          setSolicitudSeleccionada(solicitud)
+                          setConfirmandoId(null)
+                          setFinalizacionPreparadaId(solicitud.id)
+                        }}
+                      >
+                        Confirmar finalización
+                      </button>
+                    )}
+
                     {acciones.cancelar && (
                       <button
                         type="button"
@@ -269,6 +324,36 @@ function SolicitudesCliente() {
                           setConfirmandoId(null)
                         }}
                       />
+
+                      {puedeConfirmarFinalizacion(solicitud) &&
+                        finalizacionPreparadaId === solicitud.id && (
+                          <div className="solicitudes-cliente-confirmacion">
+                            <p>
+                              ¿Confirmás que el prestador terminó el trabajo?
+                            </p>
+
+                            <button
+                              type="button"
+                              disabled={finalizandoId !== null}
+                              onClick={() => confirmarFinalizacion(solicitud)}
+                            >
+                              {finalizandoId === solicitud.id
+                                ? 'Confirmando...'
+                                : 'Confirmar trabajo realizado'}
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={finalizandoId !== null}
+                              onClick={() => {
+                                setSolicitudSeleccionada(null)
+                                setFinalizacionPreparadaId(null)
+                              }}
+                            >
+                              Volver
+                            </button>
+                          </div>
+                        )}
 
                       {acciones.cancelar && confirmandoId === solicitud.id && (
                         <div className="solicitudes-cliente-confirmacion">

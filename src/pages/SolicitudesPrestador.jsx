@@ -5,11 +5,16 @@ import {
   obtenerSolicitudesPrestador,
   aceptarSolicitudPrestador,
   rechazarSolicitudPrestador,
+  marcarTrabajoTerminadoPrestador,
 } from '../services/solicitudesPrestadorService'
 import {
   obtenerAccionesSolicitudPrestador,
   ordenarSolicitudesPorFecha,
 } from '../utils/solicitudesPrestador'
+import {
+  puedeMarcarTrabajoTerminado,
+  estaPendienteConfirmacionFinalizacion,
+} from '../utils/finalizacionSolicitud'
 import '../styles/SolicitudesPrestador.css'
 
 function mostrarValor(valor) {
@@ -142,7 +147,12 @@ function SolicitudesPrestador() {
   function prepararAccion(solicitud, accion) {
     const acciones = obtenerAccionesSolicitudPrestador(solicitud)
 
-    if (!acciones[accion] || procesandoId !== null) {
+    const permitida =
+      accion === 'finalizar'
+        ? puedeMarcarTrabajoTerminado(solicitud)
+        : acciones[accion]
+
+    if (!permitida || procesandoId !== null) {
       return
     }
 
@@ -161,7 +171,12 @@ function SolicitudesPrestador() {
       solicitudSeleccionada
     )
 
-    if (!acciones[accionPendiente]) {
+    const permitida =
+      accionPendiente === 'finalizar'
+        ? puedeMarcarTrabajoTerminado(solicitudSeleccionada)
+        : acciones[accionPendiente]
+
+    if (!permitida) {
       return
     }
 
@@ -175,8 +190,10 @@ function SolicitudesPrestador() {
     try {
       if (accion === 'aceptar') {
         await aceptarSolicitudPrestador(solicitudId)
-      } else {
+      } else if (accion === 'rechazar') {
         await rechazarSolicitudPrestador(solicitudId)
+      } else if (accion === 'finalizar') {
+        await marcarTrabajoTerminadoPrestador(solicitudId)
       }
     } catch (errorAccion) {
       setError(
@@ -195,7 +212,9 @@ function SolicitudesPrestador() {
     setMensaje(
       accion === 'aceptar'
         ? 'La aceptación fue confirmada por el servidor.'
-        : 'El rechazo fue confirmado por el servidor.'
+        : accion === 'rechazar'
+          ? 'El rechazo fue confirmado por el servidor.'
+          : 'El trabajo terminado fue informado al servidor.'
     )
 
     await cargarSolicitudes()
@@ -314,6 +333,22 @@ function SolicitudesPrestador() {
                       </button>
                     )}
 
+                    {puedeMarcarTrabajoTerminado(solicitud) && (
+                      <button
+                        type="button"
+                        disabled={procesandoId !== null}
+                        onClick={() => prepararAccion(solicitud, 'finalizar')}
+                      >
+                        Marcar trabajo como terminado
+                      </button>
+                    )}
+
+                    {estaPendienteConfirmacionFinalizacion(solicitud) && (
+                      <p role="status">
+                        Trabajo terminado. Esperando confirmación del cliente.
+                      </p>
+                    )}
+
                     {acciones.rechazar && (
                       <button
                         type="button"
@@ -337,9 +372,11 @@ function SolicitudesPrestador() {
                         <div className="solicitudes-prestador-confirmacion">
                           <p>
                             ¿Confirmás que querés{' '}
-                            {accionPendiente === 'aceptar'
-                              ? 'aceptar'
-                              : 'rechazar'}{' '}
+                            {accionPendiente === 'finalizar'
+                              ? 'informar que terminaste el trabajo de'
+                              : accionPendiente === 'aceptar'
+                                ? 'aceptar'
+                                : 'rechazar'}{' '}
                             esta solicitud?
                           </p>
 
@@ -352,7 +389,9 @@ function SolicitudesPrestador() {
                               ? 'Procesando...'
                               : accionPendiente === 'aceptar'
                                 ? 'Confirmar aceptación'
-                                : 'Confirmar rechazo'}
+                                : accionPendiente === 'rechazar'
+                                  ? 'Confirmar rechazo'
+                                  : 'Confirmar trabajo terminado'}
                           </button>
 
                           <button
