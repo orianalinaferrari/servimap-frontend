@@ -15,35 +15,39 @@ export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
   }
 
   return (
-    <article>
-      <button type="button" onClick={onVolver}>
+    <article className="detalle">
+      <button type="button" className="boton-volver" onClick={onVolver}>
         Volver
       </button>
 
       <h2>{prestador.nombre}</h2>
       <p>{prestador.descripcionProfesional}</p>
 
-      <p>Oficios: {prestador.oficios.join(', ')}</p>
-      <p>Zona: {prestador.zonaCobertura}</p>
-      <p>
-        Precio: ${prestador.precioMin.toLocaleString('es-AR')} – $
-        {prestador.precioMax.toLocaleString('es-AR')}
-      </p>
+      <div className="detalle-datos">
+        <p>Oficios: {prestador.oficios.join(', ')}</p>
+        <p>Zona: {prestador.zonaCobertura}</p>
+        <p>
+          Precio: ${prestador.precioMin.toLocaleString('es-AR')} – $
+          {prestador.precioMax.toLocaleString('es-AR')}
+        </p>
+        <p className={prestador.disponible ? 'estado-disponible' : 'estado-no-disponible'}>
+          {prestador.disponible ? 'Disponible' : 'No disponible'}
+        </p>
 
-      <p>{prestador.disponible ? 'Disponible' : 'No disponible'}</p>
-
-      <button
-        type="button"
-        onClick={() => setMostrandoSolicitud(true)}
-        disabled={!prestador.disponible}
-      >
-        Solicitar servicio
-      </button>
+        <button
+          type="button"
+          className="boton-solicitar"
+          onClick={() => setMostrandoSolicitud(true)}
+          disabled={!prestador.disponible}
+        >
+          Solicitar servicio
+        </button>
+      </div>
 
       <ReputacionPrestador prestador={prestador} calificaciones={calificaciones} />
 
       <h3>Contacto</h3>
-      <ul>
+      <ul className="contacto-lista">
         <li>
           <a href={`tel:${prestador.telefono}`}>{prestador.telefono}</a>
         </li>

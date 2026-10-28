@@ -147,12 +147,13 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
       {resultados.length === 0 ? (
         <p>No se encontraron prestadores con los criterios seleccionados.</p>
       ) : (
-        <ul>
+        <ul className="lista-prestadores">
           {resultados.map((prestador) => (
-            <li key={prestador.id}>
+            <li key={prestador.id} className="tarjeta-prestador">
               <h3>
                 <button
                   type="button"
+                  className="boton-nombre"
                   onClick={() => setPrestadorSeleccionadoId(prestador.id)}
                 >
                   {prestador.nombre}
@@ -160,7 +161,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
               </h3>
               <p>{prestador.oficios.join(', ')}</p>
               <p>{prestador.zonaCobertura}</p>
-              <p>
+              <p className="tarjeta-precio">
                 ${prestador.precioMin.toLocaleString('es-AR')} – $
                 {prestador.precioMax.toLocaleString('es-AR')}
               </p>
