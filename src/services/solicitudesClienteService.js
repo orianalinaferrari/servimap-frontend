@@ -119,3 +119,46 @@ export async function cancelarSolicitudCliente(solicitudId) {
     method: 'PATCH',
   })
 }
+
+export async function confirmarFinalizacionCliente(solicitudId) {
+  if (
+    (typeof solicitudId !== 'string' && typeof solicitudId !== 'number') ||
+    String(solicitudId).trim() === ''
+  ) {
+    throw new Error('El identificador de la solicitud no es válido.')
+  }
+
+  const { apiUrl, endpoint } = obtenerConfiguracion()
+  const configurada = import.meta.env.VITE_CONFIRMAR_FINALIZACION_ENDPOINT
+
+  if (!configurada) {
+    throw new Error(
+      'La operación de confirmación todavía no está configurada.'
+    )
+  }
+
+  if (
+    !configurada.startsWith('/') ||
+    configurada.startsWith('//') ||
+    configurada.includes('?') ||
+    configurada.includes('#') ||
+    !configurada.includes(':id')
+  ) {
+    throw new Error('La ruta de confirmación no es válida.')
+  }
+
+  const ruta = configurada.replace(
+    ':id',
+    encodeURIComponent(String(solicitudId))
+  )
+
+  if (!ruta.startsWith(endpoint + '/')) {
+    throw new Error(
+      'La ruta de confirmación no corresponde a solicitudes.'
+    )
+  }
+
+  return realizarPeticion(`${apiUrl}${ruta}`, {
+    method: 'PATCH',
+  })
+}

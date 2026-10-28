@@ -162,3 +162,19 @@ export async function rechazarSolicitudPrestador(solicitudId) {
     method: 'PATCH',
   })
 }
+
+export async function marcarTrabajoTerminadoPrestador(solicitudId) {
+  validarId(solicitudId)
+
+  const { apiUrl, endpoint } = obtenerConfiguracion()
+
+  const ruta = obtenerRutaAccion(
+    endpoint,
+    'VITE_MARCAR_TRABAJO_TERMINADO_ENDPOINT',
+    solicitudId
+  )
+
+  return realizarPeticion(`${apiUrl}${ruta}`, {
+    method: 'PATCH',
+  })
+}
