@@ -1,4 +1,3 @@
-
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, test } from 'vitest'
 import { PanelAdministracion } from '../components/PanelAdministracion'
@@ -31,7 +30,7 @@ describe('PanelAdministracion', () => {
     )
 
     expect(
-      screen.getByText(/administración de oficios\./)
+      screen.getByRole('heading', { name: 'Administración de oficios' })
     ).toBeTruthy()
   })
 })
