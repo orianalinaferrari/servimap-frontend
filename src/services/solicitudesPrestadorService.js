@@ -1,3 +1,16 @@
+import { apiRequest } from './apiClient'
+import { traducirErrorApi } from './apiServiceErrors'
+
+function esRutaValida(ruta) {
+  return (
+    typeof ruta === 'string' &&
+    ruta.startsWith('/') &&
+    !ruta.startsWith('//') &&
+    !ruta.includes('?') &&
+    !ruta.includes('#')
+  )
+}
+
 function obtenerConfiguracion() {
   const apiUrl = import.meta.env.VITE_API_URL
   const endpoint = import.meta.env.VITE_SOLICITUDES_PRESTADOR_ENDPOINT
@@ -12,76 +25,30 @@ function obtenerConfiguracion() {
     throw new Error('La ruta de solicitudes recibidas no es válida.')
   }
 
-  return {
-    apiUrl: apiUrl.replace(/\/$/, ''),
-    endpoint: endpoint.replace(/\/$/, ''),
-  }
-}
-
-function esRutaValida(ruta) {
-  return (
-    typeof ruta === 'string' &&
-    ruta.startsWith('/') &&
-    !ruta.startsWith('//') &&
-    !ruta.includes('?') &&
-    !ruta.includes('#')
-  )
+  return { endpoint: endpoint.replace(/\/$/, '') }
 }
 
 function validarId(solicitudId) {
   if (
-    (typeof solicitudId !== 'string' && typeof solicitudId !== 'number') ||
+    (typeof solicitudId !== 'string' &&
+      typeof solicitudId !== 'number') ||
     String(solicitudId).trim() === ''
   ) {
     throw new Error('El identificador de la solicitud no es válido.')
   }
 }
 
-async function realizarPeticion(url, opciones = {}) {
-  let respuesta
-
+async function realizarPeticion(ruta, opciones = {}) {
   try {
-    respuesta = await fetch(url, {
-      credentials: 'include',
-      ...opciones,
+    return await apiRequest(ruta, opciones)
+  } catch (error) {
+    traducirErrorApi(error, {
+      401: 'Debés iniciar sesión para consultar tus solicitudes.',
+      403: 'No tenés permiso para realizar esta operación.',
+      404: 'La solicitud no fue encontrada.',
+      409: 'La solicitud cambió de estado y ya no permite esta operación.',
+      general: 'No se pudo completar la operación.',
     })
-  } catch {
-    throw new Error('No se pudo conectar con el servidor.')
-  }
-
-  if (respuesta.status === 401) {
-    throw new Error('Debés iniciar sesión para consultar tus solicitudes.')
-  }
-
-  if (respuesta.status === 403) {
-    throw new Error('No tenés permiso para realizar esta operación.')
-  }
-
-  if (respuesta.status === 404) {
-    throw new Error('La solicitud no fue encontrada.')
-  }
-
-  if (respuesta.status === 409) {
-    throw new Error(
-      'La solicitud cambió de estado y ya no permite esta operación.'
-    )
-  }
-
-  if (!respuesta.ok) {
-    throw new Error('No se pudo completar la operación.')
-  }
-
-  if (respuesta.status === 204) {
-    return null
-  }
-
-  let contenido
-
-  try {
-    contenido = await respuesta.text()
-    return contenido ? JSON.parse(contenido) : null
-  } catch {
-    throw new Error('El servidor devolvió una respuesta no válida.')
   }
 }
 
@@ -114,9 +81,9 @@ function obtenerRutaAccion(endpoint, variable, solicitudId) {
 }
 
 export async function obtenerSolicitudesPrestador() {
-  const { apiUrl, endpoint } = obtenerConfiguracion()
+  const { endpoint } = obtenerConfiguracion()
 
-  const resultado = await realizarPeticion(`${apiUrl}${endpoint}`)
+  const resultado = await realizarPeticion(endpoint)
 
   if (Array.isArray(resultado)) {
     return resultado
@@ -134,7 +101,7 @@ export async function obtenerSolicitudesPrestador() {
 export async function aceptarSolicitudPrestador(solicitudId) {
   validarId(solicitudId)
 
-  const { apiUrl, endpoint } = obtenerConfiguracion()
+  const { endpoint } = obtenerConfiguracion()
 
   const ruta = obtenerRutaAccion(
     endpoint,
@@ -142,15 +109,13 @@ export async function aceptarSolicitudPrestador(solicitudId) {
     solicitudId
   )
 
-  return realizarPeticion(`${apiUrl}${ruta}`, {
-    method: 'PATCH',
-  })
+  return realizarPeticion(ruta, { method: 'PATCH' })
 }
 
 export async function rechazarSolicitudPrestador(solicitudId) {
   validarId(solicitudId)
 
-  const { apiUrl, endpoint } = obtenerConfiguracion()
+  const { endpoint } = obtenerConfiguracion()
 
   const ruta = obtenerRutaAccion(
     endpoint,
@@ -158,15 +123,13 @@ export async function rechazarSolicitudPrestador(solicitudId) {
     solicitudId
   )
 
-  return realizarPeticion(`${apiUrl}${ruta}`, {
-    method: 'PATCH',
-  })
+  return realizarPeticion(ruta, { method: 'PATCH' })
 }
 
 export async function marcarTrabajoTerminadoPrestador(solicitudId) {
   validarId(solicitudId)
 
-  const { apiUrl, endpoint } = obtenerConfiguracion()
+  const { endpoint } = obtenerConfiguracion()
 
   const ruta = obtenerRutaAccion(
     endpoint,
@@ -174,7 +137,5 @@ export async function marcarTrabajoTerminadoPrestador(solicitudId) {
     solicitudId
   )
 
-  return realizarPeticion(`${apiUrl}${ruta}`, {
-    method: 'PATCH',
-  })
+  return realizarPeticion(ruta, { method: 'PATCH' })
 }

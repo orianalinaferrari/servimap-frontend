@@ -1,75 +1,69 @@
+import { ApiError, apiRequest } from './apiClient'
 
-const API_URL = import.meta.env.VITE_API_URL
+function traducirError(error, mensajes = {}) {
+  if (!(error instanceof ApiError)) {
+    throw error
+  }
 
-export async function iniciarSesion(email, contrasena) {
-  if (!API_URL) {
+  if (error.codigo === 'API_NO_CONFIGURADA') {
     throw new Error(
       'El servicio de autenticación todavía no está configurado.'
     )
   }
 
-  let respuesta
-
-  try {
-    respuesta = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        email,
-        contrasena,
-      }),
-    })
-  } catch {
+  if (error.codigo === 'ERROR_RED') {
     throw new Error('No se pudo conectar con el servidor.')
   }
 
-  if (respuesta.status === 401) {
-    throw new Error('Email o contraseña incorrectos.')
+  if (error.status && mensajes[error.status]) {
+    throw new Error(mensajes[error.status])
   }
 
-  if (!respuesta.ok) {
-    throw new Error('Ocurrió un error al iniciar sesión.')
-  }
+  throw new Error(
+    mensajes.general || 'Ocurrió un error de autenticación.'
+  )
+}
 
-  return respuesta.json()
+export async function iniciarSesion(email, contrasena) {
+  try {
+    return await apiRequest('/auth/login', {
+      method: 'POST',
+      json: { email, contrasena },
+    })
+  } catch (error) {
+    traducirError(error, {
+      401: 'Email o contraseña incorrectos.',
+      general: 'Ocurrió un error al iniciar sesión.',
+    })
+  }
 }
 
 export async function cerrarSesion() {
-  if (!API_URL) {
-    throw new Error(
-      'El servicio de autenticación no está configurado.'
-    )
-  }
-
-  const respuesta = await fetch(`${API_URL}/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  })
-
-  if (!respuesta.ok) {
-    throw new Error('No se pudo cerrar la sesión.')
+  try {
+    await apiRequest('/auth/logout', {
+      method: 'POST',
+    })
+  } catch (error) {
+    traducirError(error, {
+      general: 'No se pudo cerrar la sesión.',
+    })
   }
 }
 
 export async function obtenerSesion() {
-  if (!API_URL) {
+  if (!import.meta.env.VITE_API_URL) {
     return null
   }
 
-  const respuesta = await fetch(`${API_URL}/auth/me`, {
-    credentials: 'include',
-  })
+  try {
+    return await apiRequest('/auth/me')
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      return null
+    }
 
-  if (respuesta.status === 401) {
-    return null
+    traducirError(error, {
+      general: 'No se pudo verificar la sesión.',
+    })
   }
-
-  if (!respuesta.ok) {
-    throw new Error('No se pudo verificar la sesión.')
-  }
-
-  return respuesta.json()
 }

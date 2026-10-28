@@ -1,3 +1,6 @@
+import { apiRequest } from './apiClient'
+import { traducirErrorApi } from './apiServiceErrors'
+
 function obtenerConfiguracion() {
   const apiUrl = import.meta.env.VITE_API_URL
   const endpoint = import.meta.env.VITE_SOLICITUDES_CLIENTE_ENDPOINT
@@ -17,59 +20,27 @@ function obtenerConfiguracion() {
     throw new Error('La ruta de solicitudes del cliente no es válida.')
   }
 
-  return {
-    apiUrl: apiUrl.replace(/\/$/, ''),
-    endpoint: endpoint.replace(/\/$/, ''),
-  }
+  return { endpoint: endpoint.replace(/\/$/, '') }
 }
 
-async function realizarPeticion(url, opciones = {}) {
-  let respuesta
-
+async function realizarPeticion(ruta, opciones = {}) {
   try {
-    respuesta = await fetch(url, {
-      credentials: 'include',
-      ...opciones,
+    return await apiRequest(ruta, opciones)
+  } catch (error) {
+    traducirErrorApi(error, {
+      401: 'Debés iniciar sesión para consultar tus solicitudes.',
+      403: 'No tenés permiso para realizar esta operación.',
+      404: 'La solicitud no fue encontrada.',
+      409: 'La solicitud cambió de estado y ya no permite esta operación.',
+      general: 'No se pudo completar la operación.',
     })
-  } catch {
-    throw new Error('No se pudo conectar con el servidor.')
   }
-
-  if (respuesta.status === 401) {
-    throw new Error('Debés iniciar sesión para consultar tus solicitudes.')
-  }
-
-  if (respuesta.status === 403) {
-    throw new Error('No tenés permiso para realizar esta operación.')
-  }
-
-  if (respuesta.status === 404) {
-    throw new Error('La solicitud no fue encontrada.')
-  }
-
-  if (respuesta.status === 409) {
-    throw new Error(
-      'La solicitud cambió de estado y ya no permite esta operación.'
-    )
-  }
-
-  if (!respuesta.ok) {
-    throw new Error('No se pudo completar la operación.')
-  }
-
-  if (respuesta.status === 204) {
-    return null
-  }
-
-  const contenido = await respuesta.text()
-
-  return contenido ? JSON.parse(contenido) : null
 }
 
 export async function obtenerSolicitudesCliente() {
-  const { apiUrl, endpoint } = obtenerConfiguracion()
+  const { endpoint } = obtenerConfiguracion()
 
-  const resultado = await realizarPeticion(`${apiUrl}${endpoint}`)
+  const resultado = await realizarPeticion(endpoint)
 
   if (Array.isArray(resultado)) {
     return resultado
@@ -84,57 +55,21 @@ export async function obtenerSolicitudesCliente() {
   )
 }
 
-export async function cancelarSolicitudCliente(solicitudId) {
+function validarId(solicitudId) {
   if (
-    (typeof solicitudId !== 'string' && typeof solicitudId !== 'number') ||
+    (typeof solicitudId !== 'string' &&
+      typeof solicitudId !== 'number') ||
     String(solicitudId).trim() === ''
   ) {
     throw new Error('El identificador de la solicitud no es válido.')
   }
-
-  const { apiUrl, endpoint } = obtenerConfiguracion()
-  const cancelacion = import.meta.env.VITE_CANCELAR_SOLICITUD_ENDPOINT
-
-  if (!cancelacion) {
-    throw new Error(
-      'La operación de cancelación todavía no está configurada.'
-    )
-  }
-
-  if (
-    !cancelacion.startsWith('/') ||
-    cancelacion.startsWith('//') ||
-    !cancelacion.includes(':id')
-  ) {
-    throw new Error('La ruta de cancelación no es válida.')
-  }
-
-  const ruta = cancelacion.replace(':id', encodeURIComponent(String(solicitudId)))
-
-  if (!ruta.startsWith(endpoint + '/')) {
-    throw new Error('La ruta de cancelación no corresponde a solicitudes.')
-  }
-
-  return realizarPeticion(`${apiUrl}${ruta}`, {
-    method: 'PATCH',
-  })
 }
 
-export async function confirmarFinalizacionCliente(solicitudId) {
-  if (
-    (typeof solicitudId !== 'string' && typeof solicitudId !== 'number') ||
-    String(solicitudId).trim() === ''
-  ) {
-    throw new Error('El identificador de la solicitud no es válido.')
-  }
-
-  const { apiUrl, endpoint } = obtenerConfiguracion()
-  const configurada = import.meta.env.VITE_CONFIRMAR_FINALIZACION_ENDPOINT
+function obtenerRutaAccion(variable, endpoint, solicitudId, mensaje) {
+  const configurada = import.meta.env[variable]
 
   if (!configurada) {
-    throw new Error(
-      'La operación de confirmación todavía no está configurada.'
-    )
+    throw new Error(mensaje)
   }
 
   if (
@@ -144,7 +79,7 @@ export async function confirmarFinalizacionCliente(solicitudId) {
     configurada.includes('#') ||
     !configurada.includes(':id')
   ) {
-    throw new Error('La ruta de confirmación no es válida.')
+    throw new Error('La ruta de la operación no es válida.')
   }
 
   const ruta = configurada.replace(
@@ -153,12 +88,38 @@ export async function confirmarFinalizacionCliente(solicitudId) {
   )
 
   if (!ruta.startsWith(endpoint + '/')) {
-    throw new Error(
-      'La ruta de confirmación no corresponde a solicitudes.'
-    )
+    throw new Error('La ruta de la operación no corresponde a solicitudes.')
   }
 
-  return realizarPeticion(`${apiUrl}${ruta}`, {
-    method: 'PATCH',
-  })
+  return ruta
+}
+
+export async function cancelarSolicitudCliente(solicitudId) {
+  validarId(solicitudId)
+
+  const { endpoint } = obtenerConfiguracion()
+
+  const ruta = obtenerRutaAccion(
+    'VITE_CANCELAR_SOLICITUD_ENDPOINT',
+    endpoint,
+    solicitudId,
+    'La operación de cancelación todavía no está configurada.'
+  )
+
+  return realizarPeticion(ruta, { method: 'PATCH' })
+}
+
+export async function confirmarFinalizacionCliente(solicitudId) {
+  validarId(solicitudId)
+
+  const { endpoint } = obtenerConfiguracion()
+
+  const ruta = obtenerRutaAccion(
+    'VITE_CONFIRMAR_FINALIZACION_ENDPOINT',
+    endpoint,
+    solicitudId,
+    'La operación de confirmación todavía no está configurada.'
+  )
+
+  return realizarPeticion(ruta, { method: 'PATCH' })
 }
