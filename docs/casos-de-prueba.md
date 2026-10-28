@@ -1,7 +1,5 @@
 # Casos de prueba – Frontend ServiMap (F-26)
 
-# Casos de prueba – Frontend ServiMap (F-26)
-
 Responsable: Joaquim Oliveira
 Fecha de ejecución: 26/10/2026
 Entorno: navegador Chrome, `npm run dev` (http://localhost:5173), sin backend conectado (datos mock)
@@ -33,10 +31,5 @@ Resultado: ✅ Pasa · ❌ Falla
 
 ## Pruebas automáticas
 
-Además de estas pruebas manuales, el proyecto tiene **232 tests automáticos** (Vitest + Testing Library) que se ejecutan con `npm test` y en GitHub Actions en cada push.
-La moderación de comentarios y el panel de administración necesitan una sesión de Administrador, así que se prueban con tests automáticos (`ModeracionComentarios.test.jsx`, `PanelAdministracion.test.jsx`) hasta que el backend esté conectado.
-
-## Pruebas automáticas
-
-Además de estas pruebas manuales, el proyecto tiene **232 tests automáticos** (Vitest + Testing Library) que se ejecutan con `npm test` y en GitHub Actions en cada push.
+Además de estas pruebas manuales, se ejecutaron **322 tests automáticos** (Vitest + Testing Library) al integrar temporalmente F-26 con la rama `develop`. Los 322 tests pasaron correctamente.
 La moderación de comentarios y el panel de administración necesitan una sesión de Administrador, así que se prueban con tests automáticos (`ModeracionComentarios.test.jsx`, `PanelAdministracion.test.jsx`) hasta que el backend esté conectado.
