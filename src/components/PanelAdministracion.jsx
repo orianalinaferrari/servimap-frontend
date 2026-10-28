@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ModeracionComentarios } from './ModeracionComentarios'
+import { AdministracionOficios } from './AdministracionOficios'
 
 const SECCIONES = [
   { id: 'comentarios', nombre: 'Moderación de comentarios' },
@@ -37,7 +38,7 @@ export function PanelAdministracion({
           onModerar={onModerar}
         />
       )}
-      {seccionActiva === 'oficios' && <p>Próximamente: administración de oficios.</p>}
+      {seccionActiva === 'oficios' && <AdministracionOficios />}
     </section>
   )
 }
