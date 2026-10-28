@@ -1,58 +1,78 @@
-
-import { useEffect, useState } from 'react'
-import { AuthContext } from './authContextInstance' 
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { AuthContext } from './authContextInstance'
 import {
   iniciarSesion,
   cerrarSesion,
   obtenerSesion,
 } from '../services/authService'
 
-
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null)
   const [cargando, setCargando] = useState(true)
+  const [sesionExpirada, setSesionExpirada] = useState(false)
+  const version = useRef(0)
 
   useEffect(() => {
-    let activo = true
+    const actual = ++version.current
 
-    async function verificarSesion() {
-      try {
-        const sesion = await obtenerSesion()
-
-        if (activo) {
+    obtenerSesion()
+      .then((sesion) => {
+        if (actual === version.current) {
           setUsuario(sesion)
         }
-      } catch {
-        if (activo) {
+      })
+      .catch(() => {
+        if (actual === version.current) {
           setUsuario(null)
         }
-      } finally {
-        if (activo) {
+      })
+      .finally(() => {
+        if (actual === version.current) {
           setCargando(false)
         }
-      }
-    }
-
-    verificarSesion()
+      })
 
     return () => {
-      activo = false
+      version.current += 1
     }
   }, [])
 
-  async function login(email, contrasena) {
-    const usuarioAutenticado = await iniciarSesion(
-      email,
-      contrasena
-    )
+  const revalidarSesion = useCallback(async () => {
+    const actual = version.current
+    const sesion = await obtenerSesion()
 
-    setUsuario(usuarioAutenticado)
-    return usuarioAutenticado
+    if (actual !== version.current) {
+      return null
+    }
+
+    if (!sesion) {
+      setUsuario(null)
+      setSesionExpirada(true)
+      return null
+    }
+
+    setUsuario(sesion)
+    setSesionExpirada(false)
+    return sesion
+  }, [])
+
+  async function login(email, contrasena) {
+    const sesion = await iniciarSesion(email, contrasena)
+
+    version.current += 1
+    setUsuario(sesion)
+    setSesionExpirada(false)
+    setCargando(false)
+    return sesion
   }
 
   async function logout() {
     await cerrarSesion()
+
+    version.current += 1
     setUsuario(null)
+    setSesionExpirada(false)
+    setCargando(false)
   }
 
   return (
@@ -62,6 +82,8 @@ export function AuthProvider({ children }) {
         cargando,
         login,
         logout,
+        revalidarSesion,
+        sesionExpirada,
         autenticado: Boolean(usuario),
       }}
     >
@@ -69,4 +91,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   )
 }
-
