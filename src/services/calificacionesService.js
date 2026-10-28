@@ -1,4 +1,6 @@
 import { validarCalificacion } from '../utils/calificacionSolicitud'
+import { apiRequest } from './apiClient'
+import { traducirErrorApi } from './apiServiceErrors'
 
 export async function registrarCalificacion(solicitudId, datos) {
   if (
@@ -11,10 +13,9 @@ export async function registrarCalificacion(solicitudId, datos) {
 
   const { puntaje, comentario } = validarCalificacion(datos)
 
-  const apiUrl = import.meta.env.VITE_API_URL
   const endpoint = import.meta.env.VITE_CALIFICAR_SOLICITUD_ENDPOINT
 
-  if (!apiUrl || !endpoint) {
+  if (!import.meta.env.VITE_API_URL || !endpoint) {
     throw new Error(
       'El servicio de calificaciones todavía no está configurado.'
     )
@@ -35,50 +36,18 @@ export async function registrarCalificacion(solicitudId, datos) {
     encodeURIComponent(String(solicitudId))
   )
 
-  let respuesta
-
   try {
-    respuesta = await fetch(
-      `${apiUrl.replace(/\/$/, '')}${ruta}`,
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ puntaje, comentario }),
-      }
-    )
-  } catch {
-    throw new Error('No se pudo conectar con el servidor.')
+    return await apiRequest(ruta, {
+      method: 'POST',
+      json: { puntaje, comentario },
+    })
+  } catch (error) {
+    traducirErrorApi(error, {
+      401: 'Debés iniciar sesión para calificar.',
+      403: 'No tenés permiso para calificar esta solicitud.',
+      404: 'La solicitud no fue encontrada.',
+      409: 'Esta solicitud ya fue calificada o no permite calificación.',
+      general: 'No se pudo registrar la calificación.',
+    })
   }
-
-  if (respuesta.status === 401) {
-    throw new Error('Debés iniciar sesión para calificar.')
-  }
-
-  if (respuesta.status === 403) {
-    throw new Error('No tenés permiso para calificar esta solicitud.')
-  }
-
-  if (respuesta.status === 404) {
-    throw new Error('La solicitud no fue encontrada.')
-  }
-
-  if (respuesta.status === 409) {
-    throw new Error(
-      'Esta solicitud ya fue calificada o no permite calificación.'
-    )
-  }
-
-  if (!respuesta.ok) {
-    throw new Error('No se pudo registrar la calificación.')
-  }
-
-  if (respuesta.status === 204) {
-    return null
-  }
-
-  const contenido = await respuesta.text()
-  return contenido ? JSON.parse(contenido) : null
 }
