@@ -344,3 +344,11 @@ header nav a:hover {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ===== F-26: Mensaje de error en filtros ===== */
+
+.filtros-campo [role='alert'] {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 14px;
+}
