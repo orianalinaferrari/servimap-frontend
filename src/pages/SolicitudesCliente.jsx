@@ -1,4 +1,10 @@
 import EstadoSolicitud from '../components/EstadoSolicitud'
+import CalificarPrestador from '../components/CalificarPrestador'
+import { registrarCalificacion } from '../services/calificacionesService'
+import {
+  puedeCalificarSolicitud,
+  obtenerCalificacionSolicitud,
+} from '../utils/calificacionSolicitud'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -81,6 +87,9 @@ function SolicitudesCliente() {
   const [confirmandoId, setConfirmandoId] = useState(null)
   const [finalizacionPreparadaId, setFinalizacionPreparadaId] = useState(null)
   const [finalizandoId, setFinalizandoId] = useState(null)
+  const [calificandoId, setCalificandoId] = useState(null)
+  const [enviandoCalificacionId, setEnviandoCalificacionId] = useState(null)
+  const [calificacionesRegistradas, setCalificacionesRegistradas] = useState({})
 
   const cargarSolicitudes = useCallback(async () => {
     setCargando(true)
@@ -199,6 +208,43 @@ function SolicitudesCliente() {
     await cargarSolicitudes()
   }
 
+  async function enviarCalificacion(solicitud, datos) {
+    if (
+      !puedeCalificarSolicitud(solicitud) ||
+      calificacionesRegistradas[solicitud.id] ||
+      enviandoCalificacionId !== null
+    ) {
+      return
+    }
+
+    setError('')
+    setMensaje('')
+    setEnviandoCalificacionId(solicitud.id)
+
+    try {
+      const resultado = await registrarCalificacion(solicitud.id, datos)
+
+      setCalificacionesRegistradas((actuales) => ({
+        ...actuales,
+        [solicitud.id]: {
+          puntaje: resultado?.puntaje ?? datos.puntaje,
+          comentario: resultado?.comentario ?? datos.comentario,
+        },
+      }))
+
+      setCalificandoId(null)
+      setMensaje('La calificación fue registrada correctamente.')
+    } catch (errorCalificacion) {
+      setError(
+        errorCalificacion instanceof Error
+          ? errorCalificacion.message
+          : 'No se pudo registrar la calificación.'
+      )
+    } finally {
+      setEnviandoCalificacionId(null)
+    }
+  }
+
   return (
     <main className="solicitudes-cliente">
       <header className="solicitudes-cliente-cabecera">
@@ -300,6 +346,22 @@ function SolicitudesCliente() {
                       </button>
                     )}
 
+                    {puedeCalificarSolicitud(solicitud) &&
+                      !calificacionesRegistradas[solicitud.id] && (
+                        <button
+                          type="button"
+                          disabled={enviandoCalificacionId !== null}
+                          onClick={() => {
+                            setSolicitudSeleccionada(solicitud)
+                            setCalificandoId(solicitud.id)
+                            setConfirmandoId(null)
+                            setFinalizacionPreparadaId(null)
+                          }}
+                        >
+                          Calificar prestador
+                        </button>
+                      )}
+
                     {acciones.cancelar && (
                       <button
                         type="button"
@@ -353,6 +415,44 @@ function SolicitudesCliente() {
                               Volver
                             </button>
                           </div>
+                        )}
+
+                      {calificandoId === solicitud.id &&
+                        puedeCalificarSolicitud(solicitud) &&
+                        !calificacionesRegistradas[solicitud.id] && (
+                          <CalificarPrestador
+                            solicitud={solicitud}
+                            enviando={enviandoCalificacionId === solicitud.id}
+                            onEnviar={(datos) =>
+                              enviarCalificacion(solicitud, datos)
+                            }
+                            onCancelar={() => setCalificandoId(null)}
+                          />
+                        )}
+
+                      {(calificacionesRegistradas[solicitud.id] ||
+                        obtenerCalificacionSolicitud(solicitud)) && (
+                          <section aria-label="Calificación registrada">
+                            <h4>Calificación del servicio</h4>
+                            <p>
+                              Puntuación:{' '}
+                              {(
+                                calificacionesRegistradas[solicitud.id] ||
+                                obtenerCalificacionSolicitud(solicitud)
+                              ).puntaje} de 5
+                            </p>
+                            {(
+                              calificacionesRegistradas[solicitud.id] ||
+                              obtenerCalificacionSolicitud(solicitud)
+                            ).comentario && (
+                              <p>
+                                {(
+                                  calificacionesRegistradas[solicitud.id] ||
+                                  obtenerCalificacionSolicitud(solicitud)
+                                ).comentario}
+                              </p>
+                            )}
+                          </section>
                         )}
 
                       {acciones.cancelar && confirmandoId === solicitud.id && (
