@@ -1,10 +1,20 @@
 ﻿import { describe, expect, it } from 'vitest'
 import { crearApiSimulada, politicaDeRed, API_SIMULADA_ORIGIN, CUENTAS_QA, idQA } from '../../scripts/qa/api-simulada.mjs'
+import { esIntercepcionCancelada } from '../../scripts/qa/protocolo-cdp.mjs'
 
 const pedir = (api, method, path, body, token) => api.responder({ method, url: API_SIMULADA_ORIGIN + path, body, headers: token ? { Authorization: `Bearer ${token}` } : {} })
 const login = (api, rol) => pedir(api, 'POST', '/api/auth/login', CUENTAS_QA[rol]).body.token
 
 describe('Seguridad del runner de QA y fidelidad de su API simulada', () => {
+  it.each([
+    ['Invalid InterceptionId.', 'cancelada', true],
+    ['Invalid InterceptionId.', 'activa', false],
+    ['Invalid InterceptionId.', undefined, false],
+    ['Fallo de intercepción', 'cancelada', false],
+    ['Timeout CDP: Fetch.fulfillRequest', 'cancelada', false],
+  ])('solo tolera cancelaciones confirmadas: %s / %s', (mensaje, networkId, tolerado) => {
+    expect(esIntercepcionCancelada(new Error(mensaje), networkId, new Set(['cancelada']))).toBe(tolerado)
+  })
   it.each(['GET','POST','PUT','PATCH','DELETE','OPTIONS'])('intercepta siempre %s al backend, nunca permite tráfico real', (method) => {
     expect(politicaDeRed({ method, url: API_SIMULADA_ORIGIN + '/api/auth/register' })).toBe('simular')
   })

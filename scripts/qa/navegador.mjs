@@ -5,6 +5,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { crearApiSimulada, CUENTAS_QA, idQA, politicaDeRed, API_SIMULADA_ORIGIN } from './api-simulada.mjs'
+import { esIntercepcionCancelada } from './protocolo-cdp.mjs'
 
 const base = process.env.SERVIMAP_QA_BASE_URL || 'http://localhost:5173'
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Solo se permite un frontend local')
@@ -14,6 +15,7 @@ const carpeta = mkdtempSync(path.join(os.tmpdir(), 'servimap-qa-browser-'))
 const proceso = spawn(chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${path.join(carpeta, 'perfil')}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: 'ignore' })
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
 const api = crearApiSimulada(), pendientes = new Map()
+const canceladas = new Set()
 const reporte = { tipo: 'navegador con API simulada; ninguna escritura real', verificaciones: [], erroresConsola: [], recursosFallidos: [], escriturasBloqueadas: [], carpeta }
 let ws, numero = 0, fase = 'inicio', falloIntercepcion
 const check = (condicion, nombre) => { assert.ok(condicion, nombre); reporte.verificaciones.push(nombre) }
@@ -39,7 +41,7 @@ async function hasta(expression, mensaje, tiempo = 16000) {
   throw new Error(`No se cumplió: ${mensaje}`)
 }
 const texto = (valor) => JSON.stringify(valor)
-async function verTexto(valor) { await hasta(`document.body.innerText.includes(${texto(valor)})`, valor) }
+async function verTexto(valor) { await hasta(`document.body?.innerText.includes(${texto(valor)})`, valor) }
 async function ir(ruta) {
   await cdp('Page.navigate', { url: new URL(ruta, base).href })
   await hasta(`!!document.querySelector('#root header')`, 'React montado')
@@ -96,7 +98,7 @@ try {
       const p = pendientes.get(m.id); pendientes.delete(m.id)
       if (m.error) p?.reject(new Error(m.error.message)); else p?.resolve(m.result)
     } else if (m.method === 'Fetch.requestPaused') {
-      const { request, requestId } = m.params
+      const { request, requestId, networkId } = m.params
       ;(async () => {
         const url = new URL(request.url)
         const politica = politicaDeRed(request)
@@ -109,9 +111,16 @@ try {
           reporte.escriturasBloqueadas.push({ method: request.method, host: url.hostname })
           await cdp('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' })
         } else await cdp('Fetch.continueRequest', { requestId })
-      })().catch((error) => { falloIntercepcion = error; cdp('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' }).catch(() => {}) })
+      })().catch((error) => {
+        if (esIntercepcionCancelada(error, networkId, canceladas)) return
+        falloIntercepcion = error
+        cdp('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' }).catch(() => {})
+      })
     } else if (m.method === 'Runtime.exceptionThrown') reporte.erroresConsola.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text)
-    else if (m.method === 'Network.loadingFailed' && !m.params.canceled) reporte.recursosFallidos.push(m.params.errorText)
+    else if (m.method === 'Network.loadingFailed') {
+      if (m.params.canceled) canceladas.add(m.params.requestId)
+      else reporte.recursosFallidos.push(m.params.errorText)
+    }
     else if (m.method === 'Network.responseReceived' && m.params.response.status >= 400 && new URL(m.params.response.url).origin !== API_SIMULADA_ORIGIN) {
       const recurso = new URL(m.params.response.url)
       reporte.recursosFallidos.push(`${m.params.response.status} ${recurso.origin}${recurso.pathname}`)
