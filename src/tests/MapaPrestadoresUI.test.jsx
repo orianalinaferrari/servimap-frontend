@@ -4,6 +4,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import '@testing-library/jest-dom/vitest'
 import { MapaPrestadores } from '../components/mapa/MapaPrestadores'
 import { cargarMapLibre } from '../components/mapa/cargarMapLibre'
+import { BuscadorPrestadores } from '../components/BuscadorPrestadores'
+import { BASE, respuesta } from './helpers/contratos'
 
 vi.mock('../components/mapa/cargarMapLibre', () => ({ cargarMapLibre: vi.fn() }))
 const prestador = { id: 7, nombre: 'Prestador de prueba', oficios: ['Plomería'], latitud: -34.6, longitud: -58.4 }
@@ -22,6 +24,8 @@ beforeEach(() => {
       this.on = vi.fn((nombre, callback) => { this.eventos[nombre] = callback })
       this.emit = (nombre, evento) => this.eventos[nombre]?.(evento)
       this.addControl = vi.fn(); this.fitBounds = vi.fn(); this.jumpTo = vi.fn()
+      this.getContainer = () => opciones.container
+      this.easeTo = vi.fn()
       this.getZoom = () => 11; this.areTilesLoaded = () => true
       this.resize = vi.fn(); this.remove = vi.fn()
       mapas.push(this)
@@ -41,6 +45,10 @@ beforeEach(() => {
       marcadores.push(this)
     }),
     Popup: vi.fn(function () {
+      this.eventos = {}
+      this.on = vi.fn((nombre, callback) => { this.eventos[nombre] = callback; return this })
+      this.off = vi.fn((nombre) => { delete this.eventos[nombre]; return this })
+      this.emit = (nombre) => this.eventos[nombre]?.()
       this.setDOMContent = (contenido) => { this.contenido = contenido; return this }
       this.addTo = () => { document.body.append(this.contenido); return this }
       this.remove = vi.fn(() => this.contenido?.remove())
@@ -51,7 +59,7 @@ beforeEach(() => {
   }
   vi.mocked(cargarMapLibre).mockReset().mockResolvedValue(api)
 })
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.useRealTimers(); vi.restoreAllMocks() })
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.useRealTimers(); vi.restoreAllMocks() })
 
 async function mostrar(props = {}) {
   const vista = render(<MapaPrestadores prestadores={[prestador]} {...props} />)
@@ -61,6 +69,32 @@ async function mostrar(props = {}) {
 }
 
 describe('MapLibre y OpenFreeMap', () => {
+  it('reserva espacio al abrir la ventana para que indicaciones y créditos no se superpongan', async () => {
+    const vista = await mostrar()
+    Object.defineProperty(mapas[0].opciones.container, 'clientHeight', { value: 360 })
+    act(() => ventanas[0].emit('open'))
+    expect(mapas[0].easeTo).toHaveBeenCalledWith({ center: [-58.4, -34.6], offset: [0, 130], duration: 0 })
+    vista.unmount()
+    expect(ventanas[0].off).toHaveBeenCalledWith('open', expect.any(Function))
+  })
+  it('conserva el popup abierto cuando la búsqueda remota actualiza carga o resultados equivalentes', async () => {
+    vi.stubEnv('VITE_API_URL', BASE)
+    let resolver
+    const http = vi.fn(() => new Promise((resolve) => { resolver = resolve }))
+    vi.stubGlobal('fetch', http)
+    const catalogo = [{ id: 'o1', nombre: 'Plomería' }]
+    const inicial = { ...prestador, disponible: true, precioMin: null, precioMax: null, calificacionPromedio: null }
+    render(<BuscadorPrestadores prestadores={[inicial]} catalogoOficios={catalogo} marcadoresPublicos={[prestador]} />)
+    await waitFor(() => expect(marcadores).toHaveLength(1))
+    const primero = marcadores[0]
+    fireEvent.click(primero.element)
+    await waitFor(() => expect(http).toHaveBeenCalled())
+    expect(screen.getByRole('link', { name: /Cómo llegar/ })).toBeInTheDocument()
+    await act(async () => resolver(respuesta([{ ...inicial, oficios: catalogo, reputacion: { promedio: null, serviciosFinalizados: 0 } }])))
+    expect(screen.getByRole('link', { name: /Cómo llegar/ })).toBeInTheDocument()
+    expect(primero.remove).not.toHaveBeenCalled()
+    expect(api.Map).toHaveBeenCalledTimes(1)
+  })
   it('carga sin clave y conserva créditos, controles y centro inicial', async () => {
     await mostrar()
     expect(mapas[0].opciones.style).toBe('https://tiles.openfreemap.org/styles/liberty')

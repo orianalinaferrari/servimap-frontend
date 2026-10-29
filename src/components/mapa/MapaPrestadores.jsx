@@ -124,18 +124,25 @@ function MapaInteractivo({ disponibles, onSeleccionar, ubicacion }) {
       elemento.setAttribute('aria-label', prestador.nombre || 'Prestador')
       elemento.textContent = 'S'
       const contenido = crearContenido(prestador, onSeleccionar)
-      const ventana = new api.Popup({ offset: 24, maxWidth: '280px', focusAfterOpen: true })
+      const ventana = new api.Popup({ anchor: 'bottom', offset: 24, maxWidth: '280px', focusAfterOpen: true })
         .setDOMContent(contenido)
+      const mostrarVentanaCompleta = () => {
+        // Reservar espacio para la ventana y los créditos, también en móvil.
+        const altura = mapa.getContainer().clientHeight
+        mapa.easeTo({ center: posicion, offset: [0, Math.max(0, altura / 2 - 50)], duration: 0 })
+      }
+      ventana.on('open', mostrarVentanaCompleta)
       const marcador = new api.Marker({ element: elemento, anchor: 'bottom' })
         .setLngLat(posicion).setPopup(ventana).addTo(mapa)
-      return { marcador, ventana, contenido }
+      return { marcador, ventana, contenido, mostrarVentanaCompleta }
     })
     if (disponibles.length > 1) mapa.fitBounds(limites, { padding: 48, maxZoom: 14, duration: 0 })
     else mapa.jumpTo({ center: disponibles.length ? posicionPrestador(disponibles[0]) : CENTRO_INICIAL, zoom: disponibles.length ? 13 : 11 })
     return () => {
-      marcadores.forEach(({ marcador, ventana, contenido }) => {
+      marcadores.forEach(({ marcador, ventana, contenido, mostrarVentanaCompleta }) => {
         const boton = contenido.querySelector('button')
         if (boton) boton.onclick = null
+        ventana.off('open', mostrarVentanaCompleta)
         ventana.remove()
         marcador.remove()
       })

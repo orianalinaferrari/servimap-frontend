@@ -1,4 +1,4 @@
-﻿# Integración de ServiMap con el backend
+# Integración de ServiMap con el backend
 
 ## Referencia y alcance
 
@@ -80,3 +80,7 @@ Pendiente con cuentas de prueba autorizadas y un entorno adecuado: registro/logi
 Se volvieron a contrastar rutas, Swagger, Prisma, controladores de autenticacion/perfil/calificaciones, middleware JWT y servicios de solicitudes/mapa con GitHub; los hashes coinciden con la referencia temporal. Se corrigio un defecto reproducido por tres pruebas inicialmente fallidas: el PUT del perfil enviaba contactos y descripcion vacios que el controlador rechaza. Ahora se omiten cuando aun no estaban configurados, se impide borrar valores existentes con cadenas vacias y se valida el formato telefonico real. Se agregaron cinco pruebas de transiciones desde componentes con HTTP simulado.
 
 Ver checklist y evidencia de la validacion en [QA de integracion](qa-integracion-backend.md).
+
+### Validación ampliada posterior
+
+Desde `a399d2a`, en `feature/qa-integracion-servimap`: 402 pruebas unitarias/de componentes y 64 verificaciones de navegador con API simulada aprobadas; GET reales y CORS de localhost verificados por separado. Se corrigieron objetivos táctiles y estabilidad/posición del popup del mapa, conservando contratos y diseño. Ver comandos, evidencia y límites en [QA de integración](qa-integracion-backend.md#validación-ampliada--29102026). No certifica escrituras ni sesiones reales sin cuentas y entorno de prueba autorizados.

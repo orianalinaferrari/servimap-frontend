@@ -8,6 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "vitest run",
+    "qa:browser": "node scripts/qa/navegador.mjs",
+    "qa:read": "node scripts/qa/lecturas-reales.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

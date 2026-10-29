@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { listarPrestadores } from '../services/prestadoresService'
 import FichaPrestadorRemota from './FichaPrestadorRemota'
 import { MapaPrestadores } from './mapa/MapaPrestadores'
@@ -36,7 +36,12 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
     filtros.precioMaximo !== '' && Number(filtros.precioMaximo) < 0
   const opciones = obtenerOpcionesFiltros(listaActual)
   if (catalogoOficios) opciones.oficios = catalogoOficios.map((oficio) => oficio.nombre)
-  const resultados = aplicarFiltrosPrestadores(listaActual, termino, filtros)
+  const resultados = useMemo(() => aplicarFiltrosPrestadores(listaActual, termino, filtros), [listaActual, termino, filtros])
+  const marcadoresVisibles = useMemo(() => {
+    if (!marcadoresPublicos) return resultados
+    if (!termino && !Object.values(filtros).some(Boolean)) return marcadoresPublicos
+    return marcadoresPublicos.filter((marcador) => resultados.some((prestador) => prestador.id === marcador.id))
+  }, [marcadoresPublicos, resultados, termino, filtros])
 
   const prestadorSeleccionado = prestadores.find(
     (prestador) => prestador.id === prestadorSeleccionadoId
@@ -172,7 +177,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
       </div>
 
       <MapaPrestadores
-        prestadores={marcadoresPublicos ? marcadoresPublicos.filter((marcador) => !termino && !Object.values(filtros).some(Boolean) || resultados.some((p) => p.id === marcador.id)) : resultados}
+        prestadores={marcadoresVisibles}
         onSeleccionar={setPrestadorSeleccionadoId}
       />
 

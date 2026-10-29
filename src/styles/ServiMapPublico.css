@@ -24,8 +24,8 @@
 .servimap-volver { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: 8px; color: var(--page-bg); text-decoration: none; font-size: .9rem; }
 .servimap-logo:hover, .servimap-volver:hover { color: var(--accent-bg); }
 .servimap-volver:hover { background: rgb(246 220 227 / 10%); }
-.app-header nav { padding: 0; gap: 6px; justify-content: flex-start; }
-.app-header nav a { font-size: .9rem; border-radius: 8px; color: var(--page-bg); }
+.app-header nav { display: flex; flex-wrap: wrap; align-items: center; padding: 0; gap: 6px; justify-content: flex-start; }
+.app-header nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; font-size: .9rem; border-radius: 8px; color: var(--page-bg); }
 .app-header nav a:hover, .app-header nav a.active { background: var(--accent-bg); color: var(--accent); }
 .app-header > div { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: .85rem; }
 .app-header p { margin: 0; }
