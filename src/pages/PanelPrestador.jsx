@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 function PanelPrestador() {
   return (
-    <section>
+    <main className="panel-rol">
       <h1>Panel del prestador</h1>
       <p>Bienvenido al espacio de prestadores de ServiMap.</p>
       <p>
@@ -21,7 +21,7 @@ function PanelPrestador() {
           <Link to="/prestador/solicitudes">Solicitudes recibidas</Link>
         </p>
       </nav>
-    </section>
+    </main>
   )
 }
 

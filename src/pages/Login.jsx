@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import '../styles/Login.css'
+import CampoContrasena from '../components/auth/CampoContrasena'
 
 function Login() {
   const navigate = useNavigate()
@@ -101,10 +102,9 @@ function Login() {
           )}
 
           <label htmlFor="contrasena">Contraseña</label>
-          <input
+          <CampoContrasena
             id="contrasena"
             name="contrasena"
-            type="password"
             autoComplete="current-password"
             value={formulario.contrasena}
             onChange={manejarCambio}

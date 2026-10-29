@@ -1,6 +1,7 @@
 ﻿import { describe, it, expect, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import Registro from '../pages/Registro'
+import { MemoryRouter } from 'react-router-dom'
 
 afterEach(() => {
   cleanup()
@@ -8,7 +9,7 @@ afterEach(() => {
 
 describe('Registro de usuario', () => {
   it('muestra el formulario', () => {
-    render(<Registro />)
+    render(<MemoryRouter><Registro /></MemoryRouter>)
 
     expect(
       screen.getByRole('heading', { name: 'Crear cuenta' })
@@ -19,7 +20,7 @@ describe('Registro de usuario', () => {
   })
 
   it('permite seleccionar el rol Prestador', () => {
-    render(<Registro />)
+    render(<MemoryRouter><Registro /></MemoryRouter>)
 
     const selector = screen.getByLabelText('Tipo de usuario')
 
@@ -31,7 +32,7 @@ describe('Registro de usuario', () => {
   })
 
   it('muestra errores cuando los campos están vacíos', () => {
-    render(<Registro />)
+    render(<MemoryRouter><Registro /></MemoryRouter>)
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Crear cuenta' })
@@ -42,7 +43,7 @@ describe('Registro de usuario', () => {
   })
 
   it('detecta un email inválido', () => {
-    render(<Registro />)
+    render(<MemoryRouter><Registro /></MemoryRouter>)
 
     fireEvent.change(screen.getByLabelText('Email'), {
       target: { value: 'correo-invalido' },
@@ -56,7 +57,7 @@ describe('Registro de usuario', () => {
   })
 
   it('detecta contraseñas diferentes', () => {
-    render(<Registro />)
+    render(<MemoryRouter><Registro /></MemoryRouter>)
 
     fireEvent.change(screen.getByLabelText('Contraseña'), {
       target: { value: 'clave123' },

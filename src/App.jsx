@@ -60,8 +60,8 @@ function App() {
 
   return (
     <>
-      <header>
-        <h1>ServiMap</h1>
+      <header className="app-header">
+        <Link className="marca" to="/" aria-label="ServiMap, inicio">ServiMap<span>Servicios cerca tuyo</span></Link>
 
         <NavegacionRoles />
 
@@ -92,10 +92,19 @@ function App() {
       <AppRoutes panelAdministracion={panelAdministracion} />
 
       {esInicio && (
-        <main>
-          <h2>Encontrá prestadores de servicios</h2>
-          <p>Buscá profesionales disponibles en ServiMap.</p>
+        <main className="inicio">
+          <div className="inicio-presentacion">
+            <p className="etiqueta">Conectá con profesionales</p>
+            <h1>Encontrá prestadores de servicios</h1>
+            <p>Buscá profesionales disponibles en ServiMap.</p>
 
+            {!autenticado && (
+              <div className="inicio-acciones">
+                <Link className="enlace-boton" to="/registro?rol=CLIENTE">Soy cliente</Link>
+                <Link className="enlace-boton secundario" to="/registro?rol=PRESTADOR">Soy prestador</Link>
+              </div>
+            )}
+          </div>
           <BuscadorPrestadores
             prestadores={prestadoresMock}
             calificaciones={calificaciones}

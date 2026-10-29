@@ -1,84 +1,12 @@
-
-.login-pagina {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-  background: #f5f7fb;
-}
-
-.login-tarjeta {
-  width: 100%;
-  max-width: 440px;
-  padding: 36px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-}
-
-.login-tarjeta h1 {
-  margin-top: 0;
-  text-align: center;
-  color: #17233b;
-}
-
-.login-tarjeta > p {
-  text-align: center;
-}
-
-.login-tarjeta form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.login-tarjeta label {
-  font-weight: 600;
-  text-align: left;
-}
-
-.login-tarjeta input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font: inherit;
-}
-
-.login-tarjeta input:focus {
-  outline: 2px solid #2563eb;
-  outline-offset: 1px;
-}
-
-.login-tarjeta [role="alert"] {
-  margin: 0 0 8px;
-  color: #b91c1c;
-  font-size: 14px;
-  text-align: left;
-}
-
-.login-tarjeta button {
-  margin-top: 12px;
-  padding: 12px;
-  border: 0;
-  border-radius: 8px;
-  background: #2563eb;
-  color: white;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.login-tarjeta button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.login-tarjeta a {
-  color: #2563eb;
-  font-weight: 600;
-}
-
+﻿.login-pagina, .registro-pagina { padding: 40px 0; }
+.login-tarjeta, .registro-pagina { width: 100%; max-width: 520px; margin: 32px auto; padding: clamp(20px, 5vw, 40px); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); }
+.login-tarjeta > p, .registro-pagina > p { margin: 12px 0 24px; }
+.login-tarjeta form, .registro-formulario { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.login-tarjeta form, .registro-formulario { margin: 24px 0; }
+.login-tarjeta label, .registro-formulario label { margin-top: 8px; }
+.login-tarjeta button[type='submit'], .registro-formulario button[type='submit'] { margin-top: 16px; border: 1px solid var(--accent); background: var(--accent); color: white; font-weight: 600; }
+.login-tarjeta button[type='submit']:enabled:hover, .registro-formulario button[type='submit']:enabled:hover { background: #572a89; }
+.campo-contrasena { position: relative; margin: 0 !important; }
+.campo-contrasena input { padding-right: 56px !important; }
+.campo-contrasena .contrasena-toggle { position: absolute; right: 3px; top: 3px; display: grid; place-items: center; min-height: 40px; width: 44px; padding: 0; margin: 0; background: transparent; border: 0; color: var(--text); }
+@media (max-width: 600px) { .login-pagina { padding: 0; } .registro-pagina { margin: 24px auto; } }
