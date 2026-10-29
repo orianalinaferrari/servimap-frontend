@@ -2,6 +2,8 @@
 
 React/Vite con identidad visual ServiMap y mapa MapLibre + OpenFreeMap Liberty.
 
+Node 24.x (`.nvmrc` y `engines`). Instalar las dependencias con `npm ci`.
+
 ```sh
 npm install
 npm run dev -- --port 5173 --strictPort
@@ -15,5 +17,6 @@ Copiar `.env.example` a `.env.local` y conservar `VITE_API_URL` como origen de l
 - [Contratos, configuración, diferencias y validación del backend](docs/integracion-backend.md)
 - [Proveedor cartográfico, condiciones y revisión del mapa](docs/mapa-prestadores.md)
 - [Validación final: evidencia real, comandos seguros y bloqueos para producción](docs/validacion-final.md)
+- [Preparación de Vercel, preview y CORS](docs/despliegue-servimap.md)
 
 Las pruebas bloquean HTTP real no simulado. La API publicada permite actualmente el origen de desarrollo `http://localhost:5173`; otros orígenes requieren autorización CORS del responsable del backend. No se usa un proxy para eludir esa restricción.
