@@ -152,7 +152,7 @@ export function FormularioSolicitud({ prestador, onCancelar }) {
         </div>
 
         <div className="crear-solicitud-campo">
-          <label htmlFor="solicitud-direccion">Dirección del servicio *</label>
+          <label htmlFor="solicitud-direccion">Dirección del servicio (opcional)</label>
           <input
             id="solicitud-direccion"
             type="text"
@@ -171,20 +171,8 @@ export function FormularioSolicitud({ prestador, onCancelar }) {
         </div>
 
         <div className="crear-solicitud-campo">
-          <label htmlFor="solicitud-fecha">Fecha preferida (opcional)</label>
-          <input
-            id="solicitud-fecha"
-            type="date"
-            value={datos.fechaPreferida}
-            onChange={(evento) => actualizarCampo('fechaPreferida', evento.target.value)}
-            aria-invalid={Boolean(errores.fechaPreferida)}
-            aria-describedby={errores.fechaPreferida ? 'error-fecha' : undefined}
-          />
-          {errores.fechaPreferida && (
-            <p id="error-fecha" className="crear-solicitud-error">
-              {errores.fechaPreferida}
-            </p>
-          )}
+          <label htmlFor="solicitud-contacto">Contacto preferido (opcional)</label>
+          <input id="solicitud-contacto" value={datos.contactoPreferido} onChange={(evento) => actualizarCampo('contactoPreferido', evento.target.value)} placeholder="WhatsApp, email o teléfono" />
         </div>
 
         <div className="crear-solicitud-acciones">

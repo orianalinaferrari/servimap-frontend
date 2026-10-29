@@ -4,16 +4,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import './styles/ServiMapPublico.css'
 import AppRoutes from './routes/AppRoutes'
-import { BuscadorPrestadores } from './components/BuscadorPrestadores'
+import DirectorioPrestadores from './components/DirectorioPrestadores'
 import { PanelAdministracion } from './components/PanelAdministracion'
 import NavegacionRoles from './components/auth/NavegacionRoles'
-import { calificacionesMock } from './data/calificacionesMock'
-import { prestadoresMock } from './data/prestadoresMock'
-import { moderarCalificacion } from './utils/reputacion'
 import { useAuth } from './context/useAuth'
 
 function App() {
-  const [calificaciones, setCalificaciones] = useState(calificacionesMock)
   const [cerrandoSesion, setCerrandoSesion] = useState(false)
   const [errorSesion, setErrorSesion] = useState('')
 
@@ -23,14 +19,6 @@ function App() {
 
   const esInicio = location.pathname === '/'
   const esAccesoPublico = ['/login', '/registro'].includes(location.pathname)
-
-  function handleModerar(id, motivo) {
-    const hoy = new Date().toLocaleDateString('en-CA')
-
-    setCalificaciones((anteriores) =>
-      moderarCalificacion(anteriores, id, motivo, hoy)
-    )
-  }
 
   async function handleCerrarSesion() {
     if (cerrandoSesion) return
@@ -52,13 +40,7 @@ function App() {
     }
   }
 
-  const panelAdministracion = (
-    <PanelAdministracion
-      prestadores={prestadoresMock}
-      calificaciones={calificaciones}
-      onModerar={handleModerar}
-    />
-  )
+  const panelAdministracion = <PanelAdministracion />
 
   return (
     <>
@@ -109,10 +91,7 @@ function App() {
               </div>
             )}
           </div>
-          <BuscadorPrestadores
-            prestadores={prestadoresMock}
-            calificaciones={calificaciones}
-          />
+          <DirectorioPrestadores />
 
           <p>
             <Link to="/login">Acceder a mi cuenta</Link>

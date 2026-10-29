@@ -1,88 +1,42 @@
-import { useState } from 'react'
-import {
-  cargarCatalogoOficios,
-  guardarCatalogoOficios,
-  crearOficio,
-  modificarOficio,
-  cambiarEstadoOficio,
-} from '../utils/adminOficios'
+import { useEffect, useState } from 'react'
+import { listarTodosLosOficios, crearOficioRemoto, actualizarOficio, cambiarEstadoOficioRemoto } from '../services/prestadoresService'
 import '../styles/AdministracionOficios.css'
 
 export function AdministracionOficios() {
-  const [catalogo, setCatalogo] = useState(cargarCatalogoOficios)
+  const [catalogo, setCatalogo] = useState([])
   const [nombre, setNombre] = useState('')
   const [editandoId, setEditandoId] = useState(null)
   const [mensaje, setMensaje] = useState('')
   const [error, setError] = useState('')
-
-  function aplicarCambio(siguiente, confirmacion) {
-    try {
-      guardarCatalogoOficios(siguiente)
-      setCatalogo(siguiente)
-      setMensaje(confirmacion)
-      setError('')
-      return true
-    } catch {
-      setError('No se pudieron guardar los cambios.')
-      setMensaje('')
-      return false
-    }
-  }
-
-  function guardarFormulario(evento) {
+  const [enviando, setEnviando] = useState(false)
+  const [cargando, setCargando] = useState(true)
+  const [revision, setRevision] = useState(0)
+  useEffect(() => {
+    let activo = true
+    listarTodosLosOficios().then((lista) => { if (activo) { setCatalogo(lista); setError('') } }).catch((fallo) => { if (activo) setError(fallo.message) }).finally(() => { if (activo) setCargando(false) })
+    return () => { activo = false }
+  }, [revision])
+  async function guardarFormulario(evento) {
     evento.preventDefault()
-
+    if (enviando || cargando) return
+    if (!nombre.trim()) { setError('El nombre es obligatorio'); return }
+    setEnviando(true); setError(''); setMensaje('')
     try {
-      const siguiente = editandoId === null
-        ? crearOficio(catalogo, nombre)
-        : modificarOficio(catalogo, editandoId, nombre)
-
-      const confirmacion = editandoId === null
-        ? 'Oficio creado correctamente.'
-        : 'Oficio modificado correctamente.'
-
-      if (aplicarCambio(siguiente, confirmacion)) {
-        setNombre('')
-        setEditandoId(null)
-      }
-    } catch (errorValidacion) {
-      setError(errorValidacion.message)
-      setMensaje('')
-    }
+      const dato = editandoId === null ? await crearOficioRemoto({ nombre: nombre.trim() }) : await actualizarOficio(editandoId, { nombre: nombre.trim() })
+      setCatalogo((lista) => editandoId === null ? [...lista, dato] : lista.map((oficio) => oficio.id === dato.id ? dato : oficio))
+      setNombre(''); setEditandoId(null); setMensaje('Oficio guardado en el servidor.')
+    } catch (fallo) { setError(fallo.message) } finally { setEnviando(false) }
   }
-
-  function iniciarEdicion(oficio) {
-    setEditandoId(oficio.id)
-    setNombre(oficio.nombre)
-    setMensaje('')
-    setError('')
-  }
-
-  function cancelarEdicion() {
-    setEditandoId(null)
-    setNombre('')
-    setMensaje('')
-    setError('')
-  }
-
-  function alternarEstado(oficio) {
+  function iniciarEdicion(oficio) { setEditandoId(oficio.id); setNombre(oficio.nombre); setError(''); setMensaje('') }
+  function cancelarEdicion() { setEditandoId(null); setNombre(''); setError(''); setMensaje('') }
+  async function alternarEstado(oficio) {
+    if (enviando || cargando) return
+    setEnviando(true); setError(''); setMensaje('')
     try {
-      const siguiente = cambiarEstadoOficio(
-        catalogo,
-        oficio.id,
-        !oficio.activo
-      )
-
-      aplicarCambio(
-        siguiente,
-        oficio.activo
-          ? 'Oficio desactivado correctamente.'
-          : 'Oficio activado correctamente.'
-      )
-    } catch (errorCambio) {
-      setError(errorCambio.message)
-      setMensaje('')
-    }
+      const dato = await cambiarEstadoOficioRemoto(oficio.id, !oficio.activo)
+      setCatalogo((lista) => lista.map((item) => item.id === dato.id ? dato : item))
+      setMensaje('Estado actualizado en el servidor.')
+    } catch (fallo) { setError(fallo.message) } finally { setEnviando(false) }
   }
 
   const activos = catalogo.filter((oficio) => oficio.activo).length
@@ -116,7 +70,7 @@ export function AdministracionOficios() {
         />
 
         <div className="admin-oficios-acciones">
-          <button type="submit">
+          <button type="submit" disabled={enviando || cargando}>
             {editandoId === null ? 'Crear oficio' : 'Guardar cambios'}
           </button>
 
@@ -132,6 +86,8 @@ export function AdministracionOficios() {
       {error && <p role="alert" className="admin-oficios-error">{error}</p>}
 
       <h4>Listado de oficios</h4>
+      {cargando && <p role="status">Cargando catálogo...</p>}
+      {error && <button type="button" onClick={() => setRevision((n) => n + 1)}>Reintentar catálogo</button>}
 
       {catalogo.length === 0 ? (
         <p>No hay oficios registrados.</p>
@@ -161,6 +117,7 @@ export function AdministracionOficios() {
                   <td>
                     <div className="admin-oficios-acciones">
                       <button
+                        disabled={enviando || cargando}
                         type="button"
                         onClick={() => iniciarEdicion(oficio)}
                         aria-label={`Editar ${oficio.nombre}`}
@@ -168,6 +125,7 @@ export function AdministracionOficios() {
                         Editar
                       </button>
                       <button
+                        disabled={enviando || cargando}
                         type="button"
                         onClick={() => alternarEstado(oficio)}
                         aria-label={

@@ -1,4 +1,6 @@
-﻿import { useState } from 'react'
+﻿import { useEffect, useState } from 'react'
+import { listarPrestadores } from '../services/prestadoresService'
+import FichaPrestadorRemota from './FichaPrestadorRemota'
 import { MapaPrestadores } from './mapa/MapaPrestadores'
 import { DetallePrestador } from './DetallePrestador'
 import {
@@ -8,14 +10,33 @@ import {
 } from '../utils/filtrosPrestadores'
 import '../styles/FiltrosPrestadores.css'
 
-export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
+export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogoOficios, marcadoresPublicos }) {
   const [termino, setTermino] = useState('')
   const [filtros, setFiltros] = useState({ ...FILTROS_INICIALES })
   const [prestadorSeleccionadoId, setPrestadorSeleccionadoId] = useState(null)
+  const [remotos, setRemotos] = useState(null)
+  const [errorRemoto, setErrorRemoto] = useState('')
+  const [cargandoRemoto, setCargandoRemoto] = useState(false)
+  const consulta = JSON.stringify({ q: termino.trim(), oficioId: catalogoOficios?.find((oficio) => oficio.nombre === filtros.oficio)?.id, calificacionMin: filtros.calificacionMinima, disponible: filtros.soloDisponibles ? true : undefined })
+  useEffect(() => {
+    if (!catalogoOficios) return
+    let vigente = true
+    const temporizador = setTimeout(async () => {
+      setCargandoRemoto(true); setErrorRemoto('')
+      try {
+        const lista = await listarPrestadores(JSON.parse(consulta))
+        if (vigente) setRemotos({ consulta, lista })
+      } catch (fallo) { if (vigente) setErrorRemoto(fallo.message) }
+      finally { if (vigente) setCargandoRemoto(false) }
+    }, 300)
+    return () => { vigente = false; clearTimeout(temporizador) }
+  }, [catalogoOficios, consulta])
+  const listaActual = remotos?.consulta === consulta ? remotos.lista : prestadores
   const precioNegativo =
     filtros.precioMaximo !== '' && Number(filtros.precioMaximo) < 0
-  const opciones = obtenerOpcionesFiltros(prestadores)
-  const resultados = aplicarFiltrosPrestadores(prestadores, termino, filtros)
+  const opciones = obtenerOpcionesFiltros(listaActual)
+  if (catalogoOficios) opciones.oficios = catalogoOficios.map((oficio) => oficio.nombre)
+  const resultados = aplicarFiltrosPrestadores(listaActual, termino, filtros)
 
   const prestadorSeleccionado = prestadores.find(
     (prestador) => prestador.id === prestadorSeleccionadoId
@@ -33,6 +54,9 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
     setFiltros({ ...FILTROS_INICIALES })
   }
 
+  if (prestadorSeleccionadoId !== null && catalogoOficios) {
+    return <FichaPrestadorRemota key={prestadorSeleccionadoId} id={prestadorSeleccionadoId} onVolver={() => setPrestadorSeleccionadoId(null)} />
+  }
   if (prestadorSeleccionado) {
     return (
       <DetallePrestador
@@ -45,6 +69,8 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
 
   return (
     <section className="buscador-prestadores">
+      {cargandoRemoto && <p role="status">Actualizando búsqueda...</p>}
+      {errorRemoto && <p role="alert">{errorRemoto}</p>}
       <h2>Buscar profesionales</h2>
 
       <div className="filtros-prestadores">
@@ -52,6 +78,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
           <label htmlFor="busqueda">Buscar prestador</label>
           <input
             id="busqueda"
+            maxLength={100}
             type="text"
             value={termino}
             onChange={(evento) => setTermino(evento.target.value)}
@@ -145,7 +172,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
       </div>
 
       <MapaPrestadores
-        prestadores={resultados}
+        prestadores={marcadoresPublicos ? marcadoresPublicos.filter((marcador) => !termino && !Object.values(filtros).some(Boolean) || resultados.some((p) => p.id === marcador.id)) : resultados}
         onSeleccionar={setPrestadorSeleccionadoId}
       />
 
@@ -167,8 +194,8 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [] }) {
               <p>{prestador.oficios.join(', ')}</p>
               <p>{prestador.zonaCobertura}</p>
               <p className="tarjeta-precio">
-                ${prestador.precioMin.toLocaleString('es-AR')} – $
-                {prestador.precioMax.toLocaleString('es-AR')}
+                ${(prestador.precioMin?.toLocaleString('es-AR') ?? '—')} – $
+                {(prestador.precioMax?.toLocaleString('es-AR') ?? '—')}
               </p>
             </li>
           ))}

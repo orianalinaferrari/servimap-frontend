@@ -93,7 +93,7 @@ describe('F-14 - Acciones permitidas por estado', () => {
         obtenerAccionesSolicitudCliente(solicitud)
       ).toEqual({
         verDetalle: true,
-        cancelar: pendiente,
+        cancelar: pendiente || estado === ESTADOS_SOLICITUD.ACEPTADA,
       })
 
       expect(

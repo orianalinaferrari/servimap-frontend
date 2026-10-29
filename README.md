@@ -1,16 +1,18 @@
-# React + Vite
+﻿# ServiMap frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite con identidad visual ServiMap y mapa MapLibre + OpenFreeMap Liberty.
 
-Currently, two official plugins are available:
+```sh
+npm install
+npm run dev -- --port 5173 --strictPort
+npm test
+npm run lint
+npm run build
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Copiar `.env.example` a `.env.local` y conservar `VITE_API_URL` como origen de la API, sin `/api` al final. Guardar el archivo en UTF-8 sin BOM. No agregar credenciales ni JWT a Git.
 
-## React Compiler
+- [Contratos, configuración, diferencias y validación del backend](docs/integracion-backend.md)
+- [Proveedor cartográfico, condiciones y revisión del mapa](docs/mapa-prestadores.md)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Las pruebas bloquean HTTP real no simulado. La API publicada permite actualmente el origen de desarrollo `http://localhost:5173`; otros orígenes requieren autorización CORS del responsable del backend. No se usa un proxy para eludir esa restricción.

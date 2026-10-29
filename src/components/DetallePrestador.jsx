@@ -27,8 +27,8 @@ export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
         <p>Oficios: {prestador.oficios.join(', ')}</p>
         <p>Zona: {prestador.zonaCobertura}</p>
         <p>
-          Precio: ${prestador.precioMin.toLocaleString('es-AR')} – $
-          {prestador.precioMax.toLocaleString('es-AR')}
+          Precio: ${(prestador.precioMin?.toLocaleString('es-AR') ?? '—')} – $
+          {(prestador.precioMax?.toLocaleString('es-AR') ?? '—')}
         </p>
         <p className={prestador.disponible ? 'estado-disponible' : 'estado-no-disponible'}>
           {prestador.disponible ? 'Disponible' : 'No disponible'}
@@ -48,13 +48,13 @@ export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
 
       <h3>Contacto</h3>
       <ul className="contacto-lista">
-        <li>
+        <li hidden={!prestador.telefono}>
           <a href={`tel:${prestador.telefono}`}>{prestador.telefono}</a>
         </li>
-        <li>
+        <li hidden={!prestador.whatsapp}>
           <a href={`https://wa.me/${prestador.whatsapp}`}>WhatsApp</a>
         </li>
-        <li>
+        <li hidden={!prestador.emailContacto}>
           <a href={`mailto:${prestador.emailContacto}`}>{prestador.emailContacto}</a>
         </li>
       </ul>

@@ -38,7 +38,7 @@ describe('Registro de usuario', () => {
       screen.getByRole('button', { name: 'Crear cuenta' })
     )
 
-    expect(screen.getAllByRole('alert')).toHaveLength(7)
+    expect(screen.getAllByRole('alert')).toHaveLength(6)
     expect(screen.getByText('El nombre es obligatorio')).toBeTruthy()
   })
 

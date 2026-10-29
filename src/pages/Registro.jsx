@@ -1,192 +1,74 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import CampoContrasena from '../components/CampoContrasena'
+import { registrarUsuario } from '../services/authService'
 import '../styles/Registro.css'
 
-function Registro() {
+export default function Registro() {
   const [parametros] = useSearchParams()
-  const rolSeleccionado = parametros.get('rol')
-  const [formulario, setFormulario] = useState({
-    nombre: '',
-    apellido: '',
-    email: '',
-    telefono: '',
-    contrasena: '',
-    confirmarContrasena: '',
-    rol: ['CLIENTE', 'PRESTADOR'].includes(rolSeleccionado) ? rolSeleccionado : '',
-  })
-
-  const manejarCambio = (evento) => {
-    const { name, value } = evento.target
-
-    setFormulario({
-      ...formulario,
-      [name]: value,
-    })
-  }
-
+  const rol = parametros.get('rol')
+  const [formulario, setFormulario] = useState({ nombre: '', email: '', dni: '', contrasena: '', confirmarContrasena: '', rol: ['CLIENTE', 'PRESTADOR'].includes(rol) ? rol : '' })
   const [errores, setErrores] = useState({})
+  const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [creado, setCreado] = useState(false)
 
-  const validarFormulario = () => {
-    const nuevosErrores = {}
-
-    if (!formulario.nombre.trim()) {
-      nuevosErrores.nombre = 'El nombre es obligatorio'
-    }
-
-    if (!formulario.apellido.trim()) {
-      nuevosErrores.apellido = 'El apellido es obligatorio'
-    }
-
-    if (!formulario.email.trim()) {
-      nuevosErrores.email = 'El email es obligatorio'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.email)) {
-      nuevosErrores.email = 'Ingresá un email válido'
-    }
-
-    if (!formulario.telefono.trim()) {
-      nuevosErrores.telefono = 'El teléfono es obligatorio'
-    }
-
-    if (!formulario.contrasena) {
-      nuevosErrores.contrasena = 'La contraseña es obligatoria'
-    }
-
-    if (!formulario.confirmarContrasena) {
-      nuevosErrores.confirmarContrasena = 'Confirmá tu contraseña'
-    } else if (formulario.contrasena !== formulario.confirmarContrasena) {
-      nuevosErrores.confirmarContrasena = 'Las contraseñas no coinciden'
-    }
-
-    if (!formulario.rol) {
-      nuevosErrores.rol = 'Seleccioná un tipo de usuario'
-    }
-
-    setErrores(nuevosErrores)
-
-    return Object.keys(nuevosErrores).length === 0
+  function cambiar({ target: { name, value } }) {
+    setFormulario((anterior) => ({ ...anterior, [name]: value }))
+    setErrores((anteriores) => ({ ...anteriores, [name]: '' }))
+    setError('')
   }
 
-  const manejarEnvio = (evento) => {
+  async function enviar(evento) {
     evento.preventDefault()
-
-    const formularioValido = validarFormulario()
-
-    if (!formularioValido) {
-      return
-    }
-
-    // La conexión con el servicio de registro se agregará después.
+    if (enviando || creado) return
+    const nuevos = {}
+    const dni = formulario.dni.replace(/[.\s]/g, '')
+    if (!formulario.nombre.trim()) nuevos.nombre = 'El nombre es obligatorio'
+    if (!formulario.email.trim()) nuevos.email = 'El email es obligatorio'
+    else if (!/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(formulario.email.trim())) nuevos.email = 'Ingresá un email válido'
+    if (!/^\d{7,8}$/.test(dni)) nuevos.dni = 'El DNI debe tener 7 u 8 números'
+    if (!formulario.contrasena) nuevos.contrasena = 'La contraseña es obligatoria'
+    else if (formulario.contrasena.length < 8) nuevos.contrasena = 'La contraseña debe tener al menos 8 caracteres'
+    if (!formulario.confirmarContrasena) nuevos.confirmarContrasena = 'Confirmá tu contraseña'
+    else if (formulario.contrasena !== formulario.confirmarContrasena) nuevos.confirmarContrasena = 'Las contraseñas no coinciden'
+    if (!['CLIENTE', 'PRESTADOR'].includes(formulario.rol)) nuevos.rol = 'Seleccioná un tipo de usuario'
+    setErrores(nuevos)
+    if (Object.keys(nuevos).length) return
+    setEnviando(true); setError('')
+    try {
+      await registrarUsuario({ nombre: formulario.nombre.trim(), dni, email: formulario.email.trim().toLowerCase(), password: formulario.contrasena, rol: formulario.rol })
+      setCreado(true)
+      setFormulario((anterior) => ({ ...anterior, contrasena: '', confirmarContrasena: '', dni: '' }))
+    } catch (fallo) { setError(fallo.message) } finally { setEnviando(false) }
   }
 
   return (
     <main className="registro-pagina">
       <h1>Crear cuenta</h1>
       <p>Completá tus datos para registrarte en ServiMap.</p>
-
-      <form
-        className="registro-formulario"
-        onSubmit={manejarEnvio}
-        noValidate
-      >
-        <label htmlFor="nombre">Nombre</label>
-        <input
-          id="nombre"
-          name="nombre"
-          aria-invalid={Boolean(errores.nombre)}
-          aria-describedby={errores.nombre ? 'nombre-error' : undefined}
-          autoComplete="given-name"
-          type="text"
-          value={formulario.nombre}
-          onChange={manejarCambio}
-        />
-        {errores.nombre && <p id="nombre-error" role="alert">{errores.nombre}</p>}
-
-        <label htmlFor="apellido">Apellido</label>
-        <input
-          id="apellido"
-          name="apellido"
-          aria-invalid={Boolean(errores.apellido)}
-          aria-describedby={errores.apellido ? 'apellido-error' : undefined}
-          autoComplete="family-name"
-          type="text"
-          value={formulario.apellido}
-          onChange={manejarCambio}
-        />
-        {errores.apellido && <p id="apellido-error" role="alert">{errores.apellido}</p>}
-
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          name="email"
-          aria-invalid={Boolean(errores.email)}
-          aria-describedby={errores.email ? 'email-error' : undefined}
-          autoComplete="email"
-          type="email"
-          value={formulario.email}
-          onChange={manejarCambio}
-        />
-        {errores.email && <p id="email-error" role="alert">{errores.email}</p>}
-
-        <label htmlFor="telefono">Teléfono</label>
-        <input
-          id="telefono"
-          name="telefono"
-          aria-invalid={Boolean(errores.telefono)}
-          aria-describedby={errores.telefono ? 'telefono-error' : undefined}
-          autoComplete="tel"
-          type="tel"
-          value={formulario.telefono}
-          onChange={manejarCambio}
-        />
-        {errores.telefono && <p id="telefono-error" role="alert">{errores.telefono}</p>}
-
-        <label htmlFor="contrasena">Contraseña</label>
-        <CampoContrasena
-          id="contrasena"
-          name="contrasena"
-          aria-invalid={Boolean(errores.contrasena)}
-          aria-describedby={errores.contrasena ? 'contrasena-error' : undefined}
-          autoComplete="new-password"
-          value={formulario.contrasena}
-          onChange={manejarCambio}
-        />
-        {errores.contrasena && <p id="contrasena-error" role="alert">{errores.contrasena}</p>}
-
-        <label htmlFor="confirmarContrasena">Confirmar contraseña</label>
-        <CampoContrasena
-          id="confirmarContrasena"
-          name="confirmarContrasena"
-          aria-invalid={Boolean(errores.confirmarContrasena)}
-          aria-describedby={errores.confirmarContrasena ? 'confirmarContrasena-error' : undefined}
-          autoComplete="new-password"
-          value={formulario.confirmarContrasena}
-          onChange={manejarCambio}
-        />
-        {errores.confirmarContrasena && <p id="confirmarContrasena-error" role="alert">{errores.confirmarContrasena}</p>}
-
+      {creado && <p role="status">Tu cuenta fue creada. Iniciá sesión para continuar.</p>}
+      <form className="registro-formulario" onSubmit={enviar} noValidate aria-busy={enviando}>
+        {[
+          ['nombre', 'Nombre', 'text', 'name'], ['email', 'Email', 'email', 'email'], ['dni', 'DNI', 'text', 'off'],
+          ['contrasena', 'Contraseña', 'password', 'new-password'], ['confirmarContrasena', 'Confirmar contraseña', 'password', 'new-password'],
+        ].map(([name, label, type, autoComplete]) => {
+          const Campo = type === 'password' ? CampoContrasena : 'input'
+          return <div key={name}>
+            <label htmlFor={name}>{label}</label>
+            <Campo id={name} name={name} type={type} autoComplete={autoComplete} value={formulario[name]} onChange={cambiar} disabled={enviando || creado} aria-invalid={Boolean(errores[name])} aria-describedby={errores[name] ? `${name}-error` : undefined} placeholder={name === 'nombre' ? 'Nombre y apellido' : undefined} />
+            {errores[name] && <p id={`${name}-error`} role="alert">{errores[name]}</p>}
+          </div>
+        })}
         <label htmlFor="rol">Tipo de usuario</label>
-        <select
-          id="rol"
-          name="rol"
-          aria-invalid={Boolean(errores.rol)}
-          aria-describedby={errores.rol ? 'rol-error' : undefined}
-          value={formulario.rol}
-          onChange={manejarCambio}
-        >
-
-          <option value="">Seleccionar</option>
-          <option value="CLIENTE">Cliente</option>
-          <option value="PRESTADOR">Prestador</option>
+        <select id="rol" name="rol" value={formulario.rol} onChange={cambiar} disabled={enviando || creado} aria-invalid={Boolean(errores.rol)} aria-describedby={errores.rol ? 'rol-error' : undefined}>
+          <option value="">Seleccionar</option><option value="CLIENTE">Cliente</option><option value="PRESTADOR">Prestador</option>
         </select>
-        
         {errores.rol && <p id="rol-error" role="alert">{errores.rol}</p>}
-        
-        <button type="submit">Crear cuenta</button>
+        {error && <p role="alert">{error}</p>}
+        <button type="submit" disabled={enviando || creado}>{enviando ? 'Creando cuenta...' : 'Crear cuenta'}</button>
       </form>
       <p>¿Ya tenés cuenta? <Link to="/login">Iniciar sesión</Link></p>
     </main>
   )
 }
-
-export default Registro

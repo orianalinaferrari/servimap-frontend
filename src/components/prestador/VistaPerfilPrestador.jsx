@@ -1,53 +1,12 @@
+﻿import { Link } from 'react-router-dom'
 
 export function VistaPerfilPrestador({ perfil, onEditar }) {
-  const oficios = perfil.oficios
-    .split(',')
-    .map((oficio) => oficio.trim())
-    .filter(Boolean)
-
-  return (
-    <section aria-labelledby="titulo-perfil">
-      <h2 id="titulo-perfil">Mi perfil de prestador</h2>
-
-      <p>
-        <strong>Nombre completo:</strong>{' '}
-        {perfil.nombre} {perfil.apellido}
-      </p>
-
-      <p>
-        <strong>Teléfono:</strong>{' '}
-        {perfil.telefono || 'No informado'}
-      </p>
-
-      <p>
-        <strong>Correo electrónico:</strong>{' '}
-        {perfil.email || 'No informado'}
-      </p>
-
-      <p>
-        <strong>Ubicación:</strong>{' '}
-        {perfil.ubicacion || 'No informada'}
-      </p>
-
-      <h3>Oficios ofrecidos</h3>
-
-      {oficios.length > 0 ? (
-        <ul>
-          {oficios.map((oficio) => (
-            <li key={oficio}>{oficio}</li>
-          ))}
-        </ul>
-      ) : (
-        <p>No hay oficios registrados.</p>
-      )}
-
-      <h3>Descripción profesional</h3>
-      <p>{perfil.descripcion || 'Sin descripción.'}</p>
-
-      <button type="button" onClick={onEditar}>
-        Editar perfil
-      </button>
-    </section>
-  )
+  return <section>
+    <h1>Mi perfil</h1><h2>{perfil.nombre}</h2><p>{perfil.email}</p>
+    <p>{perfil.descripcionProfesional || 'Sin descripción profesional'}</p>
+    <dl>{[['zonaCobertura','Zona'],['telefono','Teléfono'],['whatsapp','WhatsApp'],['emailContacto','Email de contacto'],['precioMin','Precio mínimo'],['precioMax','Precio máximo']].map(([campo,label])=><div key={campo}><dt>{label}</dt><dd>{perfil[campo] ?? 'Sin informar'}</dd></div>)}</dl>
+    <p>{perfil.disponible ? 'Disponible' : 'No disponible'}</p>
+    <p>Oficios: {perfil.oficios.map((oficio) => oficio.nombre).join(', ') || 'Sin oficios asociados'}</p>
+    <button onClick={onEditar}>Editar perfil</button>{' '}<Link to="/prestador/oficios">Administrar mis oficios</Link>
+  </section>
 }
-

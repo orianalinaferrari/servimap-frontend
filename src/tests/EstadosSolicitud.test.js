@@ -72,7 +72,7 @@ describe('F-14 - Estados de solicitud', () => {
 
   test('mantiene la regla de cancelación de F-12', () => {
     expect(puedeCancelarSolicitud({ estado: 'PENDIENTE' })).toBe(true)
-    expect(puedeCancelarSolicitud({ estado: 'ACEPTADA' })).toBe(false)
+    expect(puedeCancelarSolicitud({ estado: 'ACEPTADA' })).toBe(true)
   })
 
   test('impide habilitar acciones sin identificador', () => {

@@ -21,7 +21,7 @@ vi.mock('../services/solicitudesService', () => ({
   crearSolicitud: vi.fn(),
 }))
 
-const prestador = prestadoresMock[0]
+const prestador = { ...prestadoresMock[0], oficiosCatalogo: [{ id: 'oficio-1', nombre: prestadoresMock[0].oficios[0] }] }
 
 function completarFormulario() {
   fireEvent.change(screen.getByLabelText('Servicio *'), {
@@ -32,7 +32,7 @@ function completarFormulario() {
     target: { value: 'Necesito reparar una pérdida de agua en la cocina.' },
   })
 
-  fireEvent.change(screen.getByLabelText('Dirección del servicio *'), {
+  fireEvent.change(screen.getByLabelText('Dirección del servicio (opcional)'), {
     target: { value: 'Av. Santa Fe 1234' },
   })
 }
@@ -84,8 +84,7 @@ describe('F-11 - Formulario de solicitud', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enviar solicitud' }))
 
     expect(screen.getByText('Seleccioná un servicio.')).toBeTruthy()
-    expect(screen.getByText(/La descripción debe tener/i)).toBeTruthy()
-    expect(screen.getByText(/La dirección debe tener/i)).toBeTruthy()
+    expect(screen.getByText(/La descripción es obligatoria/i)).toBeTruthy()
     expect(crearSolicitud).not.toHaveBeenCalled()
   })
 
@@ -108,7 +107,8 @@ describe('F-11 - Formulario de solicitud', () => {
     await waitFor(() => {
       expect(crearSolicitud).toHaveBeenCalledWith({
         prestadorId: prestador.id,
-        servicio: prestador.oficios[0],
+        oficioId: 'oficio-1',
+        contactoPreferido: '',
         descripcion: 'Necesito reparar una pérdida de agua en la cocina.',
         direccion: 'Av. Santa Fe 1234',
       })

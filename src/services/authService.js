@@ -1,69 +1,30 @@
-import { ApiError, apiRequest } from './apiClient'
-
-function traducirError(error, mensajes = {}) {
-  if (!(error instanceof ApiError)) {
-    throw error
-  }
-
-  if (error.codigo === 'API_NO_CONFIGURADA') {
-    throw new Error(
-      'El servicio de autenticación todavía no está configurado.'
-    )
-  }
-
-  if (error.codigo === 'ERROR_RED') {
-    throw new Error('No se pudo conectar con el servidor.')
-  }
-
-  if (error.status && mensajes[error.status]) {
-    throw new Error(mensajes[error.status])
-  }
-
-  throw new Error(
-    mensajes.general || 'Ocurrió un error de autenticación.'
-  )
-}
+﻿import { ApiError, apiRequest } from './apiClient'
+import { guardarToken, obtenerToken, eliminarToken } from './sesionToken'
 
 export async function iniciarSesion(email, contrasena) {
-  try {
-    return await apiRequest('/auth/login', {
-      method: 'POST',
-      json: { email, contrasena },
-    })
-  } catch (error) {
-    traducirError(error, {
-      401: 'Email o contraseña incorrectos.',
-      general: 'Ocurrió un error al iniciar sesión.',
-    })
-  }
+  const sesion = await apiRequest('/api/auth/login', {
+    method: 'POST', autenticar: false, json: { email: email.trim().toLowerCase(), password: contrasena },
+  })
+  if (!sesion?.usuario?.id || !sesion.usuario.rol) throw new Error('El servidor devolvió una sesión inválida.')
+  guardarToken(sesion.token)
+  return sesion.usuario
 }
 
-export async function cerrarSesion() {
-  try {
-    await apiRequest('/auth/logout', {
-      method: 'POST',
-    })
-  } catch (error) {
-    traducirError(error, {
-      general: 'No se pudo cerrar la sesión.',
-    })
-  }
+export async function registrarUsuario(datos) {
+  return apiRequest('/api/auth/register', { method: 'POST', autenticar: false, json: datos })
 }
+
+export async function cerrarSesion() { eliminarToken() }
 
 export async function obtenerSesion() {
-  if (!import.meta.env.VITE_API_URL) {
-    return null
-  }
-
+  if (!obtenerToken()) return null
   try {
-    return await apiRequest('/auth/me')
+    return await apiRequest('/api/auth/me')
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) {
+    if (error instanceof ApiError && [401, 404].includes(error.status)) {
+      eliminarToken()
       return null
     }
-
-    traducirError(error, {
-      general: 'No se pudo verificar la sesión.',
-    })
+    throw error
   }
 }

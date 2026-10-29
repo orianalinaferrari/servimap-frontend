@@ -53,8 +53,7 @@ export function tieneIdentificadorSolicitud(solicitud) {
 
 export function puedeCancelarSolicitud(solicitud) {
   return (
-    normalizarEstadoSolicitud(solicitud?.estado) ===
-    ESTADOS_SOLICITUD.PENDIENTE
+    [ESTADOS_SOLICITUD.PENDIENTE, ESTADOS_SOLICITUD.ACEPTADA].includes(normalizarEstadoSolicitud(solicitud?.estado))
   )
 }
 

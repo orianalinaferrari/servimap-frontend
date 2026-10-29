@@ -1,3 +1,5 @@
+import { obtenerToken, eliminarToken } from './sesionToken'
+
 export class ApiError extends Error {
   constructor(mensaje, { status = null, codigo = 'HTTP_ERROR' } = {}) {
     super(mensaje)
@@ -70,6 +72,8 @@ export async function apiRequest(ruta, opciones = {}) {
 
   const {
     token,
+    autenticar = true,
+    parametros,
     json,
     headers: encabezados = {},
     ...opcionesFetch
@@ -77,20 +81,22 @@ export async function apiRequest(ruta, opciones = {}) {
 
   const headers = new Headers(encabezados)
 
-  if (token != null) {
-    if (typeof token !== 'string' || !token.trim()) {
+  const tokenEnviado = token ?? (autenticar ? obtenerToken() : null)
+  if (tokenEnviado != null) {
+    if (typeof tokenEnviado !== 'string' || !tokenEnviado.trim()) {
       throw new ApiError(
         'El token de autenticación no es válido.',
         { codigo: 'TOKEN_INVALIDO' }
       )
     }
 
-    headers.set('Authorization', `Bearer ${token}`)
+    headers.set('Authorization', `Bearer ${tokenEnviado}`)
   }
 
   const configuracion = {
     ...opcionesFetch,
-    credentials: 'include',
+    credentials: 'omit',
+    redirect: 'error',
   }
 
   if (json !== undefined) {
@@ -117,7 +123,11 @@ export async function apiRequest(ruta, opciones = {}) {
   let respuesta
 
   try {
-    respuesta = await fetch(`${urlBase}${ruta}`, configuracion)
+    const query = new URLSearchParams()
+    Object.entries(parametros || {}).forEach(([clave, valor]) => {
+      if (valor !== undefined && valor !== null && valor !== '') query.set(clave, String(valor))
+    })
+    respuesta = await fetch(`${urlBase}${ruta}${query.size ? `?${query}` : ''}`, configuracion)
   } catch {
     throw new ApiError(
       'No se pudo conectar con el servidor.',
@@ -126,8 +136,12 @@ export async function apiRequest(ruta, opciones = {}) {
   }
 
   if (!respuesta.ok) {
+    if (respuesta.status === 401 && tokenEnviado && obtenerToken() === tokenEnviado) eliminarToken(true)
+    let detalle
+    try { detalle = await respuesta.json() } catch { /* Respuesta HTTP sin JSON. */ }
+    const mensajes = { 400: 'Revisá los datos ingresados.', 401: 'Debés iniciar sesión nuevamente.', 403: 'No tenés permiso para realizar esta operación.', 404: 'El recurso no fue encontrado.', 409: 'Los datos o el estado cambiaron. Actualizá la información.', 500: 'El servidor no pudo completar la operación.' }
     throw new ApiError(
-      `La solicitud falló con estado HTTP ${respuesta.status}.`,
+      typeof detalle?.error === 'string' ? detalle.error : mensajes[respuesta.status] || `La solicitud falló con estado HTTP ${respuesta.status}.`,
       {
         status: respuesta.status,
         codigo: 'ERROR_HTTP',
