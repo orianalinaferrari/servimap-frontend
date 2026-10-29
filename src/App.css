@@ -65,33 +65,6 @@
   }
 }
 
-/* ===== F-25: Menú de navegación ===== */
-
-header nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  padding: 0 16px;
-  color: var(--border);
-}
-
-header nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 12px;
-  border-radius: 999px;
-  color: var(--accent);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-header nav a:hover {
-  background: var(--accent-bg);
-}
-
 /* ===== F-25: Ficha del prestador ===== */
 
 .detalle {
@@ -340,6 +313,16 @@ header nav a:hover {
   cursor: pointer;
 }
 
+.boton-solicitar:enabled:hover {
+  background: var(--accent-hover);
+  color: var(--bg);
+}
+
+.boton-confirmar:enabled:hover {
+  background: #991b1b;
+  color: var(--bg);
+}
+
 .boton-solicitar:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -353,20 +336,12 @@ header nav a:hover {
   font-size: 14px;
 }
 /* Shared application shell and entry points. */
-.app-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--border); }
-.marca { color: var(--text-h); font-size: 1.65rem; font-weight: 750; letter-spacing: -.05em; text-decoration: none; }
-.marca span { display: block; font-size: .75rem; font-weight: 450; letter-spacing: 0; color: var(--text); }
-.app-header nav { padding: 0; gap: 6px; justify-content: flex-start; }
-.app-header nav a { font-size: .9rem; border-radius: 10px; color: var(--text); }
-.app-header nav a.active { background: var(--accent-bg); color: var(--accent); }
-.app-header > div { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: .85rem; }
-.app-header p { margin: 0; }
 .inicio-presentacion { padding: clamp(32px, 6vw, 64px) 0 32px; max-width: 720px; }
 .inicio-presentacion h1 { font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -.04em; }
 .etiqueta { color: var(--accent); font-weight: 650; font-size: .85rem; }
 .inicio-acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
 .enlace-boton { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 10px 22px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: white; text-decoration: none; font-weight: 600; }
-.enlace-boton:hover { background: #572a89; color: white; }
+.enlace-boton:hover { background: var(--accent-hover); color: white; }
 .enlace-boton.secundario { background: var(--bg); color: var(--accent); border-color: var(--border); }
 .enlace-boton.secundario:hover { background: var(--accent-bg); }
 .buscador-prestadores { padding: 0; gap: 24px; }
@@ -376,4 +351,4 @@ header nav a:hover {
 .panel-rol > nav p { margin: 0; }
 .panel-rol > nav a { display: flex; align-items: center; min-height: 90px; height: 100%; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--code-bg); font-weight: 600; text-decoration: none; }
 .panel-rol > nav a:hover { background: var(--accent-bg); border-color: var(--accent-border); }
-@media (max-width: 600px) { .app-header { gap: 16px; padding: 20px 0; } .app-header nav { width: 100%; } .app-header nav a { padding: 0 10px; } .inicio-acciones > a { flex: 1 1 160px; } .form-moderacion-botones { flex-wrap: wrap; } }
+@media (max-width: 600px) { .inicio-acciones > a { flex: 1 1 160px; } .form-moderacion-botones { flex-wrap: wrap; } }

@@ -30,19 +30,19 @@
 }
 
 .estado-solicitud--cancelada {
-  background: #e2e8f0;
-  border-color: #cbd5e1;
-  color: #334155;
+  background: var(--border);
+  border-color: var(--border);
+  color: var(--text-h);
 }
 
 .estado-solicitud--finalizada {
-  background: #dbeafe;
-  border-color: #93c5fd;
-  color: #1e40af;
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--text-h);
 }
 
 .estado-solicitud--desconocido {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #475569;
+  background: var(--code-bg);
+  border-color: var(--border);
+  color: var(--text);
 }

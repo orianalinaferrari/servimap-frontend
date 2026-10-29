@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Registro from '../pages/Registro'
-import CampoContrasena from '../components/auth/CampoContrasena'
+import CampoContrasena from '../components/CampoContrasena'
 
 afterEach(cleanup)
 

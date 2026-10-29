@@ -1,49 +1,52 @@
-﻿:root {
-  --text: #625c6c;
-  --text-h: #282033;
-  --bg: #ffffff;
-  --border: #e5dfec;
-  --code-bg: #f5f2f8;
-  --accent: #7540af;
-  --accent-bg: #f0e9f8;
-  --accent-border: #b49acc;
-  --social-bg: #f5f2f8;
-  --shadow: 0 6px 24px rgb(42 26 60 / 5%);
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: var(--sans);
-  --mono: ui-monospace, Consolas, monospace;
-  font: 16px/1.6 var(--sans);
-  color-scheme: light;
-  color: var(--text);
-  background: #faf9fc;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
+@import './styles/ServiMapIdentidad.css';
+
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
-#root { max-width: 1200px; margin: 0 auto; min-height: 100svh; padding: 0 32px 48px; }
-h1, h2, h3, h4 { color: var(--text-h); line-height: 1.25; font-weight: 650; letter-spacing: -.025em; }
+#root { min-height: 100svh; padding: 0 var(--page-gutter) 48px; }
+h1, h2, h3, h4 { font-family: var(--heading); color: var(--text-h); line-height: 1.25; font-weight: 500; letter-spacing: -.025em; }
 h1 { font-size: clamp(1.75rem, 4vw, 2.4rem); margin: 0 0 16px; }
 h2 { font-size: clamp(1.4rem, 3vw, 1.85rem); margin: 0 0 12px; }
 h3 { margin: 0 0 12px; }
 p { margin: 0 0 12px; }
 a { color: var(--accent); text-underline-offset: 4px; }
-a:hover { color: #572a89; }
+a:hover { color: var(--text-h); }
 button, input, select, textarea { font: inherit; }
 button { min-height: 44px; padding: 10px 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text-h); cursor: pointer; transition: background-color .15s, border-color .15s; }
 button:enabled:hover { background-color: var(--accent-bg); border-color: var(--accent-border); }
 button:disabled { opacity: .55; cursor: not-allowed; }
 :where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-input:not([type='checkbox']):not([type='radio']), select, textarea { width: 100%; min-width: 0; min-height: 46px; padding: 10px 12px; color: var(--text-h); background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+input:where(:not([type='checkbox']):not([type='radio'])), select, textarea { width: 100%; min-width: 0; min-height: 46px; padding: 10px 12px; color: var(--text-h); background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
 input[type='checkbox'], input[type='radio'] { accent-color: var(--accent); }
 textarea { resize: vertical; }
 label { color: var(--text-h); font-weight: 600; }
-[aria-invalid='true'] { border-color: #b42338 !important; }
+input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true'] { border-color: #b42338; }
 [role='alert'] { color: #a52336; background: #fff2f3; border-radius: 8px; padding: 10px 12px; font-size: .9rem; overflow-wrap: anywhere; }
 [role='status'] { background: var(--accent-bg); padding: 10px 14px; border-radius: 8px; }
 #root > main:not(.inicio):not(.login-pagina):not(.registro-pagina), #root > section { margin: 32px 0; padding: clamp(20px, 4vw, 36px); background: var(--bg); border: 1px solid var(--border); border-radius: 18px; text-align: left; }
-#root > main form:not(.crear-solicitud-formulario) > div { margin-bottom: 14px; }
+#root > main form:not(.crear-solicitud-formulario) > div:not(.campo-contrasena) { margin-bottom: 14px; }
 #root > main form > button + button { margin-left: 8px; }
 code { font-family: var(--mono); background: var(--code-bg); border-radius: 4px; padding: 4px 8px; }
-@media (max-width: 600px) { #root { padding: 0 16px 32px; } .filtros-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { :root { --page-gutter: 16px; } #root { padding-bottom: 32px; } .filtros-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Shared form actions and document layouts. */
+button[type='submit'] { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
+button[type='submit']:enabled:hover { background: var(--accent-hover); color: var(--bg); }
+button[type='submit']:disabled { opacity: .55; cursor: not-allowed; }
+.login-tarjeta button[type='submit'], .registro-formulario button[type='submit'] { margin-top: 16px; }
+#root > main { min-width: 0; }
+#root > main form > div > label { display: block; margin-bottom: 6px; }
+#root > main form > div > input, #root > main form > div > textarea { margin-bottom: 4px; }
+#root > main form > .campo-contrasena > input { margin-bottom: 0; }
+#root > main form > button { margin-block: 8px; }
+#root > main > section + section { margin-top: 24px; }
+#root > main > ul { padding: 0; list-style: none; display: grid; gap: 12px; }
+#root > main > ul > li { padding: 16px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; }
+dt { color: var(--text-h); font-weight: 600; }
+dd { margin: 0 0 12px; overflow-wrap: anywhere; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 12px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+th { background: var(--code-bg); color: var(--text-h); }
+@media (max-width: 600px) {
+  th, td { padding: 8px; }
+  .filtros-grid { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import CampoContrasena from '../components/auth/CampoContrasena'
+import CampoContrasena from '../components/CampoContrasena'
 import '../styles/Registro.css'
 
 function Registro() {

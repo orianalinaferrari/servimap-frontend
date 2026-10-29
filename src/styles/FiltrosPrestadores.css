@@ -1,8 +1,8 @@
 ﻿.filtros-prestadores {
   margin: 1.5rem 0;
   padding: 1.5rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
   border-radius: 14px;
 }
 
@@ -28,7 +28,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: 0.7rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: white;
   font: inherit;
@@ -53,14 +53,14 @@
 
 .filtros-acciones button {
   padding: 0.7rem 1rem;
-  border: 1px solid #94a3b8;
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: white;
   cursor: pointer;
 }
 
 .filtros-acciones button:hover {
-  background: #e2e8f0;
+  background: var(--border);
 }
 
 .filtros-acciones p {

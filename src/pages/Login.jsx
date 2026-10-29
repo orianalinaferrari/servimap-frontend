@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import '../styles/Login.css'
-import CampoContrasena from '../components/auth/CampoContrasena'
+import CampoContrasena from '../components/CampoContrasena'
 
 function Login() {
   const navigate = useNavigate()

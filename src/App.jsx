@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
+import './styles/ServiMapPublico.css'
 import AppRoutes from './routes/AppRoutes'
 import { BuscadorPrestadores } from './components/BuscadorPrestadores'
 import { PanelAdministracion } from './components/PanelAdministracion'
@@ -21,6 +22,7 @@ function App() {
   const navigate = useNavigate()
 
   const esInicio = location.pathname === '/'
+  const esAccesoPublico = ['/login', '/registro'].includes(location.pathname)
 
   function handleModerar(id, motivo) {
     const hoy = new Date().toLocaleDateString('en-CA')
@@ -60,12 +62,14 @@ function App() {
 
   return (
     <>
-      <header className="app-header">
-        <Link className="marca" to="/" aria-label="ServiMap, inicio">ServiMap<span>Servicios cerca tuyo</span></Link>
+      <header className={esAccesoPublico ? 'servimap-header-minimo' : 'app-header'}>
+        <Link className="servimap-logo" to="/" aria-label="ServiMap, inicio">ServiMap<span>Servicios cerca tuyo</span></Link>
 
-        <NavegacionRoles />
+        {esAccesoPublico ? (
+          <Link className="servimap-volver" to="/">← Volver al inicio</Link>
+        ) : <NavegacionRoles />}
 
-        {cargando ? (
+        {!esAccesoPublico && (cargando ? (
           <p role="status">Verificando sesión...</p>
         ) : autenticado ? (
           <div>
@@ -84,7 +88,7 @@ function App() {
                 : 'Cerrar sesión'}
             </button>
           </div>
-        ) : null}
+        ) : null)}
 
         {errorSesion && <p role="alert">{errorSesion}</p>}
       </header>

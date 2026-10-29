@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './CampoContrasena.css'
 
 export default function CampoContrasena(props) {
   const [visible, setVisible] = useState(false)
