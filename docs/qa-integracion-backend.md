@@ -1,5 +1,7 @@
 # QA final de integración con backend
 
+Evidencia más reciente: [validación final desde notebook](validacion-final.md). Los resultados y estados de ramas que siguen son históricos.
+
 ## Estado técnico
 
 Rama `feature/integracion-backend-servimap`; cambios locales sin commit, push ni merge. Base `7f6fd86`. Contratos cotejados de nuevo con los archivos actuales de GitHub y la referencia temporal externa: rutas, Swagger, Prisma, controladores, servicios y middleware JWT coinciden. Ningún cambio en backend, Neon ni Vercel.
