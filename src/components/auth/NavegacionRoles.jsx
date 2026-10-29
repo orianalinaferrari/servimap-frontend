@@ -1,5 +1,5 @@
 
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { normalizarRol, ROLES } from '../../utils/roles'
 
@@ -14,31 +14,31 @@ function NavegacionRoles() {
 
   return (
     <nav aria-label="Navegación según rol">
-      <Link to="/">Inicio</Link>{' | '}
+      <NavLink to="/">Inicio</NavLink>
 
       {!usuario && (
         <>
-          <Link to="/login">Iniciar sesión</Link>{' | '}
-          <Link to="/registro">Crear cuenta</Link>
+          <NavLink to="/login">Iniciar sesión</NavLink>
+          <NavLink to="/registro">Crear cuenta</NavLink>
         </>
       )}
 
       {rol === ROLES.CLIENTE && (
-        <Link to="/cliente">Mi panel de cliente</Link>
+        <NavLink to="/cliente">Mi panel de cliente</NavLink>
       )}
 
       {rol === ROLES.PRESTADOR && (
         <>
-          <Link to="/prestador">Mi panel de prestador</Link>
-          {' | '}
-          <Link to="/prestador/perfil">Mi perfil</Link>
-          {' | '}
-          <Link to="/prestador/oficios">Mis oficios</Link>
+          <NavLink to="/prestador" end>Mi panel de prestador</NavLink>
+
+          <NavLink to="/prestador/perfil">Mi perfil</NavLink>
+
+          <NavLink to="/prestador/oficios">Mis oficios</NavLink>
         </>
       )}
 
       {rol === ROLES.ADMINISTRADOR && (
-        <Link to="/admin">Panel de administración</Link>
+        <NavLink to="/admin">Panel de administración</NavLink>
       )}
     </nav>
   )

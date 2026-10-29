@@ -44,7 +44,7 @@ describe('Inicio de sesión - F-03', () => {
     ).toBeTruthy()
 
     expect(
-      screen.getByLabelText(/contraseña/i)
+      screen.getByLabelText(/^contraseña$/i)
     ).toBeTruthy()
   })
 
@@ -67,7 +67,7 @@ describe('Inicio de sesión - F-03', () => {
     )
 
     fireEvent.change(
-      screen.getByLabelText(/contraseña/i),
+      screen.getByLabelText(/^contraseña$/i),
       { target: { value: 'Clave1234' } }
     )
 
@@ -93,7 +93,7 @@ describe('Inicio de sesión - F-03', () => {
     )
 
     fireEvent.change(
-      screen.getByLabelText(/contraseña/i),
+      screen.getByLabelText(/^contraseña$/i),
       { target: { value: 'Clave1234' } }
     )
 
@@ -122,7 +122,7 @@ describe('Inicio de sesión - F-03', () => {
     )
 
     fireEvent.change(
-      screen.getByLabelText(/contraseña/i),
+      screen.getByLabelText(/^contraseña$/i),
       { target: { value: 'ClaveIncorrecta' } }
     )
 
