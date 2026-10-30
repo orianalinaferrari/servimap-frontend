@@ -47,3 +47,13 @@ export async function esperarPaginaCdp(listar, { timeoutMs = 10000, intervaloMs 
   } while (Date.now() < limite)
   throw new Error('Chrome no expuso una pestaña CDP inicial.', { cause: ultimoError })
 }
+
+// Lecturas reales por defecto; el modo local es explícito, solo QA y solo loopback.
+export function configuracionLecturasQa(env = process.env) {
+  if (!env.SERVIMAP_QA_LECTURAS_API) return { local: false, api: 'https://servimap-backend.vercel.app', web: 'http://localhost:5173' }
+  const api = new URL(env.SERVIMAP_QA_LECTURAS_API), web = new URL(env.SERVIMAP_QA_BASE_URL || 'http://localhost:5173')
+  if (![api, web].every((url) => url.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(url.hostname))) {
+    throw new Error('El modo local de lecturas solo admite orígenes http de loopback.')
+  }
+  return { local: true, api: api.origin, web: web.origin }
+}

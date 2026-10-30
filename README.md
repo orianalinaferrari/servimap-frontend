@@ -494,7 +494,9 @@ Realizan solo **GET y OPTIONS**. El segundo usa además una cadena Bearer delibe
 
 El 30/10/2026: **9 GET correctos**, salud/públicos 200 y protegidos 401 esperado; 1 oficio, 1 prestador y 0 marcadores. También **26 controles** CORS/permisos aprobados. Son datos de esa ejecución, no cantidades fijas del sistema.
 
-Existe `node scripts/qa/navegador-lecturas.mjs` para navegación real de lectura con bloqueo de escrituras; su evidencia anterior está en [validación final](docs/validacion-final.md). No se volvió a ejecutar en esta auditoría.
+Existe `node scripts/qa/navegador-lecturas.mjs` para navegación real de lectura con bloqueo de escrituras; su evidencia anterior está en [validación final](docs/validacion-final.md). Contra el backend real no se volvió a ejecutar en esta auditoría.
+
+**Modo local explícito, solo QA:** con `SERVIMAP_QA_LECTURAS_API` (origen http de loopback) y `SERVIMAP_QA_BASE_URL`, `lecturas-reales.mjs` y `navegador-lecturas.mjs` validan los mismos contratos de lectura contra una fixture local sobre la API simulada; cualquier origen que no sea loopback se rechaza. Sin esa variable conservan el comportamiento original contra `https://servimap-backend.vercel.app`. `npm run test:coverage:qa` y CI usan solo el modo local, sin depender de producción.
 
 <a id="demos"></a>
 
@@ -510,7 +512,7 @@ Procesos de desarrollo independientes: `envDir: false`, API local en memoria, se
 | PRESTADOR | `node scripts/qa/prestador-demo.mjs` | `http://127.0.0.1:4192/prestador` | `http://127.0.0.1:4193` |
 | CLIENTE | `node scripts/qa/cliente-demo.mjs` | `http://127.0.0.1:4194/cliente` | `http://127.0.0.1:4195` |
 
-Los JWT de fixtures tienen firma inválida para producción. Cliente/prestador agregan CSP de conexiones locales/cartografía; la demo administrativa tiene su servidor separado y no incorpora esa misma CSP. La diferencia figura en la auditoría y requiere revisión ante futuros cambios.
+Los JWT de fixtures tienen firma inválida para producción. Las tres demos comparten el servidor de `demo-local.mjs`. Cliente/prestador agregan CSP de conexiones locales/cartografía; la demo administrativa conserva su comportamiento sin esa CSP (`restringirConexiones: false`). La diferencia figura en la auditoría y requiere revisión ante futuros cambios.
 
 Con la demo correspondiente iniciada, los recorridos específicos son:
 
@@ -519,7 +521,7 @@ node scripts/qa/prestador-navegador.mjs
 node scripts/qa/cliente-navegador.mjs
 ```
 
-Son **alternativas**, no comandos para lanzar juntos. Requieren Chrome en la ruta Windows definida en cada script. No hay `admin-navegador.mjs`: el recorrido general cubre administración interceptada y su demo permite revisión manual.
+Son **alternativas**, no comandos para lanzar juntos. Comparten `runner-demo.mjs` y el arranque de Chrome/Edge de `chrome-cdp.mjs` (Windows o Linux; `SERVIMAP_QA_BROWSER` opcional). `npm run test:coverage:qa` y CI los ejecutan en el escenario `completo`, cada uno contra su demo, después del recorrido general, y fusionan su cobertura V8. No hay `admin-navegador.mjs`: el recorrido general cubre administración interceptada y su demo permite revisión manual.
 
 | Demo | Opción | Contenido |
 | --- | --- | --- |

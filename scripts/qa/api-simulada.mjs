@@ -49,6 +49,7 @@ export function crearApiSimulada({ perfilesAdicionales = [] } = {}) {
     const forzado = errores.findIndex((e) => e.method === method && e.path === ruta)
     if (forzado >= 0) { const [e] = errores.splice(forzado, 1); return fallo(e.status, `Error simulado ${e.status}`) }
     if (method === 'OPTIONS') return respuesta(204, null)
+    if (ruta === '/health' && method === 'GET') return respuesta(200, { status: 'ok' })
     if (ruta === '/api/auth/register' && method === 'POST') {
       const { nombre, email, password, rol } = body || {}, dni = String(body?.dni || '').replace(/[.\s]/g, '')
       if (!nombre?.trim() || !/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email || '') || !/^\d{7,8}$/.test(dni) || typeof password !== 'string' || password.length < 8 || !['CLIENTE', 'PRESTADOR'].includes(rol)) return fallo(400, 'Datos inválidos')

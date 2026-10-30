@@ -2,25 +2,17 @@ import { randomBytes } from 'node:crypto'
 const claveRegistro = randomBytes(32).toString('hex')
 // Chrome/Edge headless + CDP, sin dependencias externas. Toda API se intercepta.
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { crearApiSimulada, CUENTAS_QA, idQA, politicaDeRed, API_SIMULADA_ORIGIN } from './api-simulada.mjs'
-import { esIntercepcionCancelada, esperarPuertoChrome, esperarPaginaCdp, campoQaListo, argumentosGraficosQa } from './protocolo-cdp.mjs'
-
-// El primer arranque de Chrome con SwANGLE en runners Linux compartidos puede superar 10 s.
-const TIMEOUT_ARRANQUE_CDP_MS = 30000
+import { esIntercepcionCancelada, campoQaListo } from './protocolo-cdp.mjs'
+import { abrirChromeCdp } from './chrome-cdp.mjs'
 
 const base = process.env.SERVIMAP_QA_BASE_URL || 'http://localhost:5173'
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Solo se permite un frontend local')
-const chrome = [process.env.SERVIMAP_QA_BROWSER, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/chromium', '/usr/bin/google-chrome'].find((p) => p && existsSync(p))
-assert.ok(chrome, 'No hay Chrome/Edge instalado; no se descarga ningún navegador')
 const carpeta = mkdtempSync(path.join(os.tmpdir(), 'servimap-qa-browser-'))
-const proceso = spawn(chrome, ['--headless=new', ...argumentosGraficosQa(process.env.SERVIMAP_QA_SOFTWARE_GL === '1'), '--remote-debugging-port=0', `--user-data-dir=${path.join(carpeta, 'perfil')}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] })
-let falloChrome, diagnosticoChrome = ''
-proceso.once('error', error => { falloChrome = error })
-proceso.stderr.on('data', chunk => { diagnosticoChrome = (diagnosticoChrome + chunk).slice(-2000) })
+let proceso
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
 const api = crearApiSimulada(), pendientes = new Map()
 const canceladas = new Set()
@@ -99,15 +91,9 @@ async function crearSolicitud(descripcion) {
   return api.solicitudes.at(-1).id
 }
 try {
-  const activo = path.join(carpeta, 'perfil', 'DevToolsActivePort')
-  const port = await esperarPuertoChrome(() => {
-    if (falloChrome) throw falloChrome
-    if (proceso.exitCode !== null || proceso.signalCode !== null) {
-      throw new Error(`Chrome terminó antes de exponer CDP (exit ${proceso.exitCode}, signal ${proceso.signalCode}): ${diagnosticoChrome}`)
-    }
-    return readFileSync(activo, 'utf8')
-  }, { timeoutMs: TIMEOUT_ARRANQUE_CDP_MS, diagnostico: () => diagnosticoChrome })
-  const tab = await esperarPaginaCdp(async () => (await fetch(`http://127.0.0.1:${port}/json/list`)).json(), { timeoutMs: TIMEOUT_ARRANQUE_CDP_MS })
+  const chrome = await abrirChromeCdp(carpeta)
+  proceso = chrome.proceso
+  const tab = chrome.pagina
   ws = new WebSocket(tab.webSocketDebuggerUrl); await new Promise((r, j) => { ws.onopen = r; ws.onerror = j })
   ws.onmessage = ({ data }) => {
     const m = JSON.parse(data)
@@ -283,6 +269,6 @@ try {
   console.log(JSON.stringify({ aprobado: reporte.aprobado, verificaciones: reporte.verificaciones.length, faseFallida: reporte.faseFallida, error: reporte.error, alturaNavegacion: reporte.alturaNavegacion, erroresJavaScript: reporte.erroresConsola.length, llamadasSimuladas: api.llamadas.length, escriturasSimuladas: api.llamadas.filter((r) => !['GET','OPTIONS'].includes(r.method)).length, reporte: path.join(carpeta, 'resultado.json') }))
   writeFileSync(path.join(carpeta, 'resultado.json'), JSON.stringify(reporte, null, 2))
   } finally {
-  if (ws?.readyState === WebSocket.OPEN) { await cdp('Browser.close').catch(() => {}); ws.close() } else proceso.kill()
+  if (ws?.readyState === WebSocket.OPEN) { await cdp('Browser.close').catch(() => {}); ws.close() } else proceso?.kill()
   }
 }

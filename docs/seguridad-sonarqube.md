@@ -265,3 +265,41 @@ Revalidación final de la estabilización: **508/508 tests**, 62 archivos, un wo
 **Por qué no se alcanza >90% global ni 0% de duplicación en esta intervención:** los mayores pendientes son runners QA manuales que CI no ejecuta: `navegador-lecturas.mjs` y `lecturas-reales.mjs` (lecturas contra el backend publicado), `cliente-navegador.mjs` y `prestador-navegador.mjs` (Chrome con ruta fija de Windows, contra demos locales) y `admin-demo.mjs`/`demo-local.mjs`. Los dos runners de demo también concentran la duplicación global (~75 líneas compartidas). No se excluyeron del análisis ni se inventaron hits.
 
 **Trabajo pendiente propuesto:** extraer el cliente CDP compartido de los runners de demo (elimina la duplicación), hacerlos multiplataforma y ejecutarlos en `qa-cobertura.mjs` contra sus demos con API simulada; ejecutar las lecturas reales contra fixtures locales, y seguir sumando pruebas en `SolicitudesPrestador`, `SolicitudesCliente` y `PanelPrestador`. Cada paso debe medirse en CI antes de declarar las metas.
+
+## Duplicación y runners de demo integrados a la cobertura (posterior a `576426e`)
+
+**Remoto antes de este cambio (PR #31, `576426e`):** Gate OK, cobertura global 79,7% (457 líneas y 427 condiciones sin cubrir), duplicación global 1,9% (163 líneas), 0 issues abiertos. `main` sigue mostrando el análisis previo al PR (21 issues, duplicación 1,4%).
+
+**Duplicaciones confirmadas en SonarCloud y corrección:**
+- `cliente-navegador.mjs` ↔ `prestador-navegador.mjs` (~75 líneas): el cliente CDP, helpers, verificaciones finales y limpieza pasan a `runner-demo.mjs`; cada runner conserva solo su recorrido y sus controles.
+- `admin-demo.mjs` ↔ `demo-local.mjs` (26 líneas): la demo administrativa usa `iniciarDemo` con su aviso y sin CSP, como antes; sus datos pasan a `admin-datos.mjs`.
+- `SolicitudesCliente.jsx` ↔ `SolicitudesPrestador.jsx` (18 líneas): campos comunes del detalle en `CamposDetalleSolicitud.jsx`; cada vista mantiene su propio formato de valores.
+- El arranque de Chrome/Edge de `navegador.mjs` y de los runners se comparte en `chrome-cdp.mjs` (timeout de 30 s, diagnóstico de stderr y pestaña inicial lista).
+
+**Integración en CI:** `qa-cobertura.mjs` ejecuta, tras el recorrido general y el smoke del build, `cliente-navegador.mjs` y `prestador-navegador.mjs` contra sus demos con API simulada (puertos loopback fijos), espera disponibilidad HTTP y detiene cada demo con SIGTERM para volcar su cobertura. Sin escrituras ni conexiones a producción: los runners siguen bloqueando el backend publicado.
+
+**Validación local (Windows, Node 22.19.0):** 569/569 tests en 66 archivos con un worker; lint, build y `git diff --check` correctos. Harness QA completo en 72 s: recorrido general 84 controles, runner cliente 49 y prestador 62, todos aprobados; fusión de 4 ejecuciones V8 y 90 fuentes; el control de integridad LCOV del workflow pasa. En Windows el SIGTERM es forzado, así que la cobertura propia de los procesos de demo solo se vuelca en Linux (CI).
+
+**Cobertura local fusionada:** líneas 1917/2136 = **89,74%**, branches 1613/1939 = 83,18%; líneas + ramas **86,63%** (antes 77,34%; pendientes 929 → 545). `src` 90,94%; `scripts` 78,32%.
+
+**Pendiente para >90% global:** `navegador-lecturas.mjs` (145) y `lecturas-reales.mjs` (40) validan a propósito la API publicada y no se ejecutan en CI para no depender de producción; requieren decidir si se agrega un modo fixture explícito. Restan además `api-simulada.mjs` (32), `navegador.mjs` (30) y las vistas `SolicitudesPrestador`, `SolicitudesCliente` y `PanelPrestador` (~70). Las métricas remotas (cobertura, duplicación 0% e issues) deben confirmarse en SonarCloud tras publicar.
+
+### Lecturas en modo fixture local e integración final
+
+Autorizado explícitamente: `lecturas-reales.mjs` y `navegador-lecturas.mjs` incorporan un modo local **solo QA**, activado con `SERVIMAP_QA_LECTURAS_API` y limitado a orígenes http de loopback; sin la variable conservan el modo real. `lecturas-reales.mjs` expone `verificarLecturas` con las mismas aserciones (estado, CORS, datos privados, coordenadas redondeadas, rutas protegidas, ficha). La fixture usa el servidor de demos extraído como `crearServidorApiQa` sobre la API simulada, que ahora responde `/health` como el contrato publicado. `navegador-lecturas.mjs` usa el arranque compartido de `chrome-cdp.mjs`.
+
+`LecturasQa.test.js` ejercita la verificación real contra la fixture HTTP: caso válido y rechazos por dato privado expuesto, ruta protegida sin 401, coordenadas sin redondear, catálogo con tipos incorrectos, salud degradada y origen no autorizado, además de la selección de modo. El harness ejecuta ambos scripts en modo local después de las demos, con un solo navegador a la vez.
+
+Se corrigió una carrera previa del runner cliente: tras `Page.reload` podía validar el documento anterior. Ahora espera la recarga efectiva y la tarjeta concreta; `until` solo reintenta el error de contexto destruido por navegación.
+
+**Validación local:** 578/578 tests en 67 archivos con un worker; lint, build y `git diff --check` correctos. Harness en 87 s: general 84 controles, cliente y prestador aprobados, lecturas locales aprobadas (navegador 65 controles); 6 ejecuciones V8 y 90 fuentes fusionadas; control LCOV del workflow correcto.
+
+**Cobertura local fusionada:** líneas 2034/2146 = **94,78%**, branches 1690/1960 = 86,22%; líneas + ramas **90,70%** (382 elementos pendientes; `src` 90,94%, `scripts` 90,24%). Margen estrecho: debe confirmarse en SonarCloud tras publicar, igual que duplicación 0% e issues 0.
+
+### Pruebas de contratos de error y flujos alternativos
+
+`ApiSimuladaContratos.test.js` verifica las respuestas de error de la API simulada que usan demos y QA (401 por token inválido o vencido, 400/403/404/409 en registro, perfil, solicitudes, transiciones, calificaciones, moderación y oficios). `SolicitudesVariantes.test.jsx` cubre formatos alternativos de cliente/prestador/servicio y la recarga fallida tras una acción confirmada por el servidor.
+
+**Validación local:** 607/607 tests en 69 archivos con un worker; QA completo en 81 s con los cinco recorridos aprobados y control LCOV correcto; lint y build correctos. **Cobertura fusionada:** líneas 95,39%, ramas 88,16%, líneas + ramas **91,94%** (331 pendientes; `src` 91,98%, `scripts` 91,85%).
+
+**Por qué no se continúa hacia 97–99%:** los pendientes restantes son, en su mayoría, guardas defensivas (`if (activo)` tras desmontar, rechazos que no son `Error`, bloqueos por doble clic), ramas de fallo de los runners QA (Chrome/CDP caído, timeouts, capturas de error) y código heredado sin uso productivo (`adminOficios.js`, `oficiosPrestador.js`, `construirParametrosFiltros`, ~28 elementos). Cubrirlos exigiría inyectar fallos artificiales o probar código muerto; eliminar ese código es una decisión pendiente, no una exclusión.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { esperarPaginaCdp, esperarPuertoChrome } from '../../scripts/qa/protocolo-cdp.mjs'
+import { argumentosChromeQa, resolverNavegadorQa } from '../../scripts/qa/chrome-cdp.mjs'
 
 const completo = '43210\n/devtools/browser/qa-local\n'
 describe('Handshake CDP sin carrera entre existencia y lectura', () => {
@@ -43,5 +44,19 @@ describe('Pestaña CDP inicial', () => {
   it('falla con causa si la pestaña nunca aparece', async () => {
     const error = new Error('ECONNREFUSED')
     await expect(esperarPaginaCdp(async () => { throw error }, { timeoutMs: 0, intervaloMs: 0 })).rejects.toMatchObject({ message: 'Chrome no expuso una pestaña CDP inicial.', cause: error })
+  })
+})
+
+describe('Selección y argumentos de Chrome para QA', () => {
+  it('prioriza SERVIMAP_QA_BROWSER y usa rutas instaladas conocidas como respaldo', () => {
+    expect(resolverNavegadorQa((ruta) => ruta === '/opt/chrome', '/opt/chrome')).toBe('/opt/chrome')
+    expect(resolverNavegadorQa((ruta) => ruta === '/usr/bin/google-chrome', '/no/existe')).toBe('/usr/bin/google-chrome')
+    expect(resolverNavegadorQa(() => false, undefined)).toBeUndefined()
+  })
+  it('arranca headless con puerto CDP dinámico, perfil aislado y SwANGLE solo cuando se pide', () => {
+    const base = argumentosChromeQa('/tmp/qa/perfil')
+    expect(base).toEqual(expect.arrayContaining(['--headless=new', '--remote-debugging-port=0', '--user-data-dir=/tmp/qa/perfil']))
+    expect(base).not.toContain('--use-angle=swiftshader')
+    expect(argumentosChromeQa('/tmp/qa/perfil', true)).toContain('--use-angle=swiftshader')
   })
 })

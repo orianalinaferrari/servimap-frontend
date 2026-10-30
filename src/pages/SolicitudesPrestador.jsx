@@ -1,4 +1,5 @@
 import EstadoSolicitud from '../components/EstadoSolicitud'
+import CamposDetalleSolicitud from '../components/CamposDetalleSolicitud'
 import { IconoPrestador } from '../components/prestador/IconoPrestador'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -62,20 +63,7 @@ function DetalleSolicitudPrestador({ solicitud, onCerrar }) {
         <dt>Cliente</dt>
         <dd>{obtenerNombreCliente(solicitud)}</dd>
 
-        <dt>Servicio</dt>
-        <dd>{mostrarValor(solicitud.servicio)}</dd>
-
-        <dt>Descripción</dt>
-        <dd>{mostrarValor(solicitud.descripcion)}</dd>
-
-        <dt>Dirección</dt>
-        <dd>{mostrarValor(solicitud.direccion)}</dd>
-
-        <dt>Contacto preferido</dt>
-        <dd>{mostrarValor(solicitud.contactoPreferido)}</dd>
-
-        <dt>Fecha de creación</dt>
-        <dd>{mostrarValor(solicitud.fechaCreacion)}</dd>
+        <CamposDetalleSolicitud solicitud={solicitud} formatear={mostrarValor} />
       </dl>
     </section>
   )
