@@ -1,0 +1,116 @@
+/* Presentación exclusiva de /admin; contratos y operaciones permanecen en sus componentes. */
+body:has(.panel-administracion) { background: #F8F5EF; }
+#root:has(> .panel-administracion) { --page-gutter: clamp(16px, 3.2vw, 48px); }
+.administracion-header { background: #193F49; padding: 18px max(24px, 4.2vw); gap: 24px; }
+.administracion-header .servimap-logo { font-size: 38px; line-height: 1.05; letter-spacing: -.035em; }
+.administracion-header .servimap-logo span { margin-top: 5px; font-size: 16px; line-height: 1.4; }
+.administracion-header nav { gap: 8px; }
+.administracion-header nav a,
+.administracion-header nav a:hover,
+.administracion-header nav a:active,
+.administracion-header nav a:focus,
+.administracion-header nav a.active { padding: 14px 20px; border: 0; box-shadow: none; text-decoration: none; background: transparent; color: #FFF; font-size: 16px; }
+.administracion-header nav a::before, .administracion-header nav a::after { content: none; display: none; }
+.administracion-header nav a.active { background: #F7DCE5; color: #193F49; }
+.administracion-header nav a:focus-visible { outline: 3px solid #F7DCE5; outline-offset: 3px; }
+.administracion-header > div { gap: 24px; font-size: 14px; }
+.administracion-header > div > button { background: #FFF; color: #193F49; padding: 14px 20px; border-radius: 10px; }
+#root > .panel-administracion.panel { max-width: 1440px; margin: 0 auto; padding: 42px 0 8px; border: 0; border-radius: 0; box-shadow: none; background: transparent; text-align: left; color: #314155; gap: 0; }
+.panel-administracion > h2 { margin: 0 18px 28px; font-size: clamp(32px, 3.65vw, 52px); line-height: 1.18; font-weight: 500; letter-spacing: -.035em; color: #103E49; }
+.panel-administracion .panel-nav { margin: 0 18px 36px; display: flex; flex-wrap: wrap; gap: 10px; }
+.panel-administracion .panel-nav button { display: inline-flex; align-items: center; justify-content: center; gap: 18px; min-height: 54px; padding: 12px 30px; border: 1px solid #E7DDD5; border-radius: 10px; background: #FFF; color: #123D50; font-size: 18px; font-weight: 400; }
+.panel-administracion .panel-nav button[aria-pressed='true'] { background: #F8DCE6; border-color: #EFADC3; font-weight: 600; }
+.panel-administracion .admin-icono { flex-shrink: 0; }
+.panel-administracion .panel-nav .admin-icono { width: 28px; height: 28px; }
+.panel-administracion .moderacion { display: grid; gap: 26px; }
+.panel-administracion .admin-tarjeta { min-width: 0; padding: 22px; background: #FFF; border: 1px solid #EAE1D9; border-radius: 16px; box-shadow: 0 6px 22px rgb(64 46 30 / 4%); }
+.panel-administracion .admin-seccion-cabecera { display: flex; align-items: center; gap: 22px; margin: 0 0 24px; }
+.panel-administracion .admin-seccion-cabecera > div { min-width: 0; flex: 1; }
+.panel-administracion .admin-seccion-cabecera h3,
+.panel-administracion .admin-oficios-encabezado h3 { margin: 0 0 6px; font-size: 29px; line-height: 1.2; color: #103E49; }
+.panel-administracion .admin-seccion-cabecera p,
+.panel-administracion .admin-oficios-encabezado p { margin: 0; color: #64788E; font-size: 16px; line-height: 1.5; }
+.panel-administracion .admin-icono-circulo,
+.panel-administracion .admin-avatar { display: grid; place-items: center; flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%; background: #FCE5EC; color: #790D3E; }
+.panel-administracion .admin-icono-circulo .admin-icono { width: 32px; height: 32px; }
+.panel-administracion .admin-avatar .admin-icono { width: 36px; height: 36px; }
+.panel-administracion .admin-contador { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; gap: 12px; padding: 16px 20px; border-radius: 12px; background: #FDEBF1; color: #790D3E; font-size: 16px; font-weight: 600; }
+.panel-administracion .admin-contador-neutro { background: #EFF3F5; color: #193F49; }
+.panel-administracion .lista-moderacion { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0; margin: 0; list-style: none; }
+.panel-administracion .tarjeta-moderacion { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); align-content: start; gap: 12px 20px; min-width: 0; padding: 18px 20px 24px; border: 1px solid #E6DBD3; border-radius: 12px; box-shadow: none; background: #FFF; }
+.panel-administracion .admin-comentario-datos { min-width: 0; padding-right: 140px; }
+.panel-administracion .admin-comentario-datos strong { color: #123D50; font-size: 16px; font-weight: 600; }
+.panel-administracion .admin-prestador { margin: 4px 0 6px; color: #64788E; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.panel-administracion .admin-puntaje { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; }
+.panel-administracion .admin-puntaje .admin-icono { width: 20px; height: 20px; color: #FFA538; }
+.panel-administracion .admin-comentario-texto { grid-column: 2; margin: 0; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+.panel-administracion .boton-ocultar { position: absolute; top: 20px; right: 20px; display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 10px 16px; border: 1px solid #D53F61; border-radius: 9px; background: #FFF; color: #AA1644; font-weight: 500; }
+.panel-administracion .boton-ocultar:hover { background: #FFF0F4; }
+.panel-administracion .admin-ocultos .lista-moderacion { grid-template-columns: minmax(0, 1fr); }
+.panel-administracion .tarjeta-oculta .admin-comentario-datos { padding: 0; }
+.panel-administracion .form-moderacion { grid-column: 1 / -1; width: 100%; max-width: none; margin: 0; padding: 16px; background: #FFF6F8; }
+.panel-administracion .form-moderacion-botones { flex-wrap: wrap; }
+.panel-administracion .admin-oficios { max-width: none; margin: 0; }
+.panel-administracion .admin-oficios-encabezado { gap: 20px; margin: 0 0 26px; }
+.panel-administracion .admin-oficios-encabezado > div:first-of-type { flex: 1; min-width: 0; }
+.panel-administracion .admin-oficios-resumen span { background: #FDEBF1; color: #790D3E; font-size: 15px; padding: 14px 18px; }
+.panel-administracion .admin-oficios-resumen span:last-child { background: #E7F3EC; color: #285F49; }
+.panel-administracion .admin-oficios-formulario { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 20px; max-width: none; margin: 0 0 26px; }
+.panel-administracion .admin-oficios-formulario h4 { grid-column: 1 / -1; }
+.panel-administracion .admin-oficios h4 { margin: 0 0 18px; font-size: 27px; color: #103E49; }
+.panel-administracion .admin-oficios-formulario label { grid-column: 1; font-size: 15px; }
+.panel-administracion .admin-oficios-formulario input { grid-column: 1; max-width: none; min-height: 48px; border-color: #DDD9D5; }
+.panel-administracion .admin-oficios-formulario > .admin-oficios-acciones { grid-column: 2; grid-row: 3; align-self: start; }
+.panel-administracion .admin-oficios-formulario button[type='submit'] { min-height: 48px; background: #F5D6E0; color: #72253F; border-color: #E5B0C1; }
+.panel-administracion .admin-oficios-tabla-contenedor { border-color: #E8DDD6; border-radius: 10px; }
+.panel-administracion .admin-oficios-tabla th { background: #FCEDF2; color: #193F49; font-size: 15px; }
+.panel-administracion .admin-oficios-tabla td { overflow-wrap: anywhere; }
+.panel-administracion .admin-oficios-tabla tr:last-child td { border-bottom: 0; }
+.panel-administracion .admin-oficios-acciones button { min-height: 44px; font-size: 14px; font-weight: 500; color: #193F49; border-color: #B8CBCF; }
+.panel-administracion .admin-oficios-acciones .admin-desactivar { color: #A32149; border-color: #E2A9BC; }
+.panel-administracion .admin-oficios-acciones .admin-activar { color: #256047; border-color: #A8CCB9; }
+.panel-administracion :is(a, button, input):focus-visible { outline: 3px solid #193F49; outline-offset: 3px; }
+@media (max-width: 1100px) {
+  .administracion-header { gap: 18px; padding-inline: 24px; }
+  .administracion-header nav a { padding: 12px; font-size: 14px; }
+  .administracion-header > div { margin-left: auto; }
+  .panel-administracion .admin-comentario-datos { padding-right: 0; }
+  .panel-administracion .boton-ocultar { position: static; grid-column: 2; justify-self: start; }
+}
+@media (max-width: 700px) {
+  .administracion-header .servimap-logo { font-size: 30px; }
+  .administracion-header .servimap-logo span { font-size: 13px; }
+  .administracion-header nav { width: 100%; gap: 4px; }
+  .administracion-header nav a { padding: 10px 8px; font-size: 13px; }
+  .administracion-header > div { margin-left: 0; gap: 12px; font-size: 12px; }
+  .administracion-header > div > button { padding: 10px 14px; }
+  #root > .panel-administracion.panel { padding-top: 28px; }
+  .panel-administracion > h2 { margin: 0 0 24px; }
+  .panel-administracion .panel-nav { margin: 0 0 24px; gap: 10px; }
+  .panel-administracion .panel-nav button { width: 100%; justify-content: flex-start; padding: 12px 16px; gap: 12px; font-size: 16px; }
+  .panel-administracion .admin-tarjeta { padding: 18px 16px; }
+  .panel-administracion .admin-seccion-cabecera { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; margin-bottom: 20px; }
+  .panel-administracion .admin-seccion-cabecera .admin-contador { grid-column: 1 / -1; justify-self: start; }
+  .panel-administracion .admin-icono-circulo { width: 48px; height: 48px; }
+  .panel-administracion .admin-seccion-cabecera h3, .panel-administracion .admin-oficios-encabezado h3 { font-size: 24px; }
+  .panel-administracion .admin-seccion-cabecera p, .panel-administracion .admin-oficios-encabezado p { font-size: 14px; }
+  .panel-administracion .admin-contador { padding: 10px 14px; font-size: 14px; }
+  .panel-administracion .lista-moderacion { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .panel-administracion .tarjeta-moderacion { grid-template-columns: 44px minmax(0, 1fr); padding: 16px 12px; gap: 12px; }
+  .panel-administracion .admin-avatar { width: 44px; height: 44px; }
+  .panel-administracion .admin-avatar .admin-icono { width: 28px; height: 28px; }
+  .panel-administracion .admin-comentario-datos strong { font-size: 14px; }
+  .panel-administracion .admin-comentario-texto { grid-column: 1 / -1; font-size: 14px; }
+  .panel-administracion .admin-oficios-encabezado { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .panel-administracion .admin-oficios-encabezado > div:first-of-type { flex-basis: calc(100% - 60px); }
+  .panel-administracion .admin-oficios-formulario { grid-template-columns: minmax(0, 1fr); }
+  .panel-administracion .admin-oficios-formulario > .admin-oficios-acciones { grid-column: 1; grid-row: auto; }
+  .panel-administracion .admin-oficios-formulario button { flex: 1; }
+  .panel-administracion .admin-oficios-tabla-contenedor { overflow: visible; border: 0; }
+  .panel-administracion .admin-oficios-tabla, .panel-administracion .admin-oficios-tabla tbody { display: block; }
+  .panel-administracion .admin-oficios-tabla thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .panel-administracion .admin-oficios-tabla tr { display: block; margin-bottom: 14px; padding: 8px 12px; border: 1px solid #E8DDD6; border-radius: 10px; }
+  .panel-administracion .admin-oficios-tabla td { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: start; gap: 10px; padding: 10px 0; border: 0; font-size: 14px; }
+  .panel-administracion .admin-oficios-tabla td::before { content: attr(data-label); color: #64788E; font-weight: 500; }
+  .panel-administracion .admin-oficios-tabla td .admin-oficios-acciones { gap: 8px; }
+}

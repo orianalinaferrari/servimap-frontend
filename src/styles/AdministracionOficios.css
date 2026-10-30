@@ -1,0 +1,166 @@
+.admin-oficios {
+  max-width: 1080px;
+  margin: 28px 0;
+  color: #243247;
+}
+
+.admin-oficios-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.admin-oficios-encabezado h3 {
+  font-size: 25px;
+  margin: 0 0 8px;
+}
+
+.admin-oficios-encabezado p {
+  color: #64748b;
+  margin: 0;
+}
+
+.admin-oficios-resumen {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-oficios-resumen span {
+  padding: 10px 14px;
+  background: #eaf4f7;
+  border-radius: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-oficios-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  background: #f7fafc;
+  border: 1px solid #e0e8ed;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-oficios-formulario h4 {
+  margin: 0 0 8px;
+  font-size: 19px;
+}
+
+.admin-oficios-formulario label {
+  font-weight: 700;
+}
+
+.admin-oficios-formulario input {
+  width: 100%;
+  max-width: 480px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #b7cbd4;
+  border-radius: 10px;
+  font: inherit;
+}
+
+.admin-oficios-acciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-oficios-acciones button {
+  padding: 9px 14px;
+  border: 1px solid #a8c2ce;
+  background: white;
+  color: #245e73;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-oficios-acciones button:hover {
+  background: #eaf4f7;
+}
+
+.admin-oficios-acciones button:focus-visible {
+  outline: 3px solid #3c91b0;
+  outline-offset: 2px;
+}
+
+.admin-oficios-exito,
+.admin-oficios-error {
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.admin-oficios-exito {
+  background: #e7f6ed;
+  color: #216342;
+}
+
+.admin-oficios-error {
+  background: #fff0f0;
+  color: #a12f2f;
+}
+
+.admin-oficios-tabla-contenedor {
+  overflow-x: auto;
+  border: 1px solid #e0e8ed;
+  border-radius: 14px;
+}
+
+.admin-oficios-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.admin-oficios-tabla th,
+.admin-oficios-tabla td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #e9eef2;
+}
+
+.admin-oficios-tabla th {
+  background: #f2f7f9;
+}
+
+.admin-oficios-activo,
+.admin-oficios-inactivo {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-oficios-activo {
+  background: #e7f6ed;
+  color: #216342;
+}
+
+.admin-oficios-inactivo {
+  background: #f1f3f5;
+  color: #596579;
+}
+
+@media (max-width: 650px) {
+  .admin-oficios-encabezado {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-oficios-formulario {
+    padding: 16px;
+  }
+
+  .admin-oficios-tabla th,
+  .admin-oficios-tabla td {
+    padding: 10px;
+  }
+}

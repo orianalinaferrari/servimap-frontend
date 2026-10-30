@@ -4,14 +4,16 @@ export function ReputacionPrestador({ prestador, calificaciones }) {
   const visibles = obtenerCalificacionesVisibles(calificaciones, prestador.id)
 
   return (
-    <section>
+    <section className="reputacion">
       <h3>Reputación</h3>
 
       {prestador.calificacionPromedio === null ? (
         <p>Sin calificaciones</p>
       ) : (
         <>
-          <p aria-hidden="true">{generarEstrellas(prestador.calificacionPromedio)}</p>
+          <p className="estrellas" aria-hidden="true">
+            {generarEstrellas(prestador.calificacionPromedio)}
+          </p>
           <p>Calificación: {prestador.calificacionPromedio.toFixed(1)} / 5</p>
         </>
       )}
@@ -21,15 +23,17 @@ export function ReputacionPrestador({ prestador, calificaciones }) {
       {visibles.length === 0 ? (
         <p>Todavía no hay comentarios</p>
       ) : (
-        <ul>
+        <ul className="lista-comentarios">
           {visibles.map((calificacion) => (
-            <li key={calificacion.id}>
+            <li key={calificacion.id} className="comentario">
               <p>
                 <strong>{calificacion.clienteNombre}</strong> –{' '}
-                {generarEstrellas(calificacion.puntaje)}
+                <span className="estrellas">{generarEstrellas(calificacion.puntaje)}</span>
               </p>
               {calificacion.comentario && <p>{calificacion.comentario}</p>}
-              <p>{calificacion.fechaPublicacion.split('-').reverse().join('/')}</p>
+              <p className="comentario-fecha">
+                {new Date(calificacion.fechaPublicacion).toLocaleDateString('es-AR')}
+              </p>
             </li>
           ))}
         </ul>

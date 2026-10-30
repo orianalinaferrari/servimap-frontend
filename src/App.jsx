@@ -1,68 +1,94 @@
 
 import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
+import './styles/ServiMapPublico.css'
+import './styles/PrestadorVisual.css'
+import './styles/ClienteVisual.css'
 import AppRoutes from './routes/AppRoutes'
-import { BuscadorPrestadores } from './components/BuscadorPrestadores'
+import LandingEntrada from './components/LandingEntrada'
 import { PanelAdministracion } from './components/PanelAdministracion'
-import { calificacionesMock } from './data/calificacionesMock'
-import { prestadoresMock } from './data/prestadoresMock'
-import { moderarCalificacion } from './utils/reputacion'
+import NavegacionRoles from './components/auth/NavegacionRoles'
+import { useAuth } from './context/useAuth'
 
 function App() {
-  const [vista, setVista] = useState('busqueda')
-  const [calificaciones, setCalificaciones] = useState(calificacionesMock)
+  const [cerrandoSesion, setCerrandoSesion] = useState(false)
+  const [errorSesion, setErrorSesion] = useState('')
 
-  function handleModerar(id, motivo) {
-    const hoy = new Date().toLocaleDateString('en-CA')
+  const { usuario, autenticado, cargando, logout } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
 
-    setCalificaciones((anteriores) =>
-      moderarCalificacion(anteriores, id, motivo, hoy)
-    )
+  const esInicio = location.pathname === '/'
+  const esDirectorio = location.pathname === '/prestadores'
+  const esAdministracion = location.pathname === '/admin'
+  const esPrestador = location.pathname === '/prestador' || location.pathname.startsWith('/prestador/')
+  const esCliente = location.pathname === '/cliente' || location.pathname.startsWith('/cliente/')
+  const esAccesoPublico = ['/login', '/registro'].includes(location.pathname)
+
+  async function handleCerrarSesion() {
+    if (cerrandoSesion) return
+
+    setErrorSesion('')
+    setCerrandoSesion(true)
+
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      setErrorSesion(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo cerrar la sesión.'
+      )
+    } finally {
+      setCerrandoSesion(false)
+    }
   }
+
+  const panelAdministracion = <PanelAdministracion />
 
   return (
     <>
-      <AppRoutes />
+      {!esInicio && <header className={esAccesoPublico ? 'servimap-header-minimo' : esDirectorio ? 'app-header directorio-header' : esAdministracion ? 'app-header administracion-header' : esPrestador ? 'app-header prestador-header' : esCliente ? 'app-header cliente-header' : 'app-header'}>
+        <Link className="servimap-logo" to="/" aria-label="ServiMap, inicio">ServiMap<span>Servicios cerca tuyo</span></Link>
 
-      <main>
-        <h1>ServiMap</h1>
-        <p>Frontend de ServiMap</p>
+        {esAccesoPublico ? (
+          <Link className="servimap-volver" to="/">← Volver al inicio</Link>
+        ) : <NavegacionRoles />}
 
-        <nav aria-label="Navegación principal">
-          <button
-            type="button"
-            aria-pressed={vista === 'busqueda'}
-            onClick={() => setVista('busqueda')}
-          >
-            Buscar prestadores
-          </button>
+        {!esAccesoPublico && (cargando ? (
+          <p role="status">Verificando sesión...</p>
+        ) : autenticado ? (
+          <div>
+            <p>
+              Sesión iniciada
+              {usuario?.nombre ? `: ${usuario.nombre}` : ''}
+            </p>
 
-          <button
-            type="button"
-            aria-pressed={vista === 'admin'}
-            onClick={() => setVista('admin')}
-          >
-            Administración
-          </button>
-        </nav>
+            <button
+              type="button"
+              onClick={handleCerrarSesion}
+              disabled={cerrandoSesion}
+            >
+              {cerrandoSesion
+                ? 'Cerrando sesión...'
+                : 'Cerrar sesión'}
+            </button>
+          </div>
+        ) : null)}
 
-        {vista === 'busqueda' && (
-          <BuscadorPrestadores
-            prestadores={prestadoresMock}
-            calificaciones={calificaciones}
-          />
-        )}
+        {errorSesion && <p role="alert">{errorSesion}</p>}
+      </header>}
 
-        {vista === 'admin' && (
-          <PanelAdministracion
-            prestadores={prestadoresMock}
-            calificaciones={calificaciones}
-            onModerar={handleModerar}
-          />
-        )}
-      </main>
+      <AppRoutes panelAdministracion={panelAdministracion} />
+
+      {esInicio && (
+        <main className="inicio inicio-landing"><LandingEntrada /></main>
+      )}
     </>
   )
 }
 
 export default App
+

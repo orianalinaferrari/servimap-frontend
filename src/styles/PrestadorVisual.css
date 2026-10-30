@@ -1,0 +1,166 @@
+/* Solo rutas propias del prestador. No modifica directorio ni otros roles. */
+#root:has(> .prestador-pagina) { --page-gutter: clamp(16px, 3.2vw, 48px); }
+.prestador-header, .prestador-pagina { --accent-border: #C98D9B; --code-bg: #F8F5EF; }
+.prestador-header > *, .prestador-header > div > p { min-width: 0; overflow-wrap: anywhere; }
+.prestador-header .servimap-logo { flex-shrink: 0; }
+.prestador-header nav { margin-inline: auto; }
+.prestador-header { background: #193F49; padding: 18px var(--page-gutter); gap: 16px; }
+.prestador-header .servimap-logo { font-size: 34px; }
+.prestador-header .servimap-logo span { font-size: 13px; }
+.prestador-header nav { gap: 4px; }
+.prestador-header nav a, .prestador-header nav a:hover, .prestador-header nav a:active, .prestador-header nav a:focus, .prestador-header nav a.active { text-decoration: none; border: 0; box-shadow: none; padding: 10px 12px; font-size: 14px; background: transparent; color: white; }
+.prestador-header nav a.active { background: #F6DCE3; color: #193F49; }
+.prestador-header nav a::before, .prestador-header nav a::after { content: none; display: none; }
+.prestador-header a:focus-visible { outline: 3px solid #F6DCE3; outline-offset: 3px; }
+.prestador-header > div { gap: 14px; font-size: 13px; }
+.prestador-header > div > button { background: white; color: #193F49; white-space: nowrap; }
+#root > main.prestador-pagina:not(.inicio):not(.login-pagina):not(.registro-pagina) { max-width: 1440px; min-width: 0; margin: 30px auto 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #526268; }
+#root > main.prestador-pagina:not(.inicio):not(.login-pagina):not(.registro-pagina):is(.prestador-perfil,.prestador-oficios) { padding: 30px; border: 1px solid #E4DDD4; border-radius: 20px; background: #FFF; }
+.prestador-pagina h1 { font-size: clamp(32px, 3.7vw, 50px); line-height: 1.2; margin: 0 0 10px; }
+.prestador-pagina h2 { font-size: 28px; margin: 0 0 12px; }
+.prestador-pagina h3 { font-size: 24px; }
+.prestador-pagina p { line-height: 1.55; }
+.prestador-pagina .prestador-icono { flex: 0 0 24px; vertical-align: middle; }
+.prestador-pagina button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; border-color: #DCD5CE; background: #FFF; color: #193F49; font-weight: 500; }
+.prestador-pagina :is(button,input,select,textarea,a):focus-visible { outline: 3px solid #193F49; outline-offset: 3px; }
+.prestador-titulo { display: flex; justify-content: space-between; align-items: start; gap: 20px; margin-bottom: 24px; }
+.prestador-titulo > div { flex: 1; min-width: 0; }
+.prestador-titulo p { margin: 0; }
+.prestador-titulo > a { flex-shrink: 0; padding-top: 8px; }
+.prestador-identidad { display: flex; align-items: center; gap: 30px; padding: 28px; border: 1px solid #E6DDD6; border-radius: 14px; background: #FAF7F5; margin-bottom: 22px; }
+.prestador-identidad > div { flex: 1; min-width: 0; }
+.prestador-identidad h2 { font-size: 30px; margin-bottom: 6px; }
+.prestador-identidad p:last-child { margin-bottom: 0; }
+.prestador-identidad > button { align-self: start; white-space: nowrap; }
+.prestador-avatar { display: grid; place-items: center; width: 120px; height: 120px; flex-shrink: 0; border-radius: 50%; background: #F7DDE3; color: #193F49; font: 44px var(--heading); }
+.prestador-etiqueta { font-size: 13px; margin: 0 0 8px; }
+.prestador-email { display: flex; align-items: center; gap: 12px; color: #193F49; overflow-wrap: anywhere; }
+.prestador-email .prestador-icono { width: 18px; height: 18px; flex-basis: 18px; color: #845461; }
+.prestador-dos-columnas, .prestador-resenas { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.prestador-pagina .prestador-tarjeta { min-width: 0; padding: 24px; border: 1px solid #E6DDD6; border-radius: 14px; background: #FFF; box-shadow: 0 4px 20px rgb(25 63 73 / 3%); }
+.prestador-tarjeta > h2 { display: flex; align-items: center; gap: 14px; font-size: 25px; }
+.prestador-tarjeta > h2 > svg { color: #AC5D70; }
+.prestador-pagina dl { margin: 18px 0 0; }
+.prestador-pagina dd { margin: 0; overflow-wrap: anywhere; }
+.prestador-pagina dt { font-weight: 400; color: #193F49; }
+.prestador-contactos > div { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+.prestador-contactos > div:last-child { margin-bottom: 0; }
+.prestador-contactos > div > div { min-width: 0; }
+.prestador-icono-suave { display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; background: #FBECEF; color: #864453; }
+.prestador-icono-suave .prestador-icono { width: 20px; height: 20px; }
+.prestador-servicio > div { display: grid; grid-template-columns: 38px 126px minmax(0,1fr); align-items: center; gap: 14px; margin-bottom: 10px; }
+.prestador-servicio dd { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.prestador-disponibilidad { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; background: #EFF1F2; color: #58636B; font-size: 12px; white-space: nowrap; }
+.prestador-disponibilidad.disponible { background: #DDF5E9; color: #18784F; }
+.prestador-enlace-oficios { display: inline-block; margin-top: 10px; font-size: 14px; }
+.prestador-calificaciones { margin-top: 20px; }
+.prestador-resenas > article { min-width: 0; border: 1px solid #E6DDD6; border-radius: 12px; padding: 18px 22px; }
+.prestador-resenas p { margin: 4px 0 0; }
+.prestador-resena-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.prestador-resena-cabecera time { font-size: 12px; }
+.prestador-estrellas { display: inline-flex; gap: 4px; color: #F5AD31; }
+.prestador-estrellas .sin-puntaje { color: #C9CDD0; }
+.prestador-bloque-suave { padding: 24px; border: 1px solid #E4DDD4; border-radius: 14px; background: #FAF7F2; margin-top: 20px; }
+.prestador-seccion-titulo { display: flex; align-items: center; gap: 20px; margin-bottom: 22px; }
+.prestador-seccion-titulo h2 { margin: 0; font-size: 30px; }
+.prestador-seccion-titulo p { margin: 0; }
+.prestador-circulo { display: grid; place-items: center; flex-shrink: 0; width: 58px; height: 58px; border-radius: 50%; background: #FADDE2; color: #193F49; }
+.prestador-pagina .prestador-oficios-lista { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; }
+.prestador-pagina .prestador-oficios-lista li { display: flex; align-items: center; gap: 20px; padding: 14px; background: white; border: 1px solid #E4DDD4; border-radius: 10px; }
+.prestador-oficios-lista li > span:nth-child(2) { min-width: 0; flex: 1; font: 24px var(--heading); overflow-wrap: anywhere; color: #193F49; }
+.prestador-oficio-icono { display: grid; place-items: center; width: 50px; height: 50px; flex-shrink: 0; border-radius: 50%; color: #17585C; background: #E4F5ED; }
+.prestador-oficio-icono.electrico { color: #2263AA; background: #E7F2FD; }
+.prestador-pagina .prestador-oficios-lista button { margin-left: auto; color: #A02442; border-color: #E9B5C0; border-radius: 28px; background: #FFF7F8; }
+.prestador-bloque-suave > label { display: block; font-weight: 600; margin-bottom: 6px; }
+.prestador-bloque-suave select { background: #FFF; }
+.prestador-acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.prestador-pagina .prestador-acciones button:first-child { border-color: #A8BFC3; }
+.prestador-pagina .prestador-acciones button:last-child:not(:first-child), .prestador-pagina .prestador-edicion button[type=submit] { background: #F6DCE3; color: #723449; border-color: #F6DCE3; }
+.prestador-pagina .prestador-edicion .prestador-acciones button[type=button] { background: white; color: #193F49; border-color: #DCD5CE; }
+.prestador-pagina .prestador-edicion { max-width: none; }
+.prestador-edicion fieldset { margin: 18px 0; }
+.prestador-edicion legend { padding: 0 10px; font: 24px var(--heading); color: #193F49; }
+.prestador-campos { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.prestador-campos > div { min-width: 0; }
+.prestador-campos label { display: block; font-weight: 600; margin-bottom: 6px; }
+.prestador-campos textarea { min-height: 100px; }
+.prestador-edicion > label { display: flex; align-items: center; gap: 8px; }
+.prestador-pagina.panel-prestador { display: grid; gap: 24px; }
+.prestador-pagina .panel-prestador-encabezado { padding: 0 0 6px; background: transparent; border: 0; border-radius: 0; }
+.prestador-pagina .panel-prestador-seccion { padding: 24px; background: white; border: 1px solid #E4DDD4; border-radius: 16px; }
+.prestador-pagina .panel-prestador-indicador { box-shadow: none; background: #FAF7F2; border-color: #E4DDD4; }
+.prestador-pagina .panel-prestador-indicador strong { color: #193F49; }
+.prestador-pagina .panel-prestador-actividad { margin-top: 24px; background: white; border-color: #E4DDD4; }
+.prestador-pagina .panel-prestador-estado { background: #F7E6EC; color: #723449; }
+.prestador-pagina .panel-prestador-acceso-icono { display: grid; place-items: center; width: 50px; height: 50px; color: #8A465C; background: #FBE8EE; border-radius: 50%; }
+.prestador-pagina .panel-prestador-acceso { background: #FFF; color: #193F49; border-color: #E4DDD4; }
+.prestador-pagina .solicitudes-prestador-listado { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.prestador-pagina .solicitudes-prestador-tarjeta { padding: 24px; border-color: #E4DDD4; border-radius: 16px; box-shadow: 0 6px 22px rgb(25 63 73 / 4%); background: #FFF; }
+.prestador-pagina .solicitudes-prestador-detalle { padding: 20px; border-radius: 12px; background: #FAF7F2; border-color: #E4DDD4; }
+.prestador-pagina .solicitudes-prestador-confirmacion { margin-top: 18px; padding: 18px; border-radius: 12px; background: #FBE8EE; border: 1px solid #ECC5D1; }
+.prestador-pagina .solicitudes-prestador-aceptar { color: #20684C; border-color: #ADCDBD; }
+.prestador-pagina .solicitudes-prestador-rechazar { color: #A02442; border-color: #E9B5C0; }
+.prestador-pagina .solicitudes-prestador-acciones { gap: 10px; }
+.prestador-pagina .solicitudes-prestador-estado { padding: 0; background: transparent; }
+.prestador-pagina .solicitudes-prestador-tarjeta-superior { align-items: flex-start; margin-bottom: 18px; }
+.prestador-pagina .solicitudes-prestador-tarjeta-superior h3 { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.prestador-pagina .estado-solicitud { font-size: 12px; font-weight: 500; border-color: transparent; }
+.prestador-pagina .solicitudes-prestador-detalle dl { grid-template-columns: minmax(90px, .6fr) minmax(0, 1fr); }
+.prestador-pagina .solicitudes-prestador-detalle h3 { font-size: 22px; overflow-wrap: anywhere; }
+.prestador-pagina .solicitudes-prestador-confirmacion button { margin: 6px 8px 0 0; }
+.prestador-pagina .panel-prestador-enlace-principal { background: #F6DCE3; color: #193F49; font-weight: 500; border: 1px solid #ECC5D1; }
+.prestador-pagina .panel-prestador-enlace-principal:hover { background: #EFCBD5; }
+.prestador-pagina .panel-prestador-seccion { margin-top: 0; box-shadow: 0 4px 20px rgb(25 63 73 / 3%); }
+.prestador-pagina .panel-prestador-actividad-item > div { min-width: 0; }
+.prestador-pagina .panel-prestador-estado { flex-shrink: 0; }
+.prestador-pagina .prestador-campos :is(input,textarea) { background: white; }
+.prestador-pagina .prestador-edicion button[type=submit]:enabled:hover { background: #EFCBD5; color: #723449; }
+.prestador-pagina button:enabled:hover { border-color: #C98D9B; }
+.prestador-pagina :is(p,dd,strong) { overflow-wrap: anywhere; }
+@media (min-width: 1280px) {
+  .prestador-header { flex-wrap: nowrap; gap: 14px; }
+  .prestador-header nav { flex-wrap: nowrap; }
+  .prestador-header nav a { padding-inline: 8px; font-size: 13px; white-space: nowrap; }
+  .prestador-header > div { flex-wrap: nowrap; }
+  .prestador-header > div > p { white-space: nowrap; font-size: 12px; }
+}
+@media (max-width: 1050px) {
+  .prestador-identidad { flex-wrap: wrap; gap: 20px; }
+  .prestador-identidad > div { flex-basis: calc(100% - 140px); }
+  .prestador-servicio > div { grid-template-columns: 34px 100px minmax(0,1fr); gap: 10px; }
+  .prestador-dos-columnas { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 600px) {
+  .prestador-header nav { margin-inline: 0; }
+  .prestador-header > div { width: 100%; }
+  .prestador-header > div > p { flex: 1; }
+  .prestador-header > div > button { padding-inline: 12px; }
+  .prestador-header .servimap-logo { font-size: 28px; }
+  .prestador-header nav { gap: 2px; }
+  .prestador-header nav a { font-size: 12px; padding: 10px 8px; }
+  .prestador-header > div { gap: 10px; font-size: 12px; }
+  #root > main.prestador-pagina:not(.inicio):not(.login-pagina):not(.registro-pagina):is(.prestador-perfil,.prestador-oficios) { padding: 18px 14px; border-radius: 14px; }
+  .prestador-titulo { flex-direction: column; gap: 8px; }
+  .prestador-identidad { padding: 18px; gap: 16px; }
+  .prestador-avatar { width: 72px; height: 72px; font-size: 30px; }
+  .prestador-identidad > div { flex-basis: 100%; }
+  .prestador-identidad h2 { font-size: 25px; }
+  .prestador-pagina .prestador-tarjeta, .prestador-bloque-suave { padding: 18px 14px; }
+  .prestador-seccion-titulo { align-items: start; gap: 12px; }
+  .prestador-seccion-titulo h2 { font-size: 25px; }
+  .prestador-circulo { width: 44px; height: 44px; }
+  .prestador-servicio > div { grid-template-columns: 32px minmax(0,1fr); }
+  .prestador-servicio dd { grid-column: 2; }
+  .prestador-pagina .prestador-oficios-lista li { gap: 12px; flex-wrap: wrap; }
+  .prestador-oficios-lista li > span:nth-child(2) { font-size: 22px; }
+  .prestador-oficio-icono { width: 40px; height: 40px; }
+  .prestador-oficios-lista button { width: 100%; }
+  .prestador-resenas, .prestador-campos, .prestador-pagina .solicitudes-prestador-listado { grid-template-columns: minmax(0,1fr); }
+  .prestador-pagina .panel-prestador-seccion, .prestador-pagina .solicitudes-prestador-tarjeta { padding: 18px 14px; }
+  .prestador-pagina .solicitudes-prestador-tarjeta-superior { flex-wrap: wrap; gap: 10px; }
+  .prestador-acciones > button { flex: 1 1 150px; }
+  .prestador-pagina .solicitudes-prestador-detalle dl { grid-template-columns: minmax(0,1fr); }
+  .prestador-pagina .solicitudes-prestador-acciones > button { flex: 1 1 180px; }
+  .prestador-pagina .solicitudes-prestador-confirmacion button { width: 100%; margin-right: 0; }
+  .prestador-pagina .panel-prestador-titulo-seccion { flex-wrap: wrap; }
+}

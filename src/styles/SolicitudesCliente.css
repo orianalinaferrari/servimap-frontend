@@ -1,0 +1,128 @@
+.solicitudes-cliente {
+  max-width: 1050px;
+  margin: 2rem auto;
+  padding: 0 1rem 3rem;
+}
+
+.solicitudes-cliente-cabecera,
+.solicitudes-cliente-tarjeta-superior,
+.solicitudes-cliente-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.solicitudes-cliente-cabecera {
+  margin-bottom: 2rem;
+}
+
+.solicitudes-cliente-listado {
+  display: grid;
+  gap: 1rem;
+}
+
+.solicitudes-cliente-tarjeta,
+.solicitudes-cliente-vacio {
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.solicitudes-cliente-tarjeta h3 {
+  margin: 0;
+}
+
+.solicitudes-cliente-estado {
+  padding: 0.4rem 0.8rem;
+  background: var(--code-bg);
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.solicitudes-cliente-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.solicitudes-cliente button {
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.solicitudes-cliente button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.solicitudes-cliente-cancelar {
+  color: #991b1b;
+  border-color: #E9B5C0;
+}
+
+.solicitudes-cliente-detalle {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--code-bg);
+  border-radius: 10px;
+}
+
+.solicitudes-cliente-detalle dl {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) 1fr;
+  gap: 0.75rem;
+}
+
+.solicitudes-cliente-detalle dt {
+  font-weight: 600;
+}
+
+.solicitudes-cliente-detalle dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.solicitudes-cliente-confirmacion {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+.solicitudes-cliente-confirmacion button {
+  margin-right: 0.6rem;
+}
+
+.solicitudes-cliente-error,
+.solicitudes-cliente-exito {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+}
+
+.solicitudes-cliente-error {
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.solicitudes-cliente-exito {
+  color: #065f46;
+  background: #ecfdf5;
+}
+
+@media (max-width: 600px) {
+  .solicitudes-cliente-detalle dl {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .solicitudes-cliente-detalle dd {
+    margin-bottom: 0.8rem;
+  }
+}

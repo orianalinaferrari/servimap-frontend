@@ -1,0 +1,7 @@
+﻿.login-pagina, .registro-pagina { padding: 40px 0; }
+.login-tarjeta, .registro-pagina { width: 100%; max-width: 520px; margin: 32px auto; padding: clamp(20px, 5vw, 40px); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); }
+.login-tarjeta > p, .registro-pagina > p { margin: 12px 0 24px; }
+.login-tarjeta form, .registro-formulario { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.login-tarjeta form, .registro-formulario { margin: 24px 0; }
+.login-tarjeta label, .registro-formulario label { margin-top: 8px; }
+@media (max-width: 600px) { .login-pagina { padding: 0; } .registro-pagina { margin: 24px auto; } }

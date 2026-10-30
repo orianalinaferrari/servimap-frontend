@@ -1,0 +1,104 @@
+/* Identidad del cliente: no alcanza al directorio ni a otros roles. */
+#root:has(> .cliente-pagina) { --page-gutter: clamp(16px, 3.2vw, 48px); }
+.cliente-header { background: #193F49; padding: 18px var(--page-gutter); gap: 16px; }
+.cliente-header > *, .cliente-header > div > p { min-width: 0; overflow-wrap: anywhere; }
+.cliente-header .servimap-logo { font-size: 34px; }
+.cliente-header .servimap-logo span { font-size: 13px; }
+.cliente-header nav { margin-inline: auto; gap: 4px; }
+.cliente-header nav a, .cliente-header nav a:is(:hover,:active,:focus,.active) { text-decoration: none; border: 0; box-shadow: none; padding: 10px 12px; font-size: 14px; background: transparent; color: white; }
+.cliente-header nav a.active { background: #F6DCE3; color: #193F49; }
+.cliente-header nav a:hover { background: rgb(246 220 227 / 12%); }
+.cliente-header nav a.active:hover { background: #F6DCE3; }
+.cliente-header a:focus-visible { outline: 3px solid #F6DCE3; outline-offset: 3px; }
+.cliente-header > div { gap: 14px; font-size: 13px; }
+.cliente-header > div > button { background: white; color: #193F49; white-space: nowrap; }
+#root > main.cliente-pagina:not(.inicio):not(.login-pagina):not(.registro-pagina) { max-width: 1440px; min-width: 0; margin: 30px auto 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #526268; }
+.cliente-pagina h1 { font-size: clamp(32px, 3.7vw, 50px); line-height: 1.2; margin: 0 0 10px; }
+.cliente-pagina h2 { font-size: 28px; margin: 0 0 12px; }
+.cliente-pagina h3 { font-size: 24px; }
+.cliente-pagina p { line-height: 1.55; }
+.cliente-pagina :is(p,h3,dd,strong), .cliente-formulario-solicitud p { overflow-wrap: anywhere; }
+.cliente-titulo { margin-bottom: 28px; }
+.cliente-pagina .cliente-etiqueta { margin-bottom: 12px; font-size: 12px; font-weight: 700; letter-spacing: .12em; color: #193F49; }
+.cliente-accesos { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.cliente-pagina .cliente-tarjeta, .cliente-pagina .solicitudes-cliente-tarjeta, .cliente-pagina .solicitudes-cliente-vacio { min-width: 0; padding: 24px; border: 1px solid #E4DDD4; border-radius: 16px; background: white; box-shadow: 0 4px 20px rgb(25 63 73 / 3%); }
+.cliente-acceso { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; color: #193F49; text-decoration: none; }
+.cliente-acceso :is(h2,p) { margin: 0; }
+.cliente-acceso p { color: #526268; }
+.cliente-acceso-enlace { margin-top: auto; display: flex; align-items: center; gap: 12px; font-weight: 500; }
+.cliente-pagina .cliente-acceso:hover { background: #FAF7F5; border-color: #C98D9B; }
+.cliente-icono-suave { display: inline-grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: #FBECEF; color: #864453; }
+.cliente-acceso > .cliente-icono-suave { width: 54px; height: 54px; }
+.cliente-pagina .prestador-icono { flex-shrink: 0; vertical-align: middle; }
+.cliente-pagina button, .cliente-formulario-solicitud button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; border: 1px solid #DCD5CE; border-radius: 10px; background: white; color: #193F49; font-weight: 500; }
+.cliente-pagina button:enabled:hover, .cliente-formulario-solicitud button:enabled:hover { border-color: #C98D9B; background: #FAF0F3; }
+.cliente-pagina :is(button,input,select,textarea,a):focus-visible, .cliente-formulario-solicitud :is(button,input,select,textarea):focus-visible { outline: 3px solid #193F49; outline-offset: 3px; }
+.cliente-pagina .solicitudes-cliente-cabecera { align-items: flex-start; gap: 20px; margin-bottom: 28px; }
+.cliente-pagina .solicitudes-cliente-cabecera > div { flex: 1; min-width: 0; }
+.cliente-pagina .solicitudes-cliente-cabecera > a { flex-shrink: 0; padding-top: 8px; }
+.cliente-pagina .solicitudes-cliente-listado { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 20px; }
+.cliente-pagina .solicitudes-cliente-tarjeta-superior { align-items: flex-start; margin-bottom: 18px; }
+.cliente-pagina .solicitudes-cliente-tarjeta-superior h3 { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cliente-pagina .solicitudes-cliente-tarjeta-superior .prestador-icono { width: 22px; height: 22px; }
+.cliente-pagina .solicitudes-cliente-estado { padding: 0; background: transparent; }
+.cliente-pagina .estado-solicitud { border-color: transparent; font-size: 12px; font-weight: 500; }
+.cliente-pagina .solicitudes-cliente-acciones { gap: 10px; }
+.cliente-pagina .solicitudes-cliente-cancelar { background: #FFF7F8; color: #A02442; border-color: #E9B5C0; }
+.cliente-pagina .solicitudes-cliente-detalle { padding: 20px; border: 1px solid #E4DDD4; border-radius: 12px; background: #FAF7F2; }
+.cliente-pagina .solicitudes-cliente-detalle h3 { font-size: 22px; }
+.cliente-pagina .solicitudes-cliente-detalle dl { grid-template-columns: minmax(90px,.6fr) minmax(0,1fr); }
+.cliente-pagina .solicitudes-cliente-detalle dt { font-weight: 500; }
+.cliente-pagina .solicitudes-cliente-confirmacion { padding: 18px; border: 1px solid #ECC5D1; border-radius: 12px; background: #FBE8EE; }
+.cliente-pagina .solicitudes-cliente-confirmacion button { margin: 6px 8px 0 0; }
+.cliente-pagina .calificar-prestador, .cliente-calificacion-registrada { margin-top: 20px; padding: 20px; border: 1px solid #E4DDD4; border-radius: 12px; background: white; min-width: 0; }
+.cliente-calificacion-registrada h4 { font-size: 22px; margin: 0 0 12px; }
+.cliente-estrellas { display: inline-flex; gap: 4px; color: #F5AD31; }
+.cliente-estrellas .sin-puntaje { color: #C9CDD0; }
+.cliente-pagina .calificar-prestador-estrellas { gap: 8px; }
+.cliente-pagina .calificar-prestador-estrellas label { position: relative; min-width: 44px; min-height: 46px; }
+.cliente-pagina .calificar-prestador-estrellas input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.cliente-pagina .calificar-prestador-estrellas label > span { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 46px; min-width: 44px; padding: 6px; border: 1px solid #E4DDD4; border-radius: 10px; color: #526268; font-size: 13px; }
+.cliente-pagina .calificar-prestador-estrellas .prestador-icono { width: 18px; height: 18px; color: #C9CDD0; }
+.cliente-pagina .calificar-prestador-estrellas .seleccionada .prestador-icono { color: #F5AD31; }
+.cliente-pagina .calificar-prestador-estrellas input:checked + span { background: #FBECEF; border-color: #C98D9B; color: #193F49; }
+.cliente-pagina .calificar-prestador-estrellas input:focus-visible + span { outline: 3px solid #193F49; outline-offset: 3px; }
+.cliente-pagina .calificar-prestador-estrellas input:disabled + span { opacity: .55; cursor: not-allowed; }
+.cliente-pagina .calificar-prestador textarea { background: white; border-color: #E4DDD4; border-radius: 10px; }
+.cliente-pagina .calificar-prestador button[type=submit], .cliente-formulario-solicitud button[type=submit] { background: #F6DCE3; border-color: #F6DCE3; color: #723449; }
+.cliente-pagina .calificar-prestador button[type=submit]:enabled:hover, .cliente-formulario-solicitud button[type=submit]:enabled:hover { background: #EFCBD5; color: #723449; }
+/* Solo el formulario de creación dentro del directorio conserva su identidad de cliente. */
+.crear-solicitud.cliente-formulario-solicitud { max-width: 960px; padding: 28px; margin-block: 24px; border-color: #E4DDD4; border-radius: 16px; box-shadow: 0 4px 20px rgb(25 63 73 / 3%); }
+.cliente-formulario-solicitud h2 { font-size: clamp(28px,3vw,36px); }
+.crear-solicitud.cliente-formulario-solicitud form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.cliente-formulario-solicitud .crear-solicitud-campo { min-width: 0; }
+.cliente-formulario-solicitud .cliente-campo-completo, .cliente-formulario-solicitud .crear-solicitud-acciones { grid-column: 1 / -1; }
+.cliente-formulario-solicitud .crear-solicitud-campo :is(input,select,textarea) { background: white; border-color: #E4DDD4; border-radius: 10px; min-height: 46px; }
+.cliente-formulario-solicitud .crear-solicitud-campo [aria-invalid=true] { border-color: #B42338; }
+@media (min-width: 1280px) {
+  .cliente-header { flex-wrap: nowrap; }
+  .cliente-header nav, .cliente-header > div { flex-wrap: nowrap; }
+  .cliente-header nav a, .cliente-header > div > p { white-space: nowrap; }
+}
+@media (max-width: 900px) {
+  .cliente-pagina .solicitudes-cliente-listado { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 600px) {
+  .cliente-header .servimap-logo { font-size: 28px; }
+  .cliente-header nav { margin-inline: 0; gap: 2px; }
+  .cliente-header nav a { padding: 10px 8px; font-size: 12px; }
+  .cliente-header > div { width: 100%; gap: 10px; font-size: 12px; }
+  .cliente-header > div > p { flex: 1; }
+  .cliente-header > div > button { padding-inline: 12px; }
+  .cliente-accesos { grid-template-columns: minmax(0,1fr); gap: 18px; }
+  .cliente-pagina .cliente-tarjeta, .cliente-pagina .solicitudes-cliente-tarjeta, .cliente-pagina .solicitudes-cliente-vacio { padding: 18px 14px; }
+  .cliente-pagina .solicitudes-cliente-cabecera { flex-direction: column; gap: 8px; }
+  .cliente-pagina .solicitudes-cliente-tarjeta-superior { gap: 10px; }
+  .cliente-pagina .solicitudes-cliente-detalle, .cliente-pagina .calificar-prestador, .cliente-calificacion-registrada { padding: 18px 12px; }
+  .cliente-pagina .calificar-prestador { padding-inline: 8px; }
+  .cliente-pagina .calificar-prestador-estrellas { gap: 4px; }
+  .cliente-pagina .solicitudes-cliente-detalle dl { grid-template-columns: minmax(0,1fr); }
+  .cliente-pagina .solicitudes-cliente-acciones > button, .cliente-pagina .calificar-prestador-acciones > button, .cliente-formulario-solicitud .crear-solicitud-acciones > button { flex: 1 1 180px; }
+  .cliente-pagina .solicitudes-cliente-confirmacion button { width: 100%; margin-right: 0; }
+  .crear-solicitud.cliente-formulario-solicitud { padding: 18px 14px; }
+  .crear-solicitud.cliente-formulario-solicitud form { grid-template-columns: minmax(0,1fr); }
+}

@@ -1,0 +1,133 @@
+.solicitudes-prestador {
+  max-width: 1050px;
+  margin: 2rem auto;
+  padding: 0 1rem 3rem;
+}
+
+.solicitudes-prestador-cabecera,
+.solicitudes-prestador-tarjeta-superior,
+.solicitudes-prestador-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.solicitudes-prestador-cabecera {
+  margin-bottom: 2rem;
+}
+
+.solicitudes-prestador-listado {
+  display: grid;
+  gap: 1rem;
+}
+
+.solicitudes-prestador-tarjeta,
+.solicitudes-prestador-vacio {
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.solicitudes-prestador-tarjeta h3 {
+  margin: 0;
+}
+
+.solicitudes-prestador-estado {
+  padding: 0.4rem 0.8rem;
+  background: var(--code-bg);
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.solicitudes-prestador-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.solicitudes-prestador button {
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.solicitudes-prestador button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.solicitudes-prestador-aceptar {
+  color: #065f46;
+  border-color: #ADCDBD;
+}
+
+.solicitudes-prestador-rechazar {
+  color: #991b1b;
+  border-color: #E9B5C0;
+}
+
+.solicitudes-prestador-detalle {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--code-bg);
+  border-radius: 10px;
+}
+
+.solicitudes-prestador-detalle dl {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) 1fr;
+  gap: 0.75rem;
+}
+
+.solicitudes-prestador-detalle dt {
+  font-weight: 600;
+}
+
+.solicitudes-prestador-detalle dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.solicitudes-prestador-confirmacion {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.solicitudes-prestador-confirmacion button {
+  margin-right: 0.6rem;
+}
+
+.solicitudes-prestador-error,
+.solicitudes-prestador-exito {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+}
+
+.solicitudes-prestador-error {
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.solicitudes-prestador-exito {
+  color: #065f46;
+  background: #ecfdf5;
+}
+
+@media (max-width: 600px) {
+  .solicitudes-prestador-detalle dl {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .solicitudes-prestador-detalle dd {
+    margin-bottom: 0.8rem;
+  }
+}
