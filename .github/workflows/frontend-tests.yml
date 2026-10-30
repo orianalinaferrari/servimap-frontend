@@ -46,6 +46,7 @@ jobs:
         timeout-minutes: 5
         env:
           SERVIMAP_QA_BROWSER: /usr/bin/google-chrome
+          SERVIMAP_QA_SOFTWARE_GL: '1'
         run: npm run test:coverage:qa
 
       - name: Verificar integridad y alcance de LCOV

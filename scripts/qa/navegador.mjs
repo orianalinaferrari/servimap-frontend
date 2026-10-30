@@ -7,14 +7,14 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { crearApiSimulada, CUENTAS_QA, idQA, politicaDeRed, API_SIMULADA_ORIGIN } from './api-simulada.mjs'
-import { esIntercepcionCancelada, esperarPuertoChrome } from './protocolo-cdp.mjs'
+import { esIntercepcionCancelada, esperarPuertoChrome, campoQaListo, argumentosGraficosQa } from './protocolo-cdp.mjs'
 
 const base = process.env.SERVIMAP_QA_BASE_URL || 'http://localhost:5173'
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Solo se permite un frontend local')
 const chrome = [process.env.SERVIMAP_QA_BROWSER, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/chromium', '/usr/bin/google-chrome'].find((p) => p && existsSync(p))
 assert.ok(chrome, 'No hay Chrome/Edge instalado; no se descarga ningún navegador')
 const carpeta = mkdtempSync(path.join(os.tmpdir(), 'servimap-qa-browser-'))
-const proceso = spawn(chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${path.join(carpeta, 'perfil')}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] })
+const proceso = spawn(chrome, ['--headless=new', ...argumentosGraficosQa(process.env.SERVIMAP_QA_SOFTWARE_GL === '1'), '--remote-debugging-port=0', `--user-data-dir=${path.join(carpeta, 'perfil')}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] })
 let falloChrome, diagnosticoChrome = ''
 proceso.once('error', error => { falloChrome = error })
 proceso.stderr.on('data', chunk => { diagnosticoChrome = (diagnosticoChrome + chunk).slice(-2000) })
@@ -57,7 +57,7 @@ async function click(nombre, idSolicitud) {
   await hasta(expr, `click ${nombre}`)
 }
 async function llenar(id, valor) {
-  await hasta(`!!document.getElementById(${texto(id)})`, `campo ${id}`)
+  await hasta(`(${campoQaListo.toString()})(document,${texto(id)},${texto(valor)})`, `campo disponible ${id}`)
   await evaluar(`(()=>{const e=document.getElementById(${texto(id)});const proto=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${texto(valor)});e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))})()`)
 }
 async function captura(nombre) {

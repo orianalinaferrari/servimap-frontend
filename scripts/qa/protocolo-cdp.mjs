@@ -3,6 +3,17 @@ export function esIntercepcionCancelada(error, networkId, canceladas) {
   return error?.message === 'Invalid InterceptionId.' && Boolean(networkId) && canceladas.has(networkId)
 }
 
+export function campoQaListo(documento, id, valor) {
+  const campo = documento.getElementById(id)
+  return Boolean(campo && !campo.disabled && (campo.tagName !== 'SELECT' ||
+    [...campo.options].some(opcion => opcion.value === String(valor) && !opcion.disabled)))
+}
+
+export function argumentosGraficosQa(software) {
+  // SwANGLE as GLES driver for GPU-less test hosts; keep the Chrome sandbox.
+  return software ? ['--use-gl=angle', '--use-angle=swiftshader'] : []
+}
+
 export async function esperarPuertoChrome(leer, { timeoutMs = 10000, intervaloMs = 50 } = {}) {
   const limite = Date.now() + timeoutMs
   let ultimoError
