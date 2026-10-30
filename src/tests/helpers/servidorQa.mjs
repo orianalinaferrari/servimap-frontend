@@ -16,8 +16,12 @@ function comprobarHttp(url) {
   })
 }
 
-export async function iniciarServidorQa({ root, port = 0, configFile }) {
-  const server = await createServer({ root, configFile, server: { host: '127.0.0.1', port, strictPort: true } })
+export async function iniciarServidorQa({ root, port = 0, configFile, apiOrigin }) {
+  const server = await createServer({
+    root, configFile, envDir: false,
+    define: apiOrigin ? { 'import.meta.env.VITE_API_URL': JSON.stringify(apiOrigin) } : undefined,
+    server: { host: '127.0.0.1', port, strictPort: true },
+  })
   try {
     // listen() resolves on the actual listening event, independent of CLI colors/chunks.
     await server.listen()

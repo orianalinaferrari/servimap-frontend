@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fusionarCobertura, guardarCobertura } from './helpers/fusionarCobertura.mjs'
 import { iniciarServidorQa } from './helpers/servidorQa.mjs'
+import { API_SIMULADA_ORIGIN } from '../../scripts/qa/api-simulada.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 assert.equal(path.resolve(process.cwd()), path.resolve(root), 'Run from the frontend root')
@@ -24,7 +25,7 @@ function ejecutar(file, args = [], env = process.env) {
   })
 }
 
-const { server, url } = await iniciarServidorQa({ root })
+const { server, url } = await iniciarServidorQa({ root, apiOrigin: API_SIMULADA_ORIGIN })
 try {
   const env = { ...process.env, NODE_V8_COVERAGE: raw, SERVIMAP_QA_BASE_URL: url }
   // Fix the full scenario: never inherit a developer's shortened landing scope.
