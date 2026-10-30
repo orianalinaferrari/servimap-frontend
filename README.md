@@ -4,7 +4,7 @@ Frontend de una plataforma de servicios del hogar, desarrollado con **React y Vi
 
 La interfaz web vive en este repositorio. La API Node.js/Express, Prisma y PostgreSQL se mantienen en un [repositorio independiente](https://github.com/valenbalda/servimap-backend).
 
-**Estado verificado al 30/10/2026:** 431 pruebas aprobadas, lint y build correctos, 84 controles de navegador con API simulada aprobados. Hay pendientes de dependencias, aceptación y validación autenticada real; estos resultados no certifican una publicación en producción. Ver la [auditoría integral](docs/auditoria-integral.md).
+**Estado al 30/10/2026:** la implementación está respaldada en GitHub en `feature/landing-final-servimap`, commit `396d4f2`. Se verificaron 431 pruebas con un worker, lint y build; los 84 controles de navegador con API simulada corresponden a la validación previa documentada. Hay pendientes de dependencias, aceptación y validación autenticada real; estos resultados no certifican una publicación en producción. Ver [estado y limitaciones](#estado).
 
 Accesos: [Instalación](#instalacion) · [Rutas](#rutas) · [Contratos HTTP](#contratos) · [Pruebas](#pruebas) · [Demos](#demos) · [Estado y limitaciones](#estado) · [Presentación universitaria](#presentacion).
 
@@ -364,7 +364,7 @@ npm.cmd ci
 
 `npm ci` instala el árbol del lockfile. Usar Node 24 antes de instalar/validar: `.nvmrc`, `engines` y CI coinciden. Si se utiliza nvm-windows y ese major ya está instalado, seleccionarlo con `nvm use 24`.
 
-La rama auditada es `feature/landing-final-servimap`. Un clon recupera solo lo publicado en GitHub; **los cambios locales pendientes todavía no se recuperan con clone/pull**. Ver la sección de recuperación antes de mover el trabajo.
+La entrega está publicada en `origin/feature/landing-final-servimap` desde el commit `396d4f2`. Después de clonar, ejecutar `git switch --track origin/feature/landing-final-servimap` para recuperar esta rama; el clon puede abrir inicialmente otra rama predeterminada. Ver la sección de recuperación antes de mover el trabajo.
 
 Crear configuración local únicamente si no existe:
 
@@ -563,23 +563,23 @@ Para un despliegue autorizado:
 5. Verificar assets, fuente, worker, enlaces directos/refresh y GET/preflight desde la URL real.
 6. Completar aceptación antes de publicar. CORS permitido no prueba autenticación ni persistencia.
 
-No hay URL frontend/preview verificada ni se desplegó en esta auditoría. El fallback se comprobó localmente, sin reproducir infraestructura Vercel. No se agregó proxy para eludir CORS. Ver [despliegue](docs/despliegue-servimap.md), cuyos nombres de ramas/resultados son históricos.
+No hay URL pública del frontend/preview confirmada en los archivos revisados ni vinculación local `.vercel/project.json`. La URL `https://servimap-backend.vercel.app` corresponde a la API, no al frontend. La revisión de configuración no confirma los valores efectivos del dashboard de Vercel ni el CORS actual del servidor. El fallback se comprobó localmente, sin reproducir infraestructura Vercel. No se agregó proxy para eludir CORS. Ver [despliegue](docs/despliegue-servimap.md), cuyos nombres de ramas/resultados son históricos.
 
 ## 24. Recuperación en otra notebook
 
 1. Instalar Git/Node 24 y clonar con los comandos de instalación.
 2. Revisar `git branch -a` y qué rama remota contiene la entrega aprobada.
-3. En el clon nuevo, recuperar la rama publicada: por ejemplo `git switch --track origin/feature/landing-final-servimap` **solo si existe esa referencia remota**.
+3. En el clon nuevo, recuperar la rama publicada con `git switch --track origin/feature/landing-final-servimap`. Si ya existe localmente, usar `git switch feature/landing-final-servimap` y `git pull --ff-only` con el árbol limpio.
 4. Ejecutar `npm.cmd ci`, recrear configuración local y usar el origen/puerto permitido.
 5. Repetir validaciones/demos antes de presentar.
 
-**Actualmente hay cambios locales y archivos nuevos fuera del último commit.** Clone/fetch/pull no los recuperan sin publicar. Antes de cambiar de equipo debe acordarse su entrega por Git o una copia privada completa del trabajo, incluidos archivos nuevos; un diff de archivos versionados no basta.
+**La implementación, incluidos los 37 archivos modificados y 21 nuevos de la entrega visual/documental, quedó respaldada en el commit `396d4f2` y publicada en esta rama.** Clone/fetch/pull permiten recuperarla. Para cambios posteriores, comprobar `git status` y la sincronización con origin antes de cambiar de equipo: los archivos sin commit/push no se recuperan desde GitHub.
 
 No transferir `node_modules`, `dist`, `.env.local`, perfiles Chrome ni credenciales. Reinstalar y configurar el destino. Conservar el checkout original hasta confirmar que se recuperó todo el trabajo pendiente.
 
 ## 25. Ramas, commits y Pull Requests
 
-Rama auditada: **`feature/landing-final-servimap`**, base local `0d47cf6`. Esta intervención no crea ramas, commits, push, PR ni merge; no cambia `main`, `develop` o backend.
+Rama de entrega: **`feature/landing-final-servimap`**, implementación publicada en `396d4f2`, con autoría de `orianalinaferrari` y sin coautores. La integración prevista es un PR hacia `main`; todavía no se creó ese PR ni se hizo el merge. Estas correcciones documentales se publican en la misma rama, sin modificar `main`, `develop` o backend.
 
 Para el trabajo posterior del equipo:
 
@@ -587,11 +587,11 @@ Para el trabajo posterior del equipo:
 - Revisar status/diff antes de agregar archivos; separar documentación, diseño y correcciones cuando sea posible.
 - Incluir archivos nuevos necesarios y revisar secretos/fixtures antes de versionar.
 - Usar mensajes concretos con prefijos como `feat:`, `fix:`, `style:`, `docs:` o `test:`.
-- Presentar PR a `develop` cuando corresponda: es el destino que activa el workflow existente.
+- Para esta entrega, preparar el PR de `feature/landing-final-servimap` hacia `main`. El workflow existente solo se activa para PR hacia `develop`: no asumir que ejecutará validaciones para `main`; conservar la evidencia local y acordar la cobertura de CI antes de integrar.
 - Explicar problema, resultado final, validaciones y límites; solicitar revisión antes de integrar.
 - Acordar promoción a rama estable; no asumir políticas de protección o aprobación no verificadas.
 
-Son criterios futuros: no indican que los cambios estén publicados o exista un PR de esta entrega.
+El respaldo en GitHub ya está publicado; la revisión por PR y la integración a `main` siguen pendientes.
 
 ## 26. Problemas habituales
 
@@ -646,7 +646,7 @@ La revisión por patrones no detectó claves privadas, credenciales de base ni t
 - **MENORES:** documentos históricos, nombres administrativos de respaldo, estrellas de texto públicas, detalles de accesibilidad y CI sin workers limitados.
 - **LIMITACIONES CONOCIDAS:** las de la sección siguiente.
 
-La [auditoría integral](docs/auditoria-integral.md) registra evidencia, impacto y seguimiento. Una advertencia documentada no se presenta como corregida.
+Los hallazgos actuales se resumen en esta sección y las limitaciones en la siguiente. Las verificaciones históricas están en [QA de integración](docs/qa-integracion-backend.md) y [validación final](docs/validacion-final.md). Una advertencia documentada no se presenta como corregida.
 
 ## 29. Limitaciones y aceptación pendiente
 
@@ -662,11 +662,10 @@ La [auditoría integral](docs/auditoria-integral.md) registra evidencia, impacto
 
 ## 30. Documentación complementaria
 
-README y auditoría integral describen el checkout actual. Los documentos anteriores conservan fechas, ramas y resultados como **evidencia histórica**; sus métricas, rutas de prototipo o ramas de release no reemplazan este estado.
+Este README describe el estado de la entrega. Los documentos anteriores conservan fechas, ramas y resultados como **evidencia histórica**; sus métricas, rutas de prototipo o ramas de release no reemplazan este estado. No hay un informe independiente `docs/auditoria-integral.md` en el repositorio.
 
 | Documento | Contenido |
 | --- | --- |
-| [Auditoría integral](docs/auditoria-integral.md) | Hallazgos clasificados y resultados actuales. |
 | [Integración backend](docs/integracion-backend.md) | Contratos, adaptaciones y decisiones. |
 | [QA de integración](docs/qa-integracion-backend.md) | Verificaciones previas y checklist real. |
 | [Mapa de prestadores](docs/mapa-prestadores.md) | Proveedor y condiciones cartográficas. |
@@ -707,4 +706,4 @@ Guion sugerido:
 
 Las demos separadas no intercambian cambios: cada proceso tiene su memoria y reiniciar restaura fixtures. Explicar la transición y usar la vista del siguiente rol sin afirmar que ambas comparten una base de datos.
 
-La entrega queda preparada para revisión y un futuro commit técnico; todavía no es una certificación de aceptación integral o producción.
+La implementación está respaldada en GitHub y queda preparada para revisión antes del PR hacia `main`; todavía no es una certificación de aceptación integral o producción.
