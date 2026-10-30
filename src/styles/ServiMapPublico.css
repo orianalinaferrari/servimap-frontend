@@ -29,6 +29,11 @@
 .app-header nav a:hover, .app-header nav a.active { background: var(--accent-bg); color: var(--accent); }
 .app-header > div { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: .85rem; }
 .app-header p { margin: 0; }
+.app-header .avatar-sesion { display: inline-grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; min-height: 44px; padding: 0; border: 2px solid #C98D9B; border-radius: 50%; background: #F7DDE3; color: #193F49; font: 600 1rem/1 var(--heading); letter-spacing: .02em; text-decoration: none; box-shadow: none; }
+.app-header button.avatar-sesion { cursor: pointer; transition: background-color .15s, border-color .15s; }
+.app-header button.avatar-sesion:hover { background: #FFF; border-color: #FFF; }
+.app-header .avatar-sesion:focus-visible { outline: 3px solid #F6DCE3; outline-offset: 3px; }
+.app-header .avatar-sesion svg { width: 22px; height: 22px; }
 .app-header a:focus-visible, .servimap-header-minimo a:focus-visible { outline-color: var(--accent-bg); }
 @media (max-width: 600px) {
   .app-header, .servimap-header-minimo { gap: 12px; padding-block: 16px; }

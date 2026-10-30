@@ -1,6 +1,6 @@
 # ServiMap
 
-**Revisión del PR #31 (30/10/2026):** en `feature/sonarqube-seguridad-servimap`: 508 tests, lint/build correctos, audit npm con 0 vulnerabilidades y cobertura fusionada de 77,20% global (93,07% en `src`). La ejecución pull_request #37 del commit `064978e` aprobó CI y el Gate con cobertura nueva 94,1%, ratings A/A/A y hotspots 100%. Tras la estabilización (`9b61e2f`), las ejecuciones push #38 y pull_request #39 terminaron en éxito. Ver [causas, cambios y evidencia](docs/seguridad-sonarqube.md); las cifras de la entrega original que siguen son históricas respecto de esta revisión.
+**Revisión del PR #31 (30/10/2026):** en `feature/sonarqube-seguridad-servimap`: 508 tests, lint/build correctos, audit npm con 0 vulnerabilidades y cobertura fusionada de 77,20% global (93,07% en `src`). La ejecución pull_request #37 del commit `064978e` aprobó CI y el Gate con cobertura nueva 94,1%, ratings A/A/A y hotspots 100%. Tras la estabilización (`9b61e2f`), las ejecuciones push #38 y pull_request #39 terminaron en éxito; también #40/#41 del commit `8a452ec` (redirección por rol). **Cambios locales posteriores, sin commit:** perfil de solo lectura del cliente, completar perfil del prestador tras el login y avatar con iniciales; 553 tests, lint/build y QA de navegador correctos; cobertura local fusionada 78,46% global (líneas + ramas) y 90,94% en `src`. Ver [causas, cambios y evidencia](docs/seguridad-sonarqube.md); las cifras de la entrega original que siguen son históricas respecto de esta revisión.
 
 Frontend de una plataforma de servicios del hogar, desarrollado con **React y Vite** para la materia **Construcción de Software**. Conecta clientes con prestadores mediante un directorio, un mapa y un circuito de solicitudes, calificaciones y administración.
 
@@ -64,7 +64,7 @@ El administrador no hereda las operaciones de cliente o prestador. La UI restrin
 
 1. Elegir «Empezar como cliente» en la landing, o explorar servicios sin sesión.
 2. Registrarse y luego iniciar sesión; el registro no inicia sesión automáticamente.
-3. El login actual vuelve a `/`. Entrar en «Explorar servicios» para acceder al directorio y a la navegación de la cuenta.
+3. El login lleva a `/cliente`. El avatar con iniciales del header abre «Mi perfil» (`/cliente/perfil`): nombre, email, DNI y fecha de alta de `GET /api/auth/me`, de solo lectura.
 4. Buscar un prestador, abrir su ficha y pulsar «Solicitar servicio» si está disponible.
 5. Seleccionar un oficio ofrecido, describir el trabajo y, opcionalmente, indicar dirección/contacto preferido.
 6. Consultar «Mis solicitudes», abrir el detalle y cancelar una pendiente o aceptada con confirmación.
@@ -73,8 +73,8 @@ El administrador no hereda las operaciones de cliente o prestador. La UI restrin
 ### Prestador
 
 1. Elegir «Empezar como prestador», registrarse e iniciar sesión.
-2. Acceder a «Mi panel de prestador» desde la navegación del directorio.
-3. Completar perfil profesional, zona, contactos, precios, disponibilidad y coordenadas privadas si corresponde.
+2. El login lleva a `/prestador`, o a `/prestador/completar-perfil` si `GET /api/prestadores/me` indica datos faltantes (descripción, zona, algún contacto u oficios). «Completar más tarde» o «Ir al panel» permiten seguir sin bloquear; se vuelve a sugerir en el próximo login mientras el servidor siga informando datos faltantes.
+3. Desde el avatar del header («Ir a mi perfil»), completar perfil profesional, zona, contactos, precios, disponibilidad y coordenadas privadas si corresponde.
 4. En «Mis oficios», agregar/quitar asociaciones del catálogo activo y guardar.
 5. Revisar el panel, las solicitudes recibidas y sus detalles.
 6. Aceptar o rechazar pendientes; finalizar aceptadas cuando termine el trabajo.
@@ -180,7 +180,7 @@ Referencias: [rutas](src/routes/AppRoutes.jsx), [HTTP](src/services/apiClient.js
 
 | URL | Acceso | Contenido |
 | --- | --- | --- |
-| `/` | Público | Landing; también después del login/logout. |
+| `/` | Público | Landing; también después del logout. El login lleva al panel del rol. |
 | `/registro` | Público | Registro con rol inicialmente sin seleccionar. |
 | `/registro?rol=CLIENTE` | Público | Cliente preseleccionado. |
 | `/registro?rol=PRESTADOR` | Público | Prestador preseleccionado. |
@@ -188,15 +188,19 @@ Referencias: [rutas](src/routes/AppRoutes.jsx), [HTTP](src/services/apiClient.js
 | `/prestadores` | Público | Directorio, mapa, ficha y estado de creación de solicitud. |
 | `/cliente` | CLIENTE | Panel de accesos. |
 | `/cliente/solicitudes` | CLIENTE | Historial, detalle, cancelación y calificación. |
+| `/cliente/perfil` | CLIENTE | Datos personales de solo lectura (DNI no editable). |
 | `/prestador` | PRESTADOR | Resumen y actividad reciente. |
 | `/prestador/solicitudes` | PRESTADOR | Pedidos recibidos y transiciones. |
 | `/prestador/perfil` | PRESTADOR | Perfil propio y edición. |
+| `/prestador/completar-perfil` | PRESTADOR | Datos pendientes y formulario de edición reutilizado; al guardar vuelve al panel. |
 | `/prestador/oficios` | PRESTADOR | Asociaciones de oficios. |
 | `/admin` | ADMINISTRADOR | Oficios/moderación mediante secciones internas. |
 | `/acceso-denegado` | Público | Aviso de rol no autorizado. |
 | Cualquier otra URL | Público | Página no encontrada y regreso al inicio. |
 
-La ficha, creación de solicitud, detalles, edición de perfil y secciones administrativas son **estados de pantallas existentes**, no URLs nuevas. No existe una ruta de perfil personal del cliente.
+La ficha, creación de solicitud, detalles, edición de perfil y secciones administrativas son **estados de pantallas existentes**, no URLs nuevas.
+
+El header con sesión muestra un avatar circular con iniciales (primera y última palabra del nombre: «Oriana Lina Ferrari» → OF; una palabra → una inicial; sin nombre → ícono SVG) inmediatamente a la izquierda de «Cerrar sesión». Para CLIENTE y PRESTADOR es un botón «Ir a mi perfil»; reemplaza el enlace textual «Mi perfil». ADMINISTRADOR no tiene perfil en la API, así que su avatar solo identifica la sesión y no navega. Limitación: con apellidos compuestos o dos apellidos se toma la última palabra.
 
 Sin sesión, una ruta protegida redirige a `/login`; con rol incorrecto, a `/acceso-denegado`. Antes de mostrar una ruta autorizada se revalida la sesión con el servidor.
 
@@ -215,6 +219,8 @@ Se solicitan hasta **50 prestadores por consulta**, sin paginación en la UI. El
 La ficha remota muestra la información disponible, contactos, precios, reputación y comentarios no moderados. No se rellenan datos inexistentes con información ficticia.
 
 ### Cliente
+
+«Mi perfil» muestra los datos de `GET /api/auth/me` sin campos editables. **Dependencia del backend:** Swagger no ofrece un endpoint para actualizar datos del cliente o del usuario (solo `PUT /api/prestadores/me`); hasta que exista, el frontend no simula guardados (ni localStorage ni estado temporal). Pedido al equipo backend: por ejemplo `PUT /api/usuarios/me` con los campos editables y sus validaciones, manteniendo el DNI inmutable.
 
 El panel ofrece accesos; no tiene contadores. El historial muestra oficio, prestador, identificador, estado y detalle. Crear una solicitud utiliza los IDs reales del perfil y del oficio obtenidos de la ficha; el nombre del oficio solo sirve para selección/presentación.
 
@@ -443,7 +449,7 @@ El último requiere `dist` recién compilado y asigna un puerto loopback libre m
 
 | Control ejecutado el 30/10/2026 | Resultado |
 | --- | --- |
-| Vitest, Node 24.22.2, un worker | **484 aprobadas, 56 archivos**, sin suites omitidas. |
+| Vitest, Node 24.22.2, un worker | **484 aprobadas, 56 archivos**, sin suites omitidas. Revisión local posterior (Node 22.19.0): **553 aprobadas, 65 archivos**. |
 | ESLint | Correcto. |
 | Build Vite | Correcto; advertencia de chunks de más de 500 kB, especialmente MapLibre. |
 | Smoke del build | **13 rutas SPA y 11 archivos** correctos; worker emitido, sin privados/sourcemaps en `dist`. |
@@ -640,9 +646,9 @@ La revisión por patrones no detectó claves privadas, credenciales de base ni t
 | Implementado | Módulos públicos/por rol descritos, servicios API y estados reales. |
 | Verificado localmente | 484 tests, lint/build, smoke SPA, 84 controles Chrome simulados y contratos backend; cobertura global 63,04%. |
 | Verificado contra API publicada | Lecturas públicas, rechazos protegidos y CORS/preflight; sin escrituras reales. |
-| Pendiente | E2E autenticado real, base autorizada, preview/CORS, cobertura global >=90%, nuevo análisis Sonar y aceptación de accesibilidad. |
+| Pendiente | E2E autenticado real, base autorizada, preview/CORS, cobertura global >=90% (78,46% local; los scripts QA manuales concentran 640 de 883 elementos sin cubrir), duplicación 0% y aceptación de accesibilidad. |
 | Parcial | Búsqueda geográfica, filtros sobre conjuntos limitados y detalle de calificación tras recarga. |
-| Fuera del alcance implementado | Perfil editable de cliente, propuestas/presupuestos, pagos, chat, agenda/fecha preferida, carga de fotos, refresh token y finalización confirmada por cliente. |
+| Fuera del alcance implementado | Edición del perfil de cliente (falta endpoint backend; existe la vista de solo lectura), propuestas/presupuestos, pagos, chat, agenda/fecha preferida, carga de fotos, refresh token y finalización confirmada por cliente. |
 
 - **CRÍTICOS:** ninguno confirmado en el frontend revisado; no se requirieron correcciones funcionales.
 - **IMPORTANTES:** cobertura global y ratings Sonar pendientes de confirmar tras las correcciones; validación autenticada/deploy pendientes; alcance geográfico parcial. Corregido: el login ya no vuelve a la landing; cada rol entra a su panel (`/cliente`, `/prestador`, `/admin`) o a la ruta protegida de origen solo si pertenece a ese rol.

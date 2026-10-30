@@ -12,6 +12,8 @@ import { ROLES } from '../utils/roles'
 import PerfilPrestador from '../pages/PerfilPrestador'
 import PaginaNoEncontrada from '../pages/PaginaNoEncontrada'
 import OficiosPrestador from '../pages/OficiosPrestador'
+import PerfilCliente from '../pages/PerfilCliente'
+import CompletarPerfilPrestador from '../pages/CompletarPerfilPrestador'
 import DirectorioPrestadores from '../components/DirectorioPrestadores'
 import '../styles/DirectorioPrestadores.css'
 
@@ -39,6 +41,14 @@ function AppRoutes({ panelAdministracion }) {
           </RutaProtegida>
         }
       />
+      <Route
+        path="/cliente/perfil"
+        element={
+          <RutaProtegida rolesPermitidos={[ROLES.CLIENTE]}>
+            <PerfilCliente />
+          </RutaProtegida>
+        }
+      />
 
       <Route
         path="/prestador"
@@ -62,6 +72,14 @@ function AppRoutes({ panelAdministracion }) {
         element={
           <RutaProtegida rolesPermitidos={[ROLES.PRESTADOR]}>
             <PerfilPrestador />
+          </RutaProtegida>
+        }
+      />
+      <Route
+        path="/prestador/completar-perfil"
+        element={
+          <RutaProtegida rolesPermitidos={[ROLES.PRESTADOR]}>
+            <CompletarPerfilPrestador />
           </RutaProtegida>
         }
       />

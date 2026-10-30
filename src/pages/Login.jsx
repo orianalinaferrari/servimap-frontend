@@ -5,7 +5,7 @@ import { useAuth } from '../context/useAuth'
 import '../styles/Login.css'
 import CampoContrasena from '../components/CampoContrasena'
 import { esEmailValido } from '../utils/email'
-import { obtenerDestinoPostLogin } from '../utils/roles'
+import { resolverDestinoPostLogin } from '../services/destinoPostLogin'
 
 function Login() {
   const navigate = useNavigate()
@@ -72,7 +72,7 @@ function Login() {
       )
 
       await navigate(
-        obtenerDestinoPostLogin(usuario?.rol, location.state?.from),
+        await resolverDestinoPostLogin(usuario, location.state?.from),
         { replace: true }
       )
     } catch (error) {

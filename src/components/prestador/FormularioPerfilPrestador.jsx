@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar }) {
+export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titulo = 'Editar mi perfil', textoCancelar = 'Cancelar' }) {
   const [datos, setDatos] = useState({ ...perfil })
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -48,7 +48,7 @@ export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar }) {
     try { await onGuardar(payload) } catch (fallo) { setError(fallo.message) } finally { setEnviando(false) }
   }
   return <form className="prestador-edicion" onSubmit={enviar}>
-    <h1>Editar mi perfil</h1>
+    {titulo && <h1>{titulo}</h1>}
     <p>Nombre y email de la cuenta: {perfil.nombre} · {perfil.email}</p>
     <p>Las coordenadas exactas son privadas. En el mapa público se muestran redondeadas. Los campos numéricos vacíos conservan su valor anterior.</p>
     {[['Datos profesionales',campos.slice(0,2)],['Información de contacto',campos.slice(2,6)],['Precios y ubicación',campos.slice(6)]].map(([titulo,grupo]) => <fieldset className="prestador-tarjeta" key={titulo}><legend>{titulo}</legend><div className="prestador-campos">{grupo.map(([name, label, type]) => {
@@ -58,6 +58,6 @@ export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar }) {
     <label><input type="checkbox" checked={Boolean(datos.disponible)} onChange={(evento) => setDatos((previos) => ({ ...previos, disponible: evento.target.checked }))} disabled={enviando} /> Disponible para recibir solicitudes</label>
     {error && <p role="alert">{error}</p>}
     <div className="prestador-acciones"><button type="submit" disabled={enviando}>{enviando ? 'Guardando...' : 'Guardar cambios'}</button>
-    <button type="button" onClick={onCancelar} disabled={enviando}>Cancelar</button></div>
+    <button type="button" onClick={onCancelar} disabled={enviando}>{textoCancelar}</button></div>
   </form>
 }

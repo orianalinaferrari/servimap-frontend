@@ -9,6 +9,7 @@ import AppRoutes from './routes/AppRoutes'
 import LandingEntrada from './components/LandingEntrada'
 import { PanelAdministracion } from './components/PanelAdministracion'
 import NavegacionRoles from './components/auth/NavegacionRoles'
+import AvatarSesion from './components/auth/AvatarSesion'
 import { useAuth } from './context/useAuth'
 
 function App() {
@@ -61,10 +62,7 @@ function App() {
           <p role="status">Verificando sesión...</p>
         ) : autenticado ? (
           <div>
-            <p>
-              Sesión iniciada
-              {usuario?.nombre ? `: ${usuario.nombre}` : ''}
-            </p>
+            <AvatarSesion usuario={usuario} />
 
             <button
               type="button"

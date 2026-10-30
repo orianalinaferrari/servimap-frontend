@@ -23,7 +23,7 @@ check(await ev('!!document.querySelector("meta[http-equiv=Content-Security-Polic
 check(await ev('!localStorage.length'),'Sin credenciales en localStorage');
 const escenario=await ev('document.getElementById("qa-prestador-aviso").textContent.split(".")[0]');
 await screens('panel');
-await click('Mi perfil');
+await click('Ir a mi perfil');
 await until('!!document.querySelector("main dl")','Mi perfil');
 await screens('perfil');
 await click('Editar perfil');await until('!!document.getElementById("precioMin")','Edicion');
