@@ -13,7 +13,6 @@ import {
 } from '../utils/solicitudesPrestador'
 import {
   puedeMarcarTrabajoTerminado,
-  estaPendienteConfirmacionFinalizacion,
 } from '../utils/finalizacionSolicitud'
 import '../styles/SolicitudesPrestador.css'
 
@@ -71,8 +70,8 @@ function DetalleSolicitudPrestador({ solicitud, onCerrar }) {
         <dt>Dirección</dt>
         <dd>{mostrarValor(solicitud.direccion)}</dd>
 
-        <dt>Fecha preferida</dt>
-        <dd>{mostrarValor(solicitud.fechaPreferida)}</dd>
+        <dt>Contacto preferido</dt>
+        <dd>{mostrarValor(solicitud.contactoPreferido)}</dd>
 
         <dt>Fecha de creación</dt>
         <dd>{mostrarValor(solicitud.fechaCreacion)}</dd>
@@ -343,11 +342,7 @@ function SolicitudesPrestador() {
                       </button>
                     )}
 
-                    {estaPendienteConfirmacionFinalizacion(solicitud) && (
-                      <p role="status">
-                        Trabajo terminado. Esperando confirmación del cliente.
-                      </p>
-                    )}
+
 
                     {acciones.rechazar && (
                       <button

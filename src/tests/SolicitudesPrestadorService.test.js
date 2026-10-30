@@ -1,209 +1,40 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
-import {
-  obtenerSolicitudesPrestador,
-  aceptarSolicitudPrestador,
-  rechazarSolicitudPrestador,
-} from '../services/solicitudesPrestadorService'
-
-function configurarApi() {
-  vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-  vi.stubEnv(
-    'VITE_SOLICITUDES_PRESTADOR_ENDPOINT',
-    '/solicitudes/recibidas'
-  )
-  vi.stubEnv(
-    'VITE_ACEPTAR_SOLICITUD_ENDPOINT',
-    '/solicitudes/recibidas/:id/aceptar'
-  )
-  vi.stubEnv(
-    'VITE_RECHAZAR_SOLICITUD_ENDPOINT',
-    '/solicitudes/recibidas/:id/rechazar'
-  )
-}
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-  vi.unstubAllEnvs()
-  vi.restoreAllMocks()
-})
-
-describe('F-13 - Servicio HTTP del prestador', () => {
-  test('requiere configuración de API', async () => {
-    vi.stubEnv('VITE_API_URL', '')
-    vi.stubEnv('VITE_SOLICITUDES_PRESTADOR_ENDPOINT', '')
-
-    await expect(obtenerSolicitudesPrestador()).rejects.toThrow(
-      'El servicio de solicitudes recibidas todavía no está configurado.'
-    )
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { obtenerSolicitudesPrestador, aceptarSolicitudPrestador, rechazarSolicitudPrestador } from '../services/solicitudesPrestadorService'
+import { BASE, respuesta, instalarHttp } from './helpers/contratos'
+beforeEach(() => vi.stubEnv('VITE_API_URL', BASE))
+afterEach(() => vi.unstubAllEnvs())
+describe('Solicitudes Prestador: contrato real', () => {
+  it('consulta GET /api/solicitudes y adapta nombres del oficio', async () => {
+    const http = instalarHttp(() => respuesta([{ id: 's1', oficio: { id: 'o1', nombre: 'Plomeria' }, estado: 'PENDIENTE', calificada: false }]))
+    await expect(obtenerSolicitudesPrestador()).resolves.toMatchObject([{ id: 's1', servicio: 'Plomeria' }])
+    expect(http.mock.calls[0][0]).toBe(BASE + '/api/solicitudes')
   })
-
-  test('consulta solicitudes con sesión', async () => {
-    configurarApi()
-
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify([{ id: 1 }]),
-    })
-
-    vi.stubGlobal('fetch', fetchMock)
-
-    await expect(obtenerSolicitudesPrestador()).resolves.toEqual([
-      { id: 1 },
-    ])
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.example.test/solicitudes/recibidas',
-      { credentials: 'include' }
-    )
+  it('rechaza respuestas que no son arrays del contrato', async () => {
+    instalarHttp(() => respuesta({ solicitudes: [] }))
+    await expect(obtenerSolicitudesPrestador()).rejects.toThrow('formato')
   })
-
-  test('acepta un objeto con propiedad solicitudes', async () => {
-    configurarApi()
-
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({
-        solicitudes: [{ id: 2 }],
-      }),
-    }))
-
-    await expect(obtenerSolicitudesPrestador()).resolves.toEqual([
-      { id: 2 },
-    ])
+  it('ejecuta aceptar por PATCH al endpoint real', async () => {
+    const http=instalarHttp(() => respuesta({ id: 's1' }))
+    await aceptarSolicitudPrestador('s1')
+    expect(http.mock.calls[0][0]).toBe(BASE + '/api/solicitudes/s1/aceptar')
+    expect(http.mock.calls[0][1]).toMatchObject({ method: 'PATCH', credentials: 'omit' })
   })
-
-  test('rechaza respuestas con formato incorrecto', async () => {
-    configurarApi()
-
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ otro: true }),
-    }))
-
-    await expect(obtenerSolicitudesPrestador()).rejects.toThrow(
-      'El servidor devolvió un formato de solicitudes no reconocido.'
-    )
+  it('no ejecuta aceptar sin identificador', async () => {
+    await expect(aceptarSolicitudPrestador('')).rejects.toThrow('identificador')
+    expect(fetch).not.toHaveBeenCalled()
   })
-
-  test('rechaza sesiones no autenticadas', async () => {
-    configurarApi()
-
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-    }))
-
-    await expect(obtenerSolicitudesPrestador()).rejects.toThrow(
-      'Debés iniciar sesión'
-    )
+it('ejecuta rechazar por PATCH al endpoint real', async () => {
+    const http=instalarHttp(() => respuesta({ id: 's1' }))
+    await rechazarSolicitudPrestador('s1')
+    expect(http.mock.calls[0][0]).toBe(BASE + '/api/solicitudes/s1/rechazar')
+    expect(http.mock.calls[0][1]).toMatchObject({ method: 'PATCH', credentials: 'omit' })
   })
-
-  test('rechaza operaciones sin permisos', async () => {
-    configurarApi()
-
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 403,
-    }))
-
-    await expect(obtenerSolicitudesPrestador()).rejects.toThrow(
-      'No tenés permiso'
-    )
+  it('no ejecuta rechazar sin identificador', async () => {
+    await expect(rechazarSolicitudPrestador('')).rejects.toThrow('identificador')
+    expect(fetch).not.toHaveBeenCalled()
   })
-
-  test('acepta mediante PATCH con sesión', async () => {
-    configurarApi()
-
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 204,
-    })
-
-    vi.stubGlobal('fetch', fetchMock)
-
-    await aceptarSolicitudPrestador(201)
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.example.test/solicitudes/recibidas/201/aceptar',
-      {
-        credentials: 'include',
-        method: 'PATCH',
-      }
-    )
-  })
-
-  test('rechaza mediante PATCH con sesión', async () => {
-    configurarApi()
-
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 204,
-    })
-
-    vi.stubGlobal('fetch', fetchMock)
-
-    await rechazarSolicitudPrestador(201)
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.example.test/solicitudes/recibidas/201/rechazar',
-      {
-        credentials: 'include',
-        method: 'PATCH',
-      }
-    )
-  })
-
-  test('rechaza identificadores inválidos', async () => {
-    configurarApi()
-
-    await expect(aceptarSolicitudPrestador('')).rejects.toThrow(
-      'El identificador de la solicitud no es válido.'
-    )
-  })
-
-  test('requiere configurar la ruta de aceptación', async () => {
-    configurarApi()
-    vi.stubEnv('VITE_ACEPTAR_SOLICITUD_ENDPOINT', '')
-
-    await expect(aceptarSolicitudPrestador(201)).rejects.toThrow(
-      'La operación todavía no está configurada.'
-    )
-  })
-
-  test('requiere configurar la ruta de rechazo', async () => {
-    configurarApi()
-    vi.stubEnv('VITE_RECHAZAR_SOLICITUD_ENDPOINT', '')
-
-    await expect(rechazarSolicitudPrestador(201)).rejects.toThrow(
-      'La operación todavía no está configurada.'
-    )
-  })
-
-  test('informa conflictos de estado', async () => {
-    configurarApi()
-
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 409,
-    }))
-
-    await expect(aceptarSolicitudPrestador(201)).rejects.toThrow(
-      'La solicitud cambió de estado'
-    )
-  })
-
-  test('informa errores de conexión', async () => {
-    configurarApi()
-
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(
-      new Error('Network error')
-    ))
-
-    await expect(obtenerSolicitudesPrestador()).rejects.toThrow(
-      'No se pudo conectar con el servidor.'
-    )
+  it.each([401,403,404,409,500])('propaga HTTP %s sin inventar estados', async(status)=>{
+    instalarHttp(()=>respuesta({error:'Estado o permisos rechazados'},status))
+    await expect(aceptarSolicitudPrestador('s1')).rejects.toMatchObject({status})
   })
 })

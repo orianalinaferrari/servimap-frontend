@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AuthContext } from './authContextInstance'
+import { EVENTO_SESION_EXPIRADA, expiracionToken, obtenerToken } from '../services/sesionToken'
 import {
   iniciarSesion,
   cerrarSesion,
@@ -11,6 +12,26 @@ export function AuthProvider({ children }) {
   const [cargando, setCargando] = useState(true)
   const [sesionExpirada, setSesionExpirada] = useState(false)
   const version = useRef(0)
+
+  useEffect(() => {
+    const expirar = () => {
+      version.current += 1
+      setUsuario(null)
+      setSesionExpirada(true)
+      setCargando(false)
+    }
+    window.addEventListener(EVENTO_SESION_EXPIRADA, expirar)
+    const token = obtenerToken()
+    const restante = token ? expiracionToken(token) - Date.now() : 0
+    const temporizador = restante > 0 ? setTimeout(() => {
+      // La lectura elimina el token vencido y notifica a todas las vistas.
+      obtenerToken()
+    }, Math.min(restante + 10, 2147483647)) : null
+    return () => {
+      clearTimeout(temporizador)
+      window.removeEventListener(EVENTO_SESION_EXPIRADA, expirar)
+    }
+  }, [usuario])
 
   useEffect(() => {
     const actual = ++version.current

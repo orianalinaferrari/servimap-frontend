@@ -106,7 +106,7 @@ describe('F-12 - Pantalla de solicitudes del cliente', () => {
     ).toBeTruthy()
 
     expect(screen.getByText('Av. Santa Fe 1234')).toBeTruthy()
-    expect(screen.getByText('2026-11-10')).toBeTruthy()
+    expect(screen.getByText('Contacto preferido')).toBeTruthy()
   })
 
   test('permite cerrar el detalle', async () => {
@@ -127,7 +127,7 @@ describe('F-12 - Pantalla de solicitudes del cliente', () => {
     ).toBeNull()
   })
 
-  test('solo permite preparar cancelación de pendientes', async () => {
+  test('permite preparar cancelación de pendientes y aceptadas', async () => {
     vi.mocked(obtenerSolicitudesCliente).mockResolvedValue([
       pendiente,
       aceptada,
@@ -145,7 +145,7 @@ describe('F-12 - Pantalla de solicitudes del cliente', () => {
       within(tarjetas[0]).queryByRole('button', {
         name: 'Preparar cancelación',
       })
-    ).toBeNull()
+    ).toBeTruthy()
 
     expect(
       within(tarjetas[1]).getByRole('button', {

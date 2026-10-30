@@ -1,0 +1,20 @@
+﻿.campo-contrasena { position: relative; }
+.campo-contrasena input { padding-right: 72px; }
+.campo-contrasena .contrasena-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--accent);
+  background: transparent;
+}
+.campo-contrasena .contrasena-toggle:enabled:hover { background: var(--accent-bg); }
+.campo-contrasena .contrasena-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }

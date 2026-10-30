@@ -15,7 +15,7 @@ describe('PanelAdministracion', () => {
   })
 
   test('muestra la sección de comentarios por defecto', () => {
-    render(<PanelAdministracion />)
+    render(<PanelAdministracion calificaciones={[]} />)
 
     expect(
       screen.getByRole('heading', { name: 'Comentarios publicados' })
@@ -23,7 +23,7 @@ describe('PanelAdministracion', () => {
   })
 
   test('cambia de sección al hacer clic', () => {
-    render(<PanelAdministracion />)
+    render(<PanelAdministracion calificaciones={[]} />)
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Administración de oficios' })

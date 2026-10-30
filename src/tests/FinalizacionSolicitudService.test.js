@@ -1,137 +1,25 @@
-﻿import { afterEach, describe, expect, test, vi } from 'vitest'
-import {
-  marcarTrabajoTerminadoPrestador,
-} from '../services/solicitudesPrestadorService'
-import {
-  confirmarFinalizacionCliente,
-} from '../services/solicitudesClienteService'
-
-function configurar() {
-  vi.stubEnv('VITE_API_URL', 'https://api.example.test')
-  vi.stubEnv(
-    'VITE_SOLICITUDES_PRESTADOR_ENDPOINT',
-    '/solicitudes/recibidas'
-  )
-  vi.stubEnv(
-    'VITE_SOLICITUDES_CLIENTE_ENDPOINT',
-    '/solicitudes/mis-solicitudes'
-  )
-  vi.stubEnv(
-    'VITE_MARCAR_TRABAJO_TERMINADO_ENDPOINT',
-    '/solicitudes/recibidas/:id/terminar'
-  )
-  vi.stubEnv(
-    'VITE_CONFIRMAR_FINALIZACION_ENDPOINT',
-    '/solicitudes/mis-solicitudes/:id/confirmar-finalizacion'
-  )
-}
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-  vi.unstubAllEnvs()
-  vi.restoreAllMocks()
-})
-
-describe('F-16 - Servicios de finalización', () => {
-  test('el prestador informa finalización mediante PATCH', async () => {
-    configurar()
-
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 204,
-    })
-
-    vi.stubGlobal('fetch', fetchMock)
-
-    await marcarTrabajoTerminadoPrestador(101)
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.example.test/solicitudes/recibidas/101/terminar',
-      {
-        credentials: 'include',
-        method: 'PATCH',
-      }
-    )
+﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import * as cliente from '../services/solicitudesClienteService'
+import { marcarTrabajoTerminadoPrestador } from '../services/solicitudesPrestadorService'
+import { BASE, instalarHttp, respuesta } from './helpers/contratos'
+beforeEach(() => vi.stubEnv('VITE_API_URL', BASE))
+afterEach(() => vi.unstubAllEnvs())
+describe('Finalización real en una etapa', () => {
+  it('el prestador finaliza mediante PATCH', async () => {
+    const http = instalarHttp(() => respuesta({ id: 's1', estado: 'FINALIZADA' }))
+    await expect(marcarTrabajoTerminadoPrestador('s1')).resolves.toMatchObject({ estado: 'FINALIZADA' })
+    expect(http.mock.calls[0][0]).toBe(BASE + '/api/solicitudes/s1/finalizar')
+    expect(http.mock.calls[0][1].method).toBe('PATCH')
   })
-
-  test('el cliente confirma finalización mediante PATCH', async () => {
-    configurar()
-
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 204,
-    })
-
-    vi.stubGlobal('fetch', fetchMock)
-
-    await confirmarFinalizacionCliente(101)
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.example.test/solicitudes/mis-solicitudes/101/confirmar-finalizacion',
-      {
-        credentials: 'include',
-        method: 'PATCH',
-      }
-    )
+  it('no inventa un endpoint de confirmación del cliente', () => {
+    expect(cliente.confirmarFinalizacionCliente).toBeUndefined()
   })
-
-  test('rechaza identificadores inválidos', async () => {
-    configurar()
-
-    await expect(
-      marcarTrabajoTerminadoPrestador('')
-    ).rejects.toThrow('identificador')
-
-    await expect(
-      confirmarFinalizacionCliente('')
-    ).rejects.toThrow('identificador')
+  it('rechaza un id vacío sin enviar HTTP', async () => {
+    await expect(marcarTrabajoTerminadoPrestador('')).rejects.toThrow('identificador')
+    expect(fetch).not.toHaveBeenCalled()
   })
-
-  test('no ejecuta operaciones sin endpoints configurados', async () => {
-    configurar()
-
-    vi.stubEnv('VITE_MARCAR_TRABAJO_TERMINADO_ENDPOINT', '')
-    vi.stubEnv('VITE_CONFIRMAR_FINALIZACION_ENDPOINT', '')
-
-    await expect(
-      marcarTrabajoTerminadoPrestador(101)
-    ).rejects.toThrow('no está configurada')
-
-    await expect(
-      confirmarFinalizacionCliente(101)
-    ).rejects.toThrow('no está configurada')
-  })
-
-  test('informa conflictos de estado del servidor', async () => {
-    configurar()
-
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 409,
-    }))
-
-    await expect(
-      marcarTrabajoTerminadoPrestador(101)
-    ).rejects.toThrow('cambió de estado')
-
-    await expect(
-      confirmarFinalizacionCliente(101)
-    ).rejects.toThrow('cambió de estado')
-  })
-
-  test('informa errores de conexión', async () => {
-    configurar()
-
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(
-      new Error('Network error')
-    ))
-
-    await expect(
-      marcarTrabajoTerminadoPrestador(101)
-    ).rejects.toThrow('No se pudo conectar')
-
-    await expect(
-      confirmarFinalizacionCliente(101)
-    ).rejects.toThrow('No se pudo conectar')
+  it.each([401,403,404,409])('propaga rechazo %s del servidor', async (status) => {
+    instalarHttp(() => respuesta({ error: 'No se puede finalizar' }, status))
+    await expect(marcarTrabajoTerminadoPrestador('s1')).rejects.toMatchObject({ status })
   })
 })

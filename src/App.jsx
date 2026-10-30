@@ -2,17 +2,14 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
+import './styles/ServiMapPublico.css'
 import AppRoutes from './routes/AppRoutes'
-import { BuscadorPrestadores } from './components/BuscadorPrestadores'
+import DirectorioPrestadores from './components/DirectorioPrestadores'
 import { PanelAdministracion } from './components/PanelAdministracion'
 import NavegacionRoles from './components/auth/NavegacionRoles'
-import { calificacionesMock } from './data/calificacionesMock'
-import { prestadoresMock } from './data/prestadoresMock'
-import { moderarCalificacion } from './utils/reputacion'
 import { useAuth } from './context/useAuth'
 
 function App() {
-  const [calificaciones, setCalificaciones] = useState(calificacionesMock)
   const [cerrandoSesion, setCerrandoSesion] = useState(false)
   const [errorSesion, setErrorSesion] = useState('')
 
@@ -21,14 +18,7 @@ function App() {
   const navigate = useNavigate()
 
   const esInicio = location.pathname === '/'
-
-  function handleModerar(id, motivo) {
-    const hoy = new Date().toLocaleDateString('en-CA')
-
-    setCalificaciones((anteriores) =>
-      moderarCalificacion(anteriores, id, motivo, hoy)
-    )
-  }
+  const esAccesoPublico = ['/login', '/registro'].includes(location.pathname)
 
   async function handleCerrarSesion() {
     if (cerrandoSesion) return
@@ -50,22 +40,18 @@ function App() {
     }
   }
 
-  const panelAdministracion = (
-    <PanelAdministracion
-      prestadores={prestadoresMock}
-      calificaciones={calificaciones}
-      onModerar={handleModerar}
-    />
-  )
+  const panelAdministracion = <PanelAdministracion />
 
   return (
     <>
-      <header>
-        <h1>ServiMap</h1>
+      <header className={esAccesoPublico ? 'servimap-header-minimo' : 'app-header'}>
+        <Link className="servimap-logo" to="/" aria-label="ServiMap, inicio">ServiMap<span>Servicios cerca tuyo</span></Link>
 
-        <NavegacionRoles />
+        {esAccesoPublico ? (
+          <Link className="servimap-volver" to="/">← Volver al inicio</Link>
+        ) : <NavegacionRoles />}
 
-        {cargando ? (
+        {!esAccesoPublico && (cargando ? (
           <p role="status">Verificando sesión...</p>
         ) : autenticado ? (
           <div>
@@ -84,7 +70,7 @@ function App() {
                 : 'Cerrar sesión'}
             </button>
           </div>
-        ) : null}
+        ) : null)}
 
         {errorSesion && <p role="alert">{errorSesion}</p>}
       </header>
@@ -92,14 +78,20 @@ function App() {
       <AppRoutes panelAdministracion={panelAdministracion} />
 
       {esInicio && (
-        <main>
-          <h2>Encontrá prestadores de servicios</h2>
-          <p>Buscá profesionales disponibles en ServiMap.</p>
+        <main className="inicio">
+          <div className="inicio-presentacion">
+            <p className="etiqueta">Conectá con profesionales</p>
+            <h1>Encontrá prestadores de servicios</h1>
+            <p>Buscá profesionales disponibles en ServiMap.</p>
 
-          <BuscadorPrestadores
-            prestadores={prestadoresMock}
-            calificaciones={calificaciones}
-          />
+            {!autenticado && (
+              <div className="inicio-acciones">
+                <Link className="enlace-boton" to="/registro?rol=CLIENTE">Soy cliente</Link>
+                <Link className="enlace-boton secundario" to="/registro?rol=PRESTADOR">Soy prestador</Link>
+              </div>
+            )}
+          </div>
+          <DirectorioPrestadores />
 
           <p>
             <Link to="/login">Acceder a mi cuenta</Link>

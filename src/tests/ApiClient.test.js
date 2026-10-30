@@ -32,7 +32,7 @@ describe('F-24 - Cliente HTTP centralizado', () => {
     expect(() => obtenerApiUrl()).toThrow(ApiError)
   })
 
-  it('realiza solicitudes con cookies de sesión', async () => {
+  it('realiza solicitudes sin cookies de sesión', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -49,7 +49,7 @@ describe('F-24 - Cliente HTTP centralizado', () => {
     const [url, opciones] = fetchMock.mock.calls[0]
 
     expect(url).toBe('https://api.example.test/auth/me')
-    expect(opciones.credentials).toBe('include')
+    expect(opciones.credentials).toBe('omit')
   })
 
   it('envía JSON en solicitudes POST', async () => {

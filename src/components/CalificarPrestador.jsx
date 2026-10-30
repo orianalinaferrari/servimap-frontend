@@ -79,7 +79,7 @@ export default function CalificarPrestador({
           setComentario(evento.target.value)
         }
         rows={4}
-        maxLength={1000}
+        maxLength={500}
         placeholder="Contanos cómo fue el trabajo realizado"
       />
 

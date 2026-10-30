@@ -1,154 +1,44 @@
-﻿import { useState } from 'react'
-import { useAuth } from '../context/useAuth'
-import {
-  OFICIOS_PERMITIDOS,
-  obtenerOficiosValidos,
-} from '../utils/oficiosPrestador'
-import { crearPerfilInicial } from '../utils/perfilPrestador'
-
-function cargarPerfil(usuario) {
-  const inicial = crearPerfilInicial(usuario)
-
-  if (usuario?.id == null) {
-    return inicial
-  }
-
-  try {
-    const guardado = localStorage.getItem(
-      `servimap-perfil-${usuario.id}`
-    )
-
-    return guardado
-      ? { ...inicial, ...JSON.parse(guardado) }
-      : inicial
-  } catch {
-    return inicial
-  }
-}
+﻿import { useEffect, useState } from 'react'
+import { listarOficios, obtenerMiPerfil, actualizarMisOficios } from '../services/prestadoresService'
 
 export default function OficiosPrestador() {
-  const { usuario } = useAuth()
-
-  const [oficios, setOficios] = useState(() =>
-    obtenerOficiosValidos(cargarPerfil(usuario).oficios)
-  )
-
+  const [catalogo, setCatalogo] = useState([])
+  const [oficios, setOficios] = useState([])
   const [seleccion, setSeleccion] = useState('')
+  const [cargando, setCargando] = useState(true)
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
-
-  function agregarOficio() {
-    if (!seleccion) {
-      setMensaje('Seleccioná un oficio')
-      return
+  const [revision, setRevision] = useState(0)
+  useEffect(() => {
+    let activo = true
+    async function cargar() {
+      setCargando(true)
+      try { const [lista, perfil] = await Promise.all([listarOficios(), obtenerMiPerfil()]); if (activo) { setCatalogo(lista); setOficios(perfil.oficios); setError('') } }
+      catch (fallo) { if (activo) setError(fallo.message) }
+      finally { if (activo) setCargando(false) }
     }
-
-    if (oficios.includes(seleccion)) {
-      setMensaje('Ese oficio ya está agregado')
-      return
-    }
-
-    setOficios((anteriores) => [...anteriores, seleccion])
-    setSeleccion('')
-    setMensaje('')
+    cargar()
+    return () => { activo = false }
+  }, [revision])
+  async function guardar() {
+    if (enviando || cargando) return
+    setEnviando(true); setError(''); setMensaje('')
+    try { const perfil = await actualizarMisOficios(oficios.map((oficio) => oficio.id)); setOficios(perfil.oficios); setMensaje('Oficios guardados en el servidor.') }
+    catch (fallo) { setError(fallo.message) } finally { setEnviando(false) }
   }
-
-  function quitarOficio(oficio) {
-    setOficios((anteriores) =>
-      anteriores.filter((actual) => actual !== oficio)
-    )
-    setMensaje('')
-  }
-
-  function guardarOficios() {
-    if (usuario?.id == null) {
-      setMensaje('No se pudo identificar al prestador')
-      return
-    }
-
-    if (oficios.length === 0) {
-      setMensaje('Debés tener al menos un oficio')
-      return
-    }
-
-    try {
-      const perfil = cargarPerfil(usuario)
-
-      const actualizado = {
-        ...perfil,
-        oficios: oficios.join(', '),
-      }
-
-      localStorage.setItem(
-        `servimap-perfil-${usuario.id}`,
-        JSON.stringify(actualizado)
-      )
-
-      setMensaje('Oficios guardados en este navegador')
-    } catch {
-      setMensaje('No se pudieron guardar los oficios')
-    }
-  }
-
-  return (
-    <main>
-      <h1>Mis oficios</h1>
-
-      <p>
-        Administrá los oficios que ofrecés en ServiMap.
-      </p>
-
-      <h2>Oficios asociados</h2>
-
-      {oficios.length === 0 ? (
-        <p>No tenés oficios seleccionados.</p>
-      ) : (
-        <ul>
-          {oficios.map((oficio) => (
-            <li key={oficio}>
-              {oficio}{' '}
-              <button
-                type="button"
-                onClick={() => quitarOficio(oficio)}
-                aria-label={`Quitar ${oficio}`}
-              >
-                Quitar
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div>
-        <label htmlFor="nuevo-oficio">
-          Seleccionar oficio
-        </label>
-
-        <select
-          id="nuevo-oficio"
-          value={seleccion}
-          onChange={(evento) =>
-            setSeleccion(evento.target.value)
-          }
-        >
-          <option value="">Elegí un oficio</option>
-
-          {OFICIOS_PERMITIDOS.map((oficio) => (
-            <option key={oficio} value={oficio}>
-              {oficio}
-            </option>
-          ))}
-        </select>
-
-        <button type="button" onClick={agregarOficio}>
-          Agregar oficio
-        </button>
-      </div>
-
-      <button type="button" onClick={guardarOficios}>
-        Guardar oficios
-      </button>
-
-      {mensaje && <p role="status">{mensaje}</p>}
-    </main>
-  )
+  return <main><h1>Mis oficios</h1><p>Administrá los oficios que ofrecés en ServiMap.</p>
+    {cargando && <p role="status">Cargando oficios...</p>}
+    {error && <div role="alert"><p>{error}</p><button onClick={() => setRevision((n) => n + 1)}>Reintentar oficios</button></div>}
+    {mensaje && <p role="status">{mensaje}</p>}
+    <h2>Oficios asociados</h2>
+    {oficios.length === 0 && <p>No tenés oficios seleccionados.</p>}
+    <ul>{oficios.map((oficio) => <li key={oficio.id}>{oficio.nombre} <button aria-label={`Quitar ${oficio.nombre}`} disabled={enviando || cargando} onClick={() => setOficios((lista) => lista.filter((item) => item.id !== oficio.id))}>Quitar</button></li>)}</ul>
+    <label htmlFor="nuevo-oficio">Seleccionar oficio</label>
+    <select id="nuevo-oficio" value={seleccion} onChange={(evento) => setSeleccion(evento.target.value)} disabled={cargando || enviando}>
+      <option value="">Elegí un oficio</option>{catalogo.map((oficio) => <option value={oficio.id} key={oficio.id}>{oficio.nombre}</option>)}
+    </select>
+    <button disabled={cargando || enviando || !seleccion} onClick={() => { if (!oficios.some((oficio) => oficio.id === seleccion)) setOficios((lista) => [...lista, catalogo.find((oficio) => oficio.id === seleccion)]); setSeleccion(''); setMensaje('') }}>Agregar oficio</button>
+    <button disabled={cargando || enviando || Boolean(error)} onClick={guardar}>{enviando ? 'Guardando...' : 'Guardar oficios'}</button>
+  </main>
 }

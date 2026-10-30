@@ -32,7 +32,7 @@ export function ReputacionPrestador({ prestador, calificaciones }) {
               </p>
               {calificacion.comentario && <p>{calificacion.comentario}</p>}
               <p className="comentario-fecha">
-                {calificacion.fechaPublicacion.split('-').reverse().join('/')}
+                {new Date(calificacion.fechaPublicacion).toLocaleDateString('es-AR')}
               </p>
             </li>
           ))}

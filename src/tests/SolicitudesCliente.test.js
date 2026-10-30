@@ -36,8 +36,8 @@ describe('F-12 - Lógica de solicitudes del cliente', () => {
     expect(puedeCancelarSolicitud({ estado: 'PENDIENTE' })).toBe(true)
   })
 
-  test('no permite cancelar solicitudes aceptadas', () => {
-    expect(puedeCancelarSolicitud({ estado: 'ACEPTADA' })).toBe(false)
+  test('permite cancelar solicitudes aceptadas', () => {
+    expect(puedeCancelarSolicitud({ estado: 'ACEPTADA' })).toBe(true)
   })
 
   test('no permite cancelar solicitudes rechazadas o canceladas', () => {

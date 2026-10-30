@@ -3,7 +3,7 @@
   margin: 1.5rem auto;
   padding: 1.5rem;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 14px;
 }
 
@@ -34,7 +34,7 @@
   box-sizing: border-box;
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font: inherit;
 }
@@ -74,7 +74,7 @@
 .crear-solicitud-volver {
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  border: 1px solid #94a3b8;
+  border: 1px solid var(--border);
   cursor: pointer;
 }
 
