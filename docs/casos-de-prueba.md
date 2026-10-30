@@ -1,5 +1,7 @@
 # Casos de prueba – Frontend ServiMap (F-26)
 
+> Evidencia histórica del prototipo del 26/10; sus nombres y cantidades son fixtures, no datos actuales de la API. La aceptación vigente y sus límites están en [entrega final](entrega-final.md).
+
 Responsable: Joaquim Oliveira
 Fecha de ejecución: 26/10/2026
 Entorno: navegador Chrome, `npm run dev` (http://localhost:5173), sin backend conectado (datos mock)

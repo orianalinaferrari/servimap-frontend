@@ -1,5 +1,7 @@
 # Preparación de release — 29/10/2026
 
+Estado de entrega, checklist de aceptación y guion vigentes: [auditoría final universitaria](entrega-final.md). La evidencia de esta preparación se conserva a continuación.
+
 - Rama: `feature/release-servimap`, desde `733b9a93116fb9007fee4badfbc4f0ee7565f15f` de `feature/deploy-servimap`, inicialmente limpia y sincronizada.
 - `origin/develop` en `9a3da5732843a81336fde9b58d7ec2f34579bcd7` ya es ancestro de la base. Se ejecutó el merge exclusivamente en release: `Already up to date`. Sin conflictos ni commit de merge vacío. Segundo fetch al terminar QA confirmó el mismo estado.
 - Se conservan todos los commits de develop y sus autorías, incluidos los de Joaquim Oliveira. No se borraron archivos de develop. No se modificaron otras ramas, backend, Neon o producción.
