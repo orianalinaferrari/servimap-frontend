@@ -1,2 +1,52 @@
 ﻿/* Shared authentication styles keep registration and login consistent. */
 @import './Login.css';
+
+body:has(.registro-pagina) { min-width: 0; background: #F9F7F3; }
+#root:has(> .registro-pagina) { padding-bottom: 24px; }
+#root:has(> .registro-pagina) > .servimap-header-minimo { padding: 12px clamp(20px, 4vw, 56px); background: linear-gradient(110deg, #1B5257, #15454C); }
+#root:has(> .registro-pagina) > .servimap-header-minimo .servimap-logo { font-size: 32px; letter-spacing: -.035em; }
+main.registro-pagina {
+  --text-h: #104759;
+  --registro-acento: #15505A;
+  --registro-suave: #E7F0ED;
+  --registro-borde: #D5E6DF;
+  width: 100%; max-width: 760px; margin: 20px auto 0; padding: 24px 30px;
+  border: 1px solid #E9E5E0; border-radius: 16px; background: #fff;
+  color: #667586; box-shadow: 0 12px 40px rgb(40 53 49 / 5%);
+}
+.registro-pagina.registro-prestador { --registro-acento: #C35D7C; --registro-suave: #FBECEF; --registro-borde: #F2D6DF; }
+.registro-identidad { display: inline-flex; align-items: center; gap: 12px; min-height: 36px; padding: 6px 16px; border-radius: 30px; background: var(--registro-suave); color: var(--registro-acento); font-size: 14px; font-weight: 600; }
+.registro-identidad svg { width: 25px; height: 25px; }
+.registro-pagina h1 { margin: 10px 0 8px; font-size: 42px; line-height: 1.15; font-weight: 700; letter-spacing: -.04em; }
+.registro-pagina > .registro-subtitulo { margin: 0; color: #73829C; font-size: 15px; line-height: 1.5; }
+.registro-pagina .registro-formulario { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 26px; margin: 24px 0 0; }
+#root > main.registro-pagina form.registro-formulario > .registro-campo { margin: 0; min-width: 0; }
+.registro-formulario .registro-campo label { display: block; margin: 0 0 6px; color: var(--text-h); font-size: 14px; font-weight: 600; line-height: 1.4; }
+.registro-campo-dni { grid-column: 1; }
+.registro-campo-contrasena { grid-column: 1; }
+.registro-campo-confirmarContrasena { grid-column: 2; }
+.registro-pagina .registro-formulario input, .registro-pagina .registro-formulario select { min-height: 44px; height: 44px; margin: 0; border: 1px solid #E5E0DB; border-radius: 8px; background: #fff; color: var(--text-h); font-size: 14px; }
+.registro-formulario input::placeholder { color: #7D8BA6; opacity: 1; }
+.registro-campo-rol, .registro-error-servidor { grid-column: 1 / -1; }
+.registro-selector { position: relative; }
+.registro-selector svg { position: absolute; z-index: 1; left: 16px; top: 10px; width: 25px; height: 25px; color: var(--registro-acento); pointer-events: none; }
+.registro-pagina .registro-selector select { height: 46px; padding-left: 54px; border-color: var(--registro-borde); background-color: var(--registro-suave); font-weight: 600; }
+.registro-pagina .registro-formulario [aria-invalid='true'] { border-color: #B42338; }
+.registro-pagina [role='alert'] { margin: 6px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.registro-pagina [role='status'] { margin-top: 18px; }
+#root > main.registro-pagina form.registro-formulario > button[type='submit'] { grid-column: 1 / -1; min-height: 48px; margin: 0; border: 1px solid var(--registro-acento); border-radius: 8px; background: var(--registro-acento); color: #fff; font-size: 16px; font-weight: 600; }
+#root > main.registro-pagina form.registro-formulario > button[type='submit']:enabled:hover { filter: brightness(.94); }
+.registro-pagina .campo-contrasena input { padding-right: 56px; }
+.registro-pagina .campo-contrasena .contrasena-toggle { right: 6px; }
+.registro-pagina > .registro-login { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 16px 0 0; color: #73829C; font-size: 14px; }
+.registro-login::before, .registro-login::after { content: ''; flex: 1 1 32px; height: 1px; background: #E5E9ED; }
+.registro-login a { display: inline-flex; align-items: center; min-height: 44px; color: var(--registro-acento); font-weight: 600; }
+@media (max-width: 600px) {
+  main.registro-pagina { margin-top: 20px; padding: 22px 20px; }
+  .registro-pagina h1 { font-size: 34px; }
+  .registro-pagina .registro-formulario { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .registro-campo-dni, .registro-campo-contrasena, .registro-campo-confirmarContrasena { grid-column: 1; }
+  .registro-pagina > .registro-login { gap: 6px; font-size: 13px; }
+  .registro-login::before, .registro-login::after { display: none; }
+  #root:has(> .registro-pagina) > .servimap-header-minimo .servimap-logo { font-size: 26px; }
+}

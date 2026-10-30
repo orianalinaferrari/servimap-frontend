@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconoAdministracion } from './IconoAdministracion'
 
 export function ModeracionComentarios({ prestadores, calificaciones, onModerar }) {
   const [seleccionadaId, setSeleccionadaId] = useState(null)
@@ -32,18 +33,25 @@ export function ModeracionComentarios({ prestadores, calificaciones, onModerar }
   return (
     <section className="moderacion">
       {error && <p role="alert">{error}</p>}
-      <h3>Comentarios publicados</h3>
+      <section className="admin-tarjeta admin-publicados" aria-labelledby="admin-publicados-titulo">
+      <header className="admin-seccion-cabecera">
+        <span className="admin-icono-circulo"><IconoAdministracion /></span>
+        <div><h3 id="admin-publicados-titulo">Comentarios publicados</h3><p>Revisá los comentarios dejados por los usuarios.</p></div>
+        <span className="admin-contador"><IconoAdministracion />Total: {publicadas.length}</span>
+      </header>
       {publicadas.length === 0 ? (
         <p>No hay comentarios para moderar</p>
       ) : (
         <ul className="lista-moderacion">
           {publicadas.map((calificacion) => (
             <li key={calificacion.id} className="tarjeta-moderacion">
-              <p>
-                <strong>{nombreCliente(calificacion)}</strong> sobre{' '}
-                {nombrePrestador(calificacion.prestadorId)} – {calificacion.puntaje}/5
-              </p>
-              <p>{calificacion.comentario ?? 'Sin comentario'}</p>
+              <span className="admin-avatar"><IconoAdministracion tipo="usuario" /></span>
+              <div className="admin-comentario-datos">
+                <strong>{nombreCliente(calificacion)}</strong>
+                <p className="admin-prestador">sobre {nombrePrestador(calificacion.prestadorId)}</p>
+                <p className="admin-puntaje"><IconoAdministracion tipo="estrella" />{calificacion.puntaje}/5</p>
+              </div>
+              <p className="admin-comentario-texto">{calificacion.comentario ?? 'Sin comentario'}</p>
 
               {seleccionadaId === calificacion.id ? (
                 <form className="form-moderacion" onSubmit={confirmar}>
@@ -76,7 +84,7 @@ export function ModeracionComentarios({ prestadores, calificaciones, onModerar }
                   disabled={enviando}
                   onClick={() => setSeleccionadaId(calificacion.id)}
                 >
-                  Ocultar
+                  <IconoAdministracion tipo="oculto" />Ocultar
                 </button>
               )}
             </li>
@@ -84,22 +92,27 @@ export function ModeracionComentarios({ prestadores, calificaciones, onModerar }
         </ul>
       )}
 
-      <h3>Comentarios ocultos</h3>
+      </section>
+      <section className="admin-tarjeta admin-ocultos" aria-labelledby="admin-ocultos-titulo">
+      <header className="admin-seccion-cabecera">
+        <span className="admin-icono-circulo"><IconoAdministracion tipo="oculto" /></span>
+        <div><h3 id="admin-ocultos-titulo">Comentarios ocultos</h3><p>Comentarios que fueron ocultos y no se muestran públicamente.</p></div>
+        <span className="admin-contador admin-contador-neutro"><IconoAdministracion tipo="oculto" />Total: {ocultas.length}</span>
+      </header>
       {ocultas.length === 0 ? (
         <p>No hay comentarios ocultos</p>
       ) : (
         <ul className="lista-moderacion">
           {ocultas.map((calificacion) => (
             <li key={calificacion.id} className="tarjeta-moderacion tarjeta-oculta">
-              <p>
-                <strong>{nombreCliente(calificacion)}</strong> sobre{' '}
-                {nombrePrestador(calificacion.prestadorId)}
-              </p>
-              <p>Motivo: {calificacion.motivoModeracion ?? 'Sin motivo registrado'}</p>
+              <span className="admin-avatar"><IconoAdministracion tipo="usuario" /></span>
+              <div className="admin-comentario-datos"><strong>{nombreCliente(calificacion)}</strong><p className="admin-prestador">sobre {nombrePrestador(calificacion.prestadorId)}</p></div>
+              <p className="admin-comentario-texto">Motivo: {calificacion.motivoModeracion ?? 'Sin motivo registrado'}</p>
             </li>
           ))}
         </ul>
       )}
+      </section>
     </section>
   )
 }

@@ -68,7 +68,7 @@ describe('F-17 - Calificación de prestador', () => {
     )
 
     expect(screen.getByText('Calificar al prestador')).toBeTruthy()
-    expect(screen.getByRole('radio', { name: '5 ★' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: '5 estrellas' })).toBeTruthy()
   })
 
   test('registra una calificación y bloquea una segunda', async () => {
@@ -83,7 +83,7 @@ describe('F-17 - Calificación de prestador', () => {
       await screen.findByRole('button', { name: 'Calificar prestador' })
     )
 
-    fireEvent.click(screen.getByRole('radio', { name: '5 ★' }))
+    fireEvent.click(screen.getByRole('radio', { name: '5 estrellas' }))
 
     fireEvent.change(
       screen.getByLabelText('Comentario (opcional)'),
@@ -138,7 +138,7 @@ describe('F-17 - Calificación de prestador', () => {
       await screen.findByRole('button', { name: 'Calificar prestador' })
     )
 
-    fireEvent.click(screen.getByRole('radio', { name: '4 ★' }))
+    fireEvent.click(screen.getByRole('radio', { name: '4 estrellas' }))
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Enviar calificación' })

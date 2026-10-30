@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listarTodosLosOficios, crearOficioRemoto, actualizarOficio, cambiarEstadoOficioRemoto } from '../services/prestadoresService'
 import '../styles/AdministracionOficios.css'
+import { IconoAdministracion } from './IconoAdministracion'
 
 export function AdministracionOficios() {
   const [catalogo, setCatalogo] = useState([])
@@ -44,6 +45,7 @@ export function AdministracionOficios() {
   return (
     <section className="admin-oficios" aria-labelledby="admin-oficios-titulo">
       <header className="admin-oficios-encabezado">
+        <span className="admin-icono-circulo"><IconoAdministracion tipo="configuracion" /></span>
         <div>
           <h3 id="admin-oficios-titulo">Administración de oficios</h3>
           <p>
@@ -56,7 +58,7 @@ export function AdministracionOficios() {
         </div>
       </header>
 
-      <form className="admin-oficios-formulario" onSubmit={guardarFormulario}>
+      <form className="admin-oficios-formulario admin-tarjeta" onSubmit={guardarFormulario}>
         <h4>{editandoId === null ? 'Crear oficio' : 'Modificar oficio'}</h4>
 
         <label htmlFor="admin-oficio-nombre">Nombre del oficio</label>
@@ -85,7 +87,8 @@ export function AdministracionOficios() {
       {mensaje && <p role="status" className="admin-oficios-exito">{mensaje}</p>}
       {error && <p role="alert" className="admin-oficios-error">{error}</p>}
 
-      <h4>Listado de oficios</h4>
+      <section className="admin-tarjeta admin-oficios-listado" aria-labelledby="admin-listado-titulo">
+      <h4 id="admin-listado-titulo">Listado de oficios</h4>
       {cargando && <p role="status">Cargando catálogo...</p>}
       {error && <button type="button" onClick={() => setRevision((n) => n + 1)}>Reintentar catálogo</button>}
 
@@ -104,8 +107,8 @@ export function AdministracionOficios() {
             <tbody>
               {catalogo.map((oficio) => (
                 <tr key={oficio.id}>
-                  <td>{oficio.nombre}</td>
-                  <td>
+                  <td data-label="Oficio">{oficio.nombre}</td>
+                  <td data-label="Estado">
                     <span className={
                       oficio.activo
                         ? 'admin-oficios-activo'
@@ -114,7 +117,7 @@ export function AdministracionOficios() {
                       {oficio.activo ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Acciones">
                     <div className="admin-oficios-acciones">
                       <button
                         disabled={enviando || cargando}
@@ -125,6 +128,7 @@ export function AdministracionOficios() {
                         Editar
                       </button>
                       <button
+                        className={oficio.activo ? 'admin-desactivar' : 'admin-activar'}
                         disabled={enviando || cargando}
                         type="button"
                         onClick={() => alternarEstado(oficio)}
@@ -142,6 +146,7 @@ export function AdministracionOficios() {
           </table>
         </div>
       )}
+      </section>
     </section>
   )
 }

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../styles/LandingEntrada.css'
 
@@ -8,40 +9,51 @@ function IconoRol({ prestador }) {
 }
 
 function Ciudad() {
-  return <svg className="landing-ciudad" viewBox="0 0 460 270" fill="none" aria-hidden="true">
-    <circle cx="352" cy="55" r="29" fill="#C98D9B" opacity=".85" />
-    <g stroke="#F8F5EF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M24 248h412M51 248V127l69-30v151M51 127l69 19M139 248V62l81-30 63 30v186M139 62l81 28 63-28M220 90v158M303 248V135l68-24 47 24v113M303 135l68 23 47-23M371 158v90" fill="#F8F5EF" fillOpacity=".04" />
-      <path d="M74 147v17m22-9v17m-22 14v17m22-9v17m-22 14v17m22-9v17M160 91v16m22-9v16m-22 12v16m22-9v16m-22 12v16m22-9v16m-22 12v16m22-9v16M242 103v16m21-24v16m-21 26v16m21-24v16m-21 26v16m21-24v16m-21 26v16m21-24v16M325 159v16m23-8v16m-23 12v16m23-8v16m45-57v16m0 17v16" opacity=".6" />
-      <path d="M178 248v-29l20 7v22M333 248v-20l16 5v15" />
-      <path d="M32 248v-31m-10-2c-12-26 6-43 10-43s23 17 11 43c-3 9-18 9-21 0ZM431 248v-32m-10-2c-10-23 6-39 10-39s20 16 10 39c-3 8-17 8-20 0Z" fill="#C98D9B" />
-    </g>
-    <path d="m96 64 5-9 5 9-5 9zM309 87h12m-6-6v12" stroke="#C98D9B" strokeWidth="2" />
-  </svg>
+  return <img className="landing-ciudad" src="/illustrations/servimap-ciudad.svg" alt="" aria-hidden="true" />
 }
 
 export default function LandingEntrada() {
+  const [explicando, setExplicando] = useState(false)
+  const dialogo = useRef(null)
+  const abrirExplicacion = useRef(null)
+  useEffect(() => {
+    if (explicando) dialogo.current.showModal()
+    else if (dialogo.current.open) dialogo.current.close()
+  }, [explicando])
   return <section className="landing-entrada" aria-label="Bienvenida a ServiMap">
+    <img className="landing-panel" src="/illustrations/servimap-panel.svg" alt="" aria-hidden="true" />
+    <svg className="landing-geometria" viewBox="0 0 1600 813" preserveAspectRatio="none" fill="none" aria-hidden="true">
+      <g stroke="#E5E2DD" strokeWidth="2" opacity=".55"><path d="M780 75 1600 310M830 315 1600 65M840 565 1600 380M820 665 1600 535M960 0 1120 813M1515 0 1595 813" /></g>
+      <g stroke="#E9E7E1" strokeWidth="12" opacity=".24"><path d="M800 150 1600 395M845 615 1600 460M1010 0 1205 813" /></g>
+      <g fill="#EAE9E3" opacity=".45"><path d="m917 42 78 52-47 79-78-52zM1357 155l104 39-38 103-104-39z" /></g>
+      <g fill="#D5A0B1" opacity=".8"><circle cx="1443" cy="110" r="10" /><circle cx="955" cy="395" r="11" /><circle cx="1511" cy="692" r="11" /></g>
+    </svg>
+    <header className="landing-cabecera">
+      <Link className="landing-marca" to="/" aria-label="ServiMap, inicio">ServiMap</Link>
+      <nav aria-label="Navegación principal">
+        <button ref={abrirExplicacion} type="button" onClick={() => setExplicando(true)}>Cómo funciona</button>
+        <Link to="/prestadores">Explorar servicios</Link>
+      </nav>
+    </header>
     <div className="landing-presentacion">
       <div className="landing-mensaje">
-        <p className="landing-etiqueta">Servicios cerca tuyo</p>
-        <h1>Lo que necesitás,<br />más cerca de vos</h1>
-        <p>Conectamos personas con profesionales de confianza para hacer tu día a día más fácil.</p>
+        <p className="landing-antetitulo">Servicios cerca tuyo</p>
+        <h1>Lo que necesitás,<br />más cerca de vos.</h1>
+        <p>Conectamos personas que necesitan ayuda con quienes saben cómo resolverlo.</p>
       </div>
       <Ciudad />
     </div>
     <div className="landing-eleccion">
-      <span className="landing-decoracion" aria-hidden="true">✧</span>
       <h2>¿Qué querés hacer hoy?</h2>
       <p className="landing-subtitulo">Elegí cómo empezar en ServiMap.</p>
       <div className="landing-tarjetas">
         {[
-          { rol: 'CLIENTE', titulo: 'Encontrar un profesional', descripcion: 'Creá tu cuenta como cliente y encontrá servicios cerca tuyo', boton: 'Empezar como cliente' },
-          { rol: 'PRESTADOR', titulo: 'Ofrecer mis servicios', descripcion: 'Registrate como prestador, publicá tu oficio y conectá con clientes', boton: 'Empezar como prestador' },
+          { rol: 'CLIENTE', titulo: 'Crear cuenta cliente', descripcion: 'Creá tu cuenta como cliente y encontrá servicios cerca tuyo.', boton: 'Empezar como cliente' },
+          { rol: 'PRESTADOR', titulo: 'Ofrecer mis servicios', descripcion: 'Mostrá tu oficio y conectá con nuevos clientes.', boton: 'Empezar como prestador' },
         ].map(({ rol, titulo, descripcion, boton }) => <article className="landing-tarjeta" key={rol}>
           <div className={`landing-icono ${rol === 'PRESTADOR' ? 'landing-icono-rosa' : ''}`}><IconoRol prestador={rol === 'PRESTADOR'} /></div>
           <div className="landing-tarjeta-contenido">
-            <h3>{titulo}</h3>
+            <h3><Link to={`/registro?rol=${rol}`}>{titulo}</Link></h3>
             <p>{descripcion}</p>
             <Link className="landing-boton" to={`/registro?rol=${rol}`}>{boton}<span aria-hidden="true">→</span></Link>
           </div>
@@ -49,5 +61,14 @@ export default function LandingEntrada() {
       </div>
       <p className="landing-login">¿Ya tenés una cuenta? <Link to="/login">Iniciá sesión</Link></p>
     </div>
+    <dialog ref={dialogo} className="landing-dialogo" aria-labelledby="como-funciona-titulo" onCancel={() => setExplicando(false)} onClose={() => { setExplicando(false); abrirExplicacion.current?.focus() }} onClick={(evento) => {
+      if (evento.target !== dialogo.current) return
+      const r = dialogo.current.getBoundingClientRect()
+      if (evento.clientX < r.left || evento.clientX > r.right || evento.clientY < r.top || evento.clientY > r.bottom) setExplicando(false)
+    }}>
+      <div className="landing-dialogo-titulo"><h2 id="como-funciona-titulo">Cómo funciona ServiMap</h2><button type="button" aria-label="Cerrar explicación" onClick={() => setExplicando(false)} autoFocus>×</button></div>
+      <h3>Como cliente</h3><p>Explorá los servicios, creá tu cuenta y enviá una solicitud a un profesional. Cuando el trabajo finalice, calificá tu experiencia.</p>
+      <h3>Como prestador</h3><p>Registrate, completá tu perfil y tus oficios. Recibí solicitudes de clientes y gestioná tus trabajos desde tu panel.</p>
+    </dialog>
   </section>
 }

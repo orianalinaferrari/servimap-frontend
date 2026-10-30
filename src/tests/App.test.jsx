@@ -16,7 +16,7 @@ describe('App', () => {
       expect(screen.getByRole('banner')).toHaveClass('servimap-header-minimo')
       expect(screen.getByRole('link', { name: 'ServiMap, inicio' })).toBeInTheDocument()
       fireEvent.click(screen.getByRole('link', { name: /Volver al inicio/ }))
-      expect(screen.getByRole('heading', { name: /prestadores de servicios/ })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Lo que necesitás/ })).toBeInTheDocument()
     }
   )
 

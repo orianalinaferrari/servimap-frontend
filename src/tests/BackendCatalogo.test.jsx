@@ -44,5 +44,15 @@ describe('Directorio, ficha y mapa reales',()=>{
     render(<DirectorioPrestadores/>);await screen.findByRole('button',{name:publico.nombre});fireEvent.change(screen.getByLabelText('Oficio'),{target:{value:'Plomero'}})
     await waitFor(()=>expect(http.mock.calls.some(([url])=>new URL(url).searchParams.get('oficioId')==='o1')).toBe(true))
   })
+  it('presenta resultados sin precios inventados y el botón de búsqueda no duplica lecturas',async()=>{
+    render(<DirectorioPrestadores/>);await screen.findByRole('button',{name:publico.nombre})
+    expect(screen.getByText('Mostrando 1 resultado')).toBeInTheDocument()
+    expect(screen.queryByText(/Desde \$|Hasta \$/)).toBeNull()
+    const lecturas=http.mock.calls.length
+    fireEvent.click(screen.getByRole('button',{name:'Buscar prestadores'}))
+    expect(http.mock.calls).toHaveLength(lecturas)
+    fireEvent.click(screen.getByText('Ver perfil'))
+    expect(await screen.findByText('Comentario remoto')).toBeInTheDocument()
+  })
   it('ficha conserva comentarios públicos sin requerir datos del cliente',async()=>{const ficha=await obtenerPrestador('p1');expect(ficha.comentarios[0]).toMatchObject({prestadorId:'p1',comentario:'Comentario remoto'});expect(ficha.comentarios[0].dni).toBeUndefined()})
 })

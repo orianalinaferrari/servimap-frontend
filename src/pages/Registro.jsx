@@ -12,6 +12,14 @@ export default function Registro() {
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [creado, setCreado] = useState(false)
+  const esPrestador = formulario.rol === 'PRESTADOR'
+  const nombreRol = formulario.rol === 'CLIENTE' ? 'Cliente' : esPrestador ? 'Prestador' : ''
+
+  function iconoRol() {
+    return <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {esPrestador ? <><rect x="4" y="9" width="20" height="15" rx="2" /><path d="M10 9V6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3M4 15a27 27 0 0 0 20 0M12 15h4v5h-4z" /></> : <><circle cx="11" cy="8" r="4" fill="currentColor" stroke="none" /><path d="M3 24v-3a8 8 0 0 1 16 0v3Z" fill="currentColor" stroke="none" /><circle cx="21" cy="10" r="3" fill="currentColor" stroke="none" /><path d="M21 16c4 0 5 4 5 8h-5" fill="currentColor" stroke="none" /></>}
+    </svg>
+  }
 
   function cambiar({ target: { name, value } }) {
     setFormulario((anterior) => ({ ...anterior, [name]: value }))
@@ -44,31 +52,37 @@ export default function Registro() {
   }
 
   return (
-    <main className="registro-pagina">
+    <main className={`registro-pagina${esPrestador ? ' registro-prestador' : ''}`}>
+      {nombreRol && <div className="registro-identidad">{iconoRol()}<span>{nombreRol}</span></div>}
       <h1>Crear cuenta</h1>
-      <p>Completá tus datos para registrarte en ServiMap.</p>
+      <p className="registro-subtitulo">Completá tus datos para registrarte en ServiMap.</p>
       {creado && <p role="status">Tu cuenta fue creada. Iniciá sesión para continuar.</p>}
       <form className="registro-formulario" onSubmit={enviar} noValidate aria-busy={enviando}>
         {[
-          ['nombre', 'Nombre', 'text', 'name'], ['email', 'Email', 'email', 'email'], ['dni', 'DNI', 'text', 'off'],
+          ['nombre', 'Nombre y apellido', 'text', 'name'], ['email', 'Email', 'email', 'email'], ['dni', 'DNI', 'text', 'off'],
           ['contrasena', 'Contraseña', 'password', 'new-password'], ['confirmarContrasena', 'Confirmar contraseña', 'password', 'new-password'],
         ].map(([name, label, type, autoComplete]) => {
           const Campo = type === 'password' ? CampoContrasena : 'input'
-          return <div key={name}>
+          const placeholders = { nombre: 'Nombre y apellido', email: 'tu@email.com', dni: 'Ej: 12345678', contrasena: 'Mínimo 8 caracteres', confirmarContrasena: 'Repetí tu contraseña' }
+          return <div className={`registro-campo registro-campo-${name}`} key={name}>
             <label htmlFor={name}>{label}</label>
-            <Campo id={name} name={name} type={type} autoComplete={autoComplete} value={formulario[name]} onChange={cambiar} disabled={enviando || creado} aria-invalid={Boolean(errores[name])} aria-describedby={errores[name] ? `${name}-error` : undefined} placeholder={name === 'nombre' ? 'Nombre y apellido' : undefined} />
+            <Campo id={name} name={name} type={type} autoComplete={autoComplete} value={formulario[name]} onChange={cambiar} disabled={enviando || creado} aria-invalid={Boolean(errores[name])} aria-describedby={errores[name] ? `${name}-error` : undefined} placeholder={placeholders[name]} inputMode={name === 'dni' ? 'numeric' : undefined} />
             {errores[name] && <p id={`${name}-error`} role="alert">{errores[name]}</p>}
           </div>
         })}
-        <label htmlFor="rol">Tipo de usuario</label>
-        <select id="rol" name="rol" value={formulario.rol} onChange={cambiar} disabled={enviando || creado} aria-invalid={Boolean(errores.rol)} aria-describedby={errores.rol ? 'rol-error' : undefined}>
+        <div className="registro-campo registro-campo-rol">
+          <label htmlFor="rol">Tipo de usuario</label>
+          <div className="registro-selector">{nombreRol && iconoRol()}
+            <select id="rol" name="rol" value={formulario.rol} onChange={cambiar} disabled={enviando || creado} aria-invalid={Boolean(errores.rol)} aria-describedby={errores.rol ? 'rol-error' : undefined}>
           <option value="">Seleccionar</option><option value="CLIENTE">Cliente</option><option value="PRESTADOR">Prestador</option>
-        </select>
-        {errores.rol && <p id="rol-error" role="alert">{errores.rol}</p>}
-        {error && <p role="alert">{error}</p>}
-        <button type="submit" disabled={enviando || creado}>{enviando ? 'Creando cuenta...' : 'Crear cuenta'}</button>
+            </select>
+          </div>
+          {errores.rol && <p id="rol-error" role="alert">{errores.rol}</p>}
+        </div>
+        {error && <p className="registro-error-servidor" role="alert">{error}</p>}
+        <button type="submit" disabled={enviando || creado}>{enviando ? 'Creando cuenta...' : nombreRol ? `Crear cuenta como ${nombreRol.toLowerCase()}` : 'Crear cuenta'}</button>
       </form>
-      <p>¿Ya tenés cuenta? <Link to="/login">Iniciar sesión</Link></p>
+      <p className="registro-login">¿Ya tenés cuenta? <Link to="/login">Iniciá sesión</Link></p>
     </main>
   )
 }

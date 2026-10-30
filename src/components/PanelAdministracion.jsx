@@ -1,6 +1,8 @@
 ﻿import { useEffect, useState } from 'react'
 import { ModeracionComentarios } from './ModeracionComentarios'
 import { AdministracionOficios } from './AdministracionOficios'
+import { IconoAdministracion } from './IconoAdministracion'
+import '../styles/PanelAdministracion.css'
 import { listarCalificaciones, moderarComentario } from '../services/calificacionesService'
 
 export function PanelAdministracion({ prestadores = [], calificaciones, onModerar }) {
@@ -20,10 +22,10 @@ export function PanelAdministracion({ prestadores = [], calificaciones, onModera
     const actualizada = await moderarComentario(id, motivo)
     setRemotas((lista) => lista.map((calificacion) => calificacion.id === id ? actualizada : calificacion))
   }
-  return <section className="panel"><h2>Panel de administración</h2>
+  return <section className="panel panel-administracion"><h2>Panel de administración</h2>
     <nav className="panel-nav" aria-label="Secciones de administración">
-      <button aria-pressed={seccionActiva === 'comentarios'} onClick={() => setSeccionActiva('comentarios')}>Moderación de comentarios</button>
-      <button aria-pressed={seccionActiva === 'oficios'} onClick={() => setSeccionActiva('oficios')}>Administración de oficios</button>
+      <button aria-pressed={seccionActiva === 'comentarios'} onClick={() => setSeccionActiva('comentarios')}><IconoAdministracion />Moderación de comentarios</button>
+      <button aria-pressed={seccionActiva === 'oficios'} onClick={() => setSeccionActiva('oficios')}><IconoAdministracion tipo="configuracion" />Administración de oficios</button>
     </nav>
     {seccionActiva === 'comentarios' && <>
       {cargando && <p role="status">Cargando calificaciones...</p>}

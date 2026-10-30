@@ -210,7 +210,7 @@ export function MapaPrestadores({ prestadores = [], onSeleccionar }) {
       {estadoUbicacion && <p role="status">{estadoUbicacion}</p>}
       <MapaInteractivo disponibles={disponibles} onSeleccionar={onSeleccionar} ubicacion={ubicacion} />
       {disponibles.length === 0 && (
-        <p role="status">Todavía no hay prestadores con coordenadas registradas. Podés encontrarlos en el listado.</p>
+        <p className="mapa-sin-coordenadas" role="status"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 23S3 14 3 9a9 9 0 0 1 18 0c0 5-9 14-9 14ZM12 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" /></svg>Todavía no hay prestadores con coordenadas registradas. Podés encontrarlos en el listado.</p>
       )}
     </section>
   )

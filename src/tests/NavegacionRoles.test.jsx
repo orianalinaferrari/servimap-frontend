@@ -43,12 +43,15 @@ describe('F-04 - Navegación según rol', () => {
     configurarUsuario({ id: 1, rol: ROLES.CLIENTE })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/cliente/solicitudes']}>
         <NavegacionRoles />
       </MemoryRouter>
     )
 
     expect(screen.getByText('Mi panel de cliente')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Mis solicitudes' })).toHaveAttribute('href', '/cliente/solicitudes')
+    expect(screen.getByRole('link', { name: 'Mis solicitudes' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByText('Mi panel de cliente')).not.toHaveAttribute('aria-current')
     expect(
       screen.queryByText('Panel de administración')
     ).not.toBeInTheDocument()

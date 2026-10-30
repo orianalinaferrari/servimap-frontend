@@ -1,4 +1,5 @@
 import EstadoSolicitud from '../components/EstadoSolicitud'
+import { IconoPrestador } from '../components/prestador/IconoPrestador'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -229,7 +230,7 @@ function SolicitudesPrestador() {
   }
 
   return (
-    <main className="solicitudes-prestador">
+    <main className="solicitudes-prestador prestador-pagina">
       <header className="solicitudes-prestador-cabecera">
         <div>
           <h1>Solicitudes recibidas</h1>
@@ -287,7 +288,7 @@ function SolicitudesPrestador() {
                   key={solicitud.id}
                 >
                   <div className="solicitudes-prestador-tarjeta-superior">
-                    <h3>{mostrarValor(solicitud.servicio)}</h3>
+                    <h3><span className="prestador-icono-suave"><IconoPrestador tipo="oficio" /></span>{mostrarValor(solicitud.servicio)}</h3>
 
                     <span className="solicitudes-prestador-estado">
                       <EstadoSolicitud estado={solicitud.estado} />
@@ -317,7 +318,7 @@ function SolicitudesPrestador() {
                           }
                         }}
                       >
-                        {mostrandoDetalle ? 'Ocultar detalle' : 'Ver detalle'}
+                        <IconoPrestador tipo="solicitudes" />{mostrandoDetalle ? 'Ocultar detalle' : 'Ver detalle'}
                       </button>
                     )}
 

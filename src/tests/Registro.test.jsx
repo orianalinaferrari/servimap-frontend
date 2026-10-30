@@ -15,7 +15,7 @@ describe('Registro de usuario', () => {
       screen.getByRole('heading', { name: 'Crear cuenta' })
     ).toBeTruthy()
 
-    expect(screen.getByLabelText('Nombre')).toBeTruthy()
+    expect(screen.getByLabelText('Nombre y apellido')).toBeTruthy()
     expect(screen.getByLabelText('Email')).toBeTruthy()
   })
 

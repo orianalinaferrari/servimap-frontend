@@ -15,6 +15,7 @@ function NavegacionRoles() {
   return (
     <nav aria-label="Navegación según rol">
       <NavLink to="/">Inicio</NavLink>
+      <NavLink to="/prestadores">Explorar servicios</NavLink>
 
       {!usuario && (
         <>
@@ -24,7 +25,10 @@ function NavegacionRoles() {
       )}
 
       {rol === ROLES.CLIENTE && (
-        <NavLink to="/cliente">Mi panel de cliente</NavLink>
+        <>
+          <NavLink to="/cliente" end>Mi panel de cliente</NavLink>
+          <NavLink to="/cliente/solicitudes">Mis solicitudes</NavLink>
+        </>
       )}
 
       {rol === ROLES.PRESTADOR && (

@@ -71,14 +71,14 @@ try {
   }
   await cdp('Page.enable'); await cdp('Runtime.enable'); await cdp('Network.enable')
   await cdp('Fetch.enable', { patterns: [{ urlPattern: '*', requestStage: 'Request' }] })
-  for (const ruta of ['/', '/login', '/registro', '/cliente', '/prestador', '/admin']) {
+  for (const ruta of ['/', '/prestadores', '/login', '/registro', '/cliente', '/prestador', '/admin']) {
     await cdp('Page.navigate', { url: base + ruta })
     await hasta(`!!document.querySelector('#root header')`, 'React montado')
     if (['/cliente', '/prestador', '/admin'].includes(ruta)) {
       await hasta(`location.pathname==='/login'`, 'redirección sin sesión')
       check(true, `${ruta}: acceso sin sesión redirige a login`)
     }
-    if (ruta === '/') {
+    if (ruta === '/prestadores') {
       await hasta(`document.querySelector('.mapa-interactivo')?.getAttribute('aria-busy')==='false'`, 'Liberty cargado')
       await hasta(`document.querySelector('.mapa-marcador') || document.body.innerText.includes('Todavía no hay prestadores con coordenadas registradas.')`, 'mapa remoto resuelto')
       check(await evaluar(`!!document.querySelector('.maplibregl-ctrl-attrib')?.textContent.includes('OpenStreetMap')`), 'Liberty real con créditos visibles')
@@ -92,7 +92,7 @@ try {
       check(await evaluar('document.documentElement.scrollWidth<=innerWidth'), `${ruta}: sin overflow ${width}px`)
       check(await evaluar(`[...document.querySelectorAll('input:not([type=hidden]),select,textarea')].every(e=>e.labels?.length||e.getAttribute('aria-label'))`), `${ruta}: campos etiquetados ${width}px`)
       if (width === 320 || width === 1365) await captura(`${ruta.slice(1) || 'inicio'}-${width}`)
-      if (ruta === '/' && (width === 320 || width === 1365)) {
+      if (ruta === '/prestadores' && (width === 320 || width === 1365)) {
         await evaluar(`document.querySelector('.mapa-interactivo').scrollIntoView({block:'center'})`)
         await esperar(200)
         await captura(`mapa-${width}`)

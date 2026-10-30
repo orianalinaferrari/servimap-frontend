@@ -12,11 +12,14 @@ import { ROLES } from '../utils/roles'
 import PerfilPrestador from '../pages/PerfilPrestador'
 import PaginaNoEncontrada from '../pages/PaginaNoEncontrada'
 import OficiosPrestador from '../pages/OficiosPrestador'
+import DirectorioPrestadores from '../components/DirectorioPrestadores'
+import '../styles/DirectorioPrestadores.css'
 
 function AppRoutes({ panelAdministracion }) {
   return (
     <Routes>
       <Route path="/" element={null} />
+      <Route path="/prestadores" element={<main className="inicio directorio-pagina"><div className="inicio-presentacion"><h1>Encontrá prestadores de servicios</h1><p>Buscá profesionales disponibles en ServiMap.</p></div><DirectorioPrestadores /></main>} />
       <Route path="/registro" element={<Registro />} />
       <Route path="/login" element={<Login />} />
 

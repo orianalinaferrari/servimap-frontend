@@ -79,7 +79,7 @@ export function FormularioSolicitud({ prestador, onCancelar }) {
   }
 
   return (
-    <section className="crear-solicitud">
+    <section className={`crear-solicitud${esCliente ? ' cliente-formulario-solicitud' : ''}`}>
       <button
         type="button"
         className="crear-solicitud-volver"
@@ -109,7 +109,7 @@ export function FormularioSolicitud({ prestador, onCancelar }) {
       )}
 
       <form onSubmit={enviar} noValidate>
-        <div className="crear-solicitud-campo">
+        <div className="crear-solicitud-campo cliente-campo-completo">
           <label htmlFor="solicitud-servicio">Servicio *</label>
           <select
             id="solicitud-servicio"
@@ -132,7 +132,7 @@ export function FormularioSolicitud({ prestador, onCancelar }) {
           )}
         </div>
 
-        <div className="crear-solicitud-campo">
+        <div className="crear-solicitud-campo cliente-campo-completo">
           <label htmlFor="solicitud-descripcion">Descripción del trabajo *</label>
           <textarea
             id="solicitud-descripcion"

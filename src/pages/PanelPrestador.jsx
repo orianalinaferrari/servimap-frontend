@@ -8,6 +8,7 @@ import {
 } from '../utils/panelPrestador'
 import { obtenerEtiquetaEstado } from '../utils/estadosSolicitud'
 import '../styles/PanelPrestador.css'
+import { IconoPrestador } from '../components/prestador/IconoPrestador'
 
 function obtenerNombreUsuario(usuario) {
   if (typeof usuario?.nombre === 'string' && usuario.nombre.trim()) {
@@ -91,7 +92,7 @@ function PanelPrestador() {
   const recientes = obtenerActividadRecientePrestador(solicitudes)
 
   return (
-    <main className="panel-prestador">
+    <main className="panel-prestador prestador-pagina">
       <header className="panel-prestador-encabezado">
         <div>
           <p className="panel-prestador-etiqueta">
@@ -243,7 +244,7 @@ function PanelPrestador() {
             to="/prestador/solicitudes"
           >
             <span className="panel-prestador-acceso-icono">
-              📋
+              <IconoPrestador tipo="solicitudes" />
             </span>
             <strong>Solicitudes recibidas</strong>
             <span>
@@ -256,7 +257,7 @@ function PanelPrestador() {
             to="/prestador/perfil"
           >
             <span className="panel-prestador-acceso-icono">
-              👤
+              <IconoPrestador tipo="usuario" />
             </span>
             <strong>Mi perfil</strong>
             <span>
@@ -269,7 +270,7 @@ function PanelPrestador() {
             to="/prestador/oficios"
           >
             <span className="panel-prestador-acceso-icono">
-              🛠️
+              <IconoPrestador tipo="herramienta" />
             </span>
             <strong>Mis oficios</strong>
             <span>

@@ -17,7 +17,7 @@ const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
 const api = crearApiSimulada(), pendientes = new Map()
 const canceladas = new Set()
 const reporte = { tipo: 'navegador con API simulada; ninguna escritura real', verificaciones: [], erroresConsola: [], recursosFallidos: [], escriturasBloqueadas: [], carpeta }
-let ws, numero = 0, fase = 'inicio', falloIntercepcion
+let ws, numero = 0, fase = 'inicio', falloIntercepcion, nav
 const check = (condicion, nombre) => { assert.ok(condicion, nombre); reporte.verificaciones.push(nombre) }
 function cdp(method, params = {}) {
   return new Promise((resolve, reject) => {
@@ -62,11 +62,12 @@ async function captura(nombre) {
 }
 async function responsive(nombre) {
   for (const width of nombre === 'inicio' ? [1365, 768, 390, 320] : [1365, 390]) {
-    await cdp('Emulation.setDeviceMetricsOverride', { width, height: width === 390 ? 844 : 1000, deviceScaleFactor: 1, mobile: width === 390 })
+    await cdp('Emulation.setDeviceMetricsOverride', { width, height: nombre === 'inicio' && width === 1365 ? 768 : width === 390 ? 844 : 1000, deviceScaleFactor: 1, mobile: width === 390 })
     await esperar(180)
     check(await evaluar('document.documentElement.scrollWidth <= document.documentElement.clientWidth'), `${nombre}: sin overflow ${width}px`)
     check(await evaluar(`[...document.querySelectorAll('input:not([type=hidden]),select,textarea')].every(e=>e.labels?.length||e.getAttribute('aria-label'))`), `${nombre}: campos etiquetados ${width}px`)
     if (nombre === 'inicio') {
+      if (width === 1365) check(await evaluar('document.documentElement.scrollHeight<=innerHeight'), 'landing 1365x768: sin scroll vertical')
       check(await evaluar(`[...document.querySelectorAll('.landing-boton')].length===2&&[...document.querySelectorAll('.landing-boton')].every(e=>{const r=e.getBoundingClientRect();return r.height>=44&&r.left>=0&&r.right<=document.documentElement.clientWidth&&e.scrollWidth<=e.clientWidth})`), `landing: dos acciones legibles y táctiles ${width}px`)
       await captura(`landing-${width}`)
     }
@@ -76,14 +77,14 @@ async function responsive(nombre) {
 }
 async function login(cuenta) {
   await ir('/login'); await llenar('email', cuenta.email); await llenar('contrasena', cuenta.password)
-  await click('Iniciar sesión'); await verTexto('Cerrar sesión')
+  await click('Iniciar sesión'); await hasta(`!!sessionStorage.getItem('servimap-jwt')`, 'login con JWT'); await ir('/prestadores'); await verTexto('Cerrar sesión')
 }
 async function logout() {
   await click('Cerrar sesión'); await hasta(`!sessionStorage.getItem('servimap-jwt')`, 'logout sin token')
   await verTexto('Crear cuenta')
 }
 async function crearSolicitud(descripcion) {
-  await ir('/'); await click('QA PRESTADOR'); await click('Solicitar servicio')
+  await ir('/prestadores'); await click('QA PRESTADOR'); await click('Solicitar servicio')
   await llenar('solicitud-servicio', 'Plomería'); await llenar('solicitud-descripcion', descripcion)
   await llenar('solicitud-direccion', 'Dirección sintética de test'); await llenar('solicitud-contacto', 'Email')
   await click('Enviar solicitud'); await verTexto('Tu solicitud fue enviada correctamente.')
@@ -133,16 +134,36 @@ try {
   }
   await cdp('Runtime.enable'); await cdp('Network.enable'); await cdp('Page.enable')
   await cdp('Fetch.enable', { patterns: [{ urlPattern: '*', requestStage: 'Request' }] })
+  recorrido: {
   fase = 'público y registro'
-  await ir('/'); await verTexto('QA PRESTADOR'); await verTexto('Todavía no hay prestadores con coordenadas registradas.')
+  await ir('/'); await verTexto('¿Qué querés hacer hoy?')
+  check(await evaluar(`!document.querySelector('.buscador-prestadores,.mapa-interactivo,.app-header')`), 'inicio solo contiene landing')
+  await responsive('inicio')
+  nav = await evaluar(`Math.min(...[...document.querySelectorAll('.landing-cabecera nav a,.landing-cabecera nav button')].map(e=>e.getBoundingClientRect().height))`)
+  reporte.alturaNavegacion = nav
+  await click('Cómo funciona'); await hasta(`document.querySelector('dialog').open`, 'modal abierto')
+  check(await evaluar(`document.querySelector('dialog').contains(document.activeElement)`), 'modal recibe foco')
+  await captura('modal-movil')
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 })
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 })
+  await hasta(`!document.querySelector('dialog').open`, 'Escape cierra modal')
+  await hasta(`document.activeElement.textContent==='Cómo funciona'`, 'modal devuelve foco al disparador')
+  check(true, 'modal devuelve foco al disparador')
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 1365, height: 768, deviceScaleFactor: 1, mobile: false })
+  await click('Cómo funciona'); await captura('modal-escritorio'); await click('Cerrar explicación')
+  await click('Cómo funciona')
+  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', x: 5, y: 5, button: 'left', clickCount: 1 })
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 5, y: 5, button: 'left', clickCount: 1 })
+  await hasta(`!document.querySelector('dialog').open`, 'overlay cierra modal')
+  check(true, 'modal: cierre por botón, Escape y overlay')
+  await click('Explorar servicios'); await verTexto('QA PRESTADOR'); await verTexto('Todavía no hay prestadores con coordenadas registradas.')
   await hasta(`document.querySelector('.mapa-interactivo')?.getAttribute('aria-busy')==='false'`, 'mapa cargado', 25000)
   check(await evaluar(`document.querySelector('.maplibregl-ctrl-attrib')?.textContent.includes('OpenStreetMap')`), 'mapa real Liberty: créditos')
   await llenar('busqueda', 'sin-coincidencias-qa'); await verTexto('No se encontraron prestadores con los criterios seleccionados.')
   check(true, 'búsqueda y estado vacío con API simulada')
   await llenar('busqueda', ''); await verTexto('QA PRESTADOR')
-  await responsive('inicio')
-  const nav = await evaluar(`Math.min(...[...document.querySelectorAll('.app-header nav a')].map(e=>e.getBoundingClientRect().height))`)
-  reporte.alturaNavegacion = nav
+  await responsive('directorio')
+  await ir('/'); await verTexto('¿Qué querés hacer hoy?')
   for (const rol of ['CLIENTE', 'PRESTADOR']) {
     await evaluar(`document.querySelector('.landing-boton[href="/registro?rol=${rol}"]').click()`)
     await hasta(`document.getElementById('rol')?.value===${texto(rol)}`, `registro preselecciona ${rol}`)
@@ -152,13 +173,15 @@ try {
   await evaluar(`document.querySelector('.landing-login a').click()`); await verTexto('Ingresá tus datos para acceder a ServiMap.')
   check(await evaluar(`location.pathname==='/login'`), 'landing: enlace inferior abre login')
   await ir('/'); await verTexto('¿Qué querés hacer hoy?')
+  // Modo acotado para cambios visuales: navegación, modal, mapa y ambos roles.
+  if (process.env.SERVIMAP_QA_SCOPE === 'landing') break recorrido
   await evaluar(`document.querySelector('.landing-boton[href="/registro?rol=CLIENTE"]').click()`)
   await llenar('nombre', 'QA Registro'); await llenar('email', 'registro@example.test'); await llenar('dni', '98.765.432'); await llenar('contrasena', 'fixture-local-only'); await llenar('confirmarContrasena', 'fixture-local-only')
-  await llenar('dni', 'abc'); await click('Crear cuenta'); await verTexto('El DNI debe tener 7 u 8 números')
+  await llenar('dni', 'abc'); await click('Crear cuenta como cliente'); await verTexto('El DNI debe tener 7 u 8 números')
   check(true, 'DNI inválido bloqueado antes de registrar')
   await llenar('dni', '98.765.432')
   await click('Mostrar contraseña'); check(await evaluar(`document.getElementById('contrasena').type==='text'&&document.getElementById('contrasena').value==='fixture-local-only'`), 'ojo conserva contraseña')
-  await click('Ocultar contraseña'); await responsive('registro'); await click('Crear cuenta'); await verTexto('Tu cuenta fue creada.')
+  await click('Ocultar contraseña'); await responsive('registro'); await click('Crear cuenta como cliente'); await verTexto('Tu cuenta fue creada.')
   check(!await evaluar(`sessionStorage.getItem('servimap-jwt')`), 'registro no inicia sesión implícitamente')
   const cliente = { email: 'registro@example.test', password: 'fixture-local-only' }
   fase = 'cliente'
@@ -203,7 +226,7 @@ try {
   check(api.oficios.some((o) => o.nombre === 'Oficio QA editado' && o.activo), 'administrador crea, edita y activa/desactiva')
   await responsive('administracion'); await logout()
   fase = 'mapa con marcador y privacidad'
-  await ir('/'); await verTexto('QA PRESTADOR'); await hasta(`!!document.querySelector('.mapa-marcador')`, 'marcador público')
+  await ir('/prestadores'); await verTexto('QA PRESTADOR'); await hasta(`!!document.querySelector('.mapa-marcador')`, 'marcador público')
   await hasta(`document.querySelector('.mapa-interactivo')?.getAttribute('aria-busy')==='false'`, 'mapa con marcador cargado', 25000)
   await cdp('Browser.grantPermissions', { origin: new URL(base).origin, permissions: ['geolocation'] })
   await cdp('Emulation.setGeolocationOverride', { latitude: -34.62, longitude: -58.4, accuracy: 25 })
@@ -233,6 +256,7 @@ try {
   await responsive('login')
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab' }); await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab' })
   check(await evaluar(`['A','BUTTON','INPUT','SELECT','TEXTAREA','SUMMARY'].includes(document.activeElement.tagName)`), 'navegación básica mediante teclado')
+  }
   check(reporte.erroresConsola.length === 0, 'sin excepciones JavaScript en navegador')
   check(reporte.recursosFallidos.length === 0, 'recursos frontend y cartográficos sin errores de red ni HTTP')
   check(reporte.escriturasBloqueadas.length === 0, 'sin escrituras fuera del interceptor')
@@ -244,7 +268,10 @@ try {
   process.exitCode = 1
 } finally {
   reporte.llamadasSimuladas = api.llamadas
-  writeFileSync(path.join(carpeta, 'resultado.json'), JSON.stringify(reporte, null, 2))
+  try {
   console.log(JSON.stringify({ aprobado: reporte.aprobado, verificaciones: reporte.verificaciones.length, faseFallida: reporte.faseFallida, error: reporte.error, alturaNavegacion: reporte.alturaNavegacion, erroresJavaScript: reporte.erroresConsola.length, llamadasSimuladas: api.llamadas.length, escriturasSimuladas: api.llamadas.filter((r) => !['GET','OPTIONS'].includes(r.method)).length, reporte: path.join(carpeta, 'resultado.json') }))
+  writeFileSync(path.join(carpeta, 'resultado.json'), JSON.stringify(reporte, null, 2))
+  } finally {
   if (ws?.readyState === WebSocket.OPEN) { await cdp('Browser.close').catch(() => {}); ws.close() } else proceso.kill()
+  }
 }

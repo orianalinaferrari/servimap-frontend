@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconoPrestador as IconoCliente } from './prestador/IconoPrestador'
 import {
   puedeCalificarSolicitud,
   validarCalificacion,
@@ -56,12 +57,13 @@ export default function CalificarPrestador({
             <label key={valor}>
               <input
                 type="radio"
+                aria-label={`${valor} ${valor === 1 ? 'estrella' : 'estrellas'}`}
                 name={`puntaje-${solicitud.id}`}
                 value={valor}
                 checked={puntaje === valor}
                 onChange={() => setPuntaje(valor)}
               />
-              <span>{valor} ★</span>
+              <span className={valor <= puntaje ? 'seleccionada' : ''} aria-hidden="true">{valor}<IconoCliente tipo="estrella" /></span>
             </label>
           ))}
         </div>

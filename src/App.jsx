@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import './styles/ServiMapPublico.css'
+import './styles/PrestadorVisual.css'
+import './styles/ClienteVisual.css'
 import AppRoutes from './routes/AppRoutes'
-import DirectorioPrestadores from './components/DirectorioPrestadores'
 import LandingEntrada from './components/LandingEntrada'
 import { PanelAdministracion } from './components/PanelAdministracion'
 import NavegacionRoles from './components/auth/NavegacionRoles'
@@ -19,8 +20,11 @@ function App() {
   const navigate = useNavigate()
 
   const esInicio = location.pathname === '/'
+  const esDirectorio = location.pathname === '/prestadores'
+  const esAdministracion = location.pathname === '/admin'
+  const esPrestador = location.pathname === '/prestador' || location.pathname.startsWith('/prestador/')
+  const esCliente = location.pathname === '/cliente' || location.pathname.startsWith('/cliente/')
   const esAccesoPublico = ['/login', '/registro'].includes(location.pathname)
-  const TituloDirectorio = autenticado ? 'h1' : 'h2'
 
   async function handleCerrarSesion() {
     if (cerrandoSesion) return
@@ -46,7 +50,7 @@ function App() {
 
   return (
     <>
-      <header className={esAccesoPublico ? 'servimap-header-minimo' : 'app-header'}>
+      {!esInicio && <header className={esAccesoPublico ? 'servimap-header-minimo' : esDirectorio ? 'app-header directorio-header' : esAdministracion ? 'app-header administracion-header' : esPrestador ? 'app-header prestador-header' : esCliente ? 'app-header cliente-header' : 'app-header'}>
         <Link className="servimap-logo" to="/" aria-label="ServiMap, inicio">ServiMap<span>Servicios cerca tuyo</span></Link>
 
         {esAccesoPublico ? (
@@ -75,22 +79,12 @@ function App() {
         ) : null)}
 
         {errorSesion && <p role="alert">{errorSesion}</p>}
-      </header>
+      </header>}
 
       <AppRoutes panelAdministracion={panelAdministracion} />
 
       {esInicio && (
-        <main className="inicio">
-          {!autenticado && <LandingEntrada />}
-          <div className="inicio-presentacion inicio-directorio">
-            <p className="etiqueta">Conectá con profesionales</p>
-            <TituloDirectorio>Encontrá prestadores de servicios</TituloDirectorio>
-            <p>Buscá profesionales disponibles en ServiMap.</p>
-
-          </div>
-          <DirectorioPrestadores />
-
-        </main>
+        <main className="inicio inicio-landing"><LandingEntrada /></main>
       )}
     </>
   )

@@ -1,4 +1,6 @@
 import EstadoSolicitud from '../components/EstadoSolicitud'
+import { IconoPrestador as IconoCliente } from '../components/prestador/IconoPrestador'
+import { EstrellasCalificacion } from '../components/cliente/EstrellasCalificacion'
 import CalificarPrestador from '../components/CalificarPrestador'
 import { registrarCalificacion } from '../services/calificacionesService'
 import {
@@ -205,7 +207,7 @@ function SolicitudesCliente() {
   }
 
   return (
-    <main className="solicitudes-cliente">
+    <main className="solicitudes-cliente cliente-pagina">
       <header className="solicitudes-cliente-cabecera">
         <div>
           <h1>Mis solicitudes</h1>
@@ -259,6 +261,7 @@ function SolicitudesCliente() {
                 >
                   <div className="solicitudes-cliente-tarjeta-superior">
                     <h3>
+                      <span className="cliente-icono-suave"><IconoCliente tipo="oficio" /></span>
                       {mostrarValor(solicitud.servicio)}
                     </h3>
 
@@ -287,7 +290,7 @@ function SolicitudesCliente() {
                           setConfirmandoId(null)
                         }}
                       >
-                        {mostrandoDetalle ? 'Ocultar detalle' : 'Ver detalle'}
+                        <IconoCliente tipo="solicitudes" />{mostrandoDetalle ? 'Ocultar detalle' : 'Ver detalle'}
                       </button>
                     )}
 
@@ -304,7 +307,7 @@ function SolicitudesCliente() {
                             setConfirmandoId(null)
                           }}
                         >
-                          Calificar prestador
+                          <IconoCliente tipo="estrella" />Calificar prestador
                         </button>
                       )}
 
@@ -350,8 +353,9 @@ function SolicitudesCliente() {
 
                       {(calificacionesRegistradas[solicitud.id] ||
                         obtenerCalificacionSolicitud(solicitud)) && (
-                          <section aria-label="Calificación registrada">
+                          <section className="cliente-calificacion-registrada" aria-label="Calificación registrada">
                             <h4>Calificación del servicio</h4>
+                            <EstrellasCalificacion puntaje={(calificacionesRegistradas[solicitud.id] || obtenerCalificacionSolicitud(solicitud)).puntaje} />
                             <p>
                               Puntuación:{' '}
                               {(

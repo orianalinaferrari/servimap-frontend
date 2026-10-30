@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { listarPrestadores } from '../services/prestadoresService'
 import FichaPrestadorRemota from './FichaPrestadorRemota'
 import { MapaPrestadores } from './mapa/MapaPrestadores'
@@ -10,6 +10,18 @@ import {
 } from '../utils/filtrosPrestadores'
 import '../styles/FiltrosPrestadores.css'
 
+function IconoDirectorio({ tipo }) {
+  const trazos = {
+    buscar: 'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z',
+    zona: 'M12 22s8-8 8-14a8 8 0 0 0-16 0c0 6 8 14 8 14ZM15 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
+    precio: 'm3 3 9 0 9 9-9 9-9-9V3ZM7 7h.01',
+    estrella: 'm12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z',
+    oficio: 'M14 6a6 6 0 0 0-7 8L2 19a2 2 0 0 0 3 3l6-6a6 6 0 0 0 8-7l-4 4-4-4 4-4Z',
+    flecha: 'M4 12h16m-6-6 6 6-6 6',
+  }
+  return <svg viewBox="0 0 24 24" fill={tipo === 'estrella' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={trazos[tipo]} /></svg>
+}
+
 export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogoOficios, marcadoresPublicos }) {
   const [termino, setTermino] = useState('')
   const [filtros, setFiltros] = useState({ ...FILTROS_INICIALES })
@@ -17,6 +29,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
   const [remotos, setRemotos] = useState(null)
   const [errorRemoto, setErrorRemoto] = useState('')
   const [cargandoRemoto, setCargandoRemoto] = useState(false)
+  const resultadosRef = useRef(null)
   const consulta = JSON.stringify({ q: termino.trim(), oficioId: catalogoOficios?.find((oficio) => oficio.nombre === filtros.oficio)?.id, calificacionMin: filtros.calificacionMinima, disponible: filtros.soloDisponibles ? true : undefined })
   useEffect(() => {
     if (!catalogoOficios) return
@@ -76,11 +89,11 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
     <section className="buscador-prestadores">
       {cargandoRemoto && <p role="status">Actualizando búsqueda...</p>}
       {errorRemoto && <p role="alert">{errorRemoto}</p>}
-      <h2>Buscar profesionales</h2>
-
       <div className="filtros-prestadores">
+        <h2>Buscar profesionales</h2>
         <div className="filtros-campo filtros-busqueda">
           <label htmlFor="busqueda">Buscar prestador</label>
+          <IconoDirectorio tipo="buscar" />
           <input
             id="busqueda"
             maxLength={100}
@@ -170,9 +183,9 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
             Limpiar filtros
           </button>
 
-          <p role="status">
-            {resultados.length} {resultados.length === 1 ? 'prestador encontrado' : 'prestadores encontrados'}
-          </p>
+          <button className="directorio-buscar" type="button" onClick={() => resultadosRef.current?.scrollIntoView?.({ block: 'start' })}>
+            <IconoDirectorio tipo="buscar" /> Buscar prestadores
+          </button>
         </div>
       </div>
 
@@ -181,31 +194,39 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
         onSeleccionar={setPrestadorSeleccionadoId}
       />
 
+      <section className="directorio-resultados" ref={resultadosRef} aria-labelledby="directorio-resultados-titulo">
+        <div className="directorio-resultados-cabecera"><h2 id="directorio-resultados-titulo">Prestadores encontrados</h2><p role="status">Mostrando {resultados.length} {resultados.length === 1 ? 'resultado' : 'resultados'}</p></div>
       {resultados.length === 0 ? (
         <p>No se encontraron prestadores con los criterios seleccionados.</p>
       ) : (
         <ul className="lista-prestadores">
           {resultados.map((prestador) => (
             <li key={prestador.id} className="tarjeta-prestador">
+              <span className="directorio-avatar" aria-hidden="true"><IconoDirectorio tipo="oficio" /></span>
+              <div className="directorio-datos">
               <h3>
                 <button
                   type="button"
                   className="boton-nombre"
+                  aria-label={prestador.nombre}
                   onClick={() => setPrestadorSeleccionadoId(prestador.id)}
                 >
                   {prestador.nombre}
+                  <span className="directorio-ver-perfil" aria-hidden="true">Ver perfil <IconoDirectorio tipo="flecha" /></span>
                 </button>
               </h3>
               <p>{prestador.oficios.join(', ')}</p>
-              <p>{prestador.zonaCobertura}</p>
-              <p className="tarjeta-precio">
-                ${(prestador.precioMin?.toLocaleString('es-AR') ?? '—')} – $
-                {(prestador.precioMax?.toLocaleString('es-AR') ?? '—')}
-              </p>
+              <div className="directorio-metadatos">
+                {prestador.zonaCobertura && <span><IconoDirectorio tipo="zona" />{prestador.zonaCobertura}</span>}
+                {Number.isFinite(prestador.calificacionPromedio) && <span className="directorio-calificacion"><IconoDirectorio tipo="estrella" />{prestador.calificacionPromedio.toFixed(1)}{Number.isFinite(prestador.reputacion?.totalCalificaciones) && ` (${prestador.reputacion.totalCalificaciones})`}</span>}
+                {Number.isFinite(prestador.precioMin) ? <span><IconoDirectorio tipo="precio" />Desde $ {prestador.precioMin.toLocaleString('es-AR')}</span> : Number.isFinite(prestador.precioMax) && <span><IconoDirectorio tipo="precio" />Hasta $ {prestador.precioMax.toLocaleString('es-AR')}</span>}
+              </div>
+              </div>
             </li>
           ))}
         </ul>
       )}
+      </section>
     </section>
   )
 }

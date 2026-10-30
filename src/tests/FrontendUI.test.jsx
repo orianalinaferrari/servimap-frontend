@@ -10,7 +10,7 @@ describe('Navegación al registro y visibilidad de contraseñas', () => {
   it.each(['CLIENTE', 'PRESTADOR'])('conserva el rol %s recibido desde inicio', (rol) => {
     render(<MemoryRouter initialEntries={[`/registro?rol=${rol}`]}><Registro /></MemoryRouter>)
     expect(screen.getByLabelText('Tipo de usuario').value).toBe(rol)
-    expect(screen.getByRole('link', { name: 'Iniciar sesión' }).getAttribute('href')).toBe('/login')
+    expect(screen.getByRole('link', { name: 'Iniciá sesión' }).getAttribute('href')).toBe('/login')
   })
 
   it('ignora roles que no están disponibles para registro', () => {

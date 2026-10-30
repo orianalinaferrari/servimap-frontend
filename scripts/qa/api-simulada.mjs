@@ -14,21 +14,22 @@ const respuesta = (status, body) => ({ status, body })
 const fallo = (status, error) => respuesta(status, { error })
 const tokenQA = (usuario, segundos) => `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: usuario.id, rol: usuario.rol, exp: Math.floor(Date.now() / 1000) + segundos })).toString('base64url')}.firma-fixture-no-valida-en-produccion`
 
-export function crearApiSimulada() {
+export function crearApiSimulada({ perfilesAdicionales = [] } = {}) {
   const usuarios = Object.entries(CUENTAS_QA).map(([rol, datos], indice) => ({ ...datos, id: idQA(indice + 1), nombre: `QA ${rol}`, dni: `1234567${indice}`, rol }))
   const oficios = [{ id: idQA(201), nombre: 'Plomería', categoria: 'Hogar', activo: true }, { id: idQA(202), nombre: 'Electricidad', categoria: 'Hogar', activo: true }]
   const perfil = { id: idQA(101), nombre: 'QA PRESTADOR', email: CUENTAS_QA.PRESTADOR.email, descripcionProfesional: 'Servicios para pruebas locales.', fotoPerfil: null, zonaCobertura: 'Centro', latitud: null, longitud: null, precioMin: null, precioMax: null, telefono: null, whatsapp: null, emailContacto: null, disponible: true, oficioIds: [oficios[0].id] }
   const solicitudes = [], calificaciones = [], errores = [], llamadas = []
   let contador = 0, siguienteTTL = 3600
   const usuarioPublico = ({ id, nombre, email, rol }) => ({ id, nombre, email, rol })
-  const perfilPropio = () => ({ ...perfil, oficioIds: undefined, oficios: oficios.filter((o) => perfil.oficioIds.includes(o.id)).map(({ id, nombre }) => ({ id, nombre })) })
+  const perfiles = [perfil, ...perfilesAdicionales]
+  const perfilPropio = (dato = perfil) => ({ ...dato, oficioIds: undefined, oficios: oficios.filter((o) => dato.oficioIds.includes(o.id)).map(({ id, nombre }) => ({ id, nombre })) })
   const reputacion = () => ({ promedio: calificaciones.length ? Math.round(calificaciones.reduce((s, c) => s + c.puntaje, 0) / calificaciones.length * 10) / 10 : null, totalCalificaciones: calificaciones.length, serviciosFinalizados: solicitudes.filter((s) => s.estado === 'FINALIZADA').length })
   const comentarios = () => calificaciones.filter((c) => !c.moderada).map(({ id, puntaje, comentario, fechaPublicacion }) => ({ id, puntaje, comentario, fechaPublicacion }))
-  function resumen() {
-    const p = perfilPropio()
+  function resumen(dato = perfil) {
+    const p = perfilPropio(dato)
     const publico = { ...p }
     for (const campo of ['email', 'telefono', 'whatsapp', 'emailContacto']) delete publico[campo]
-    return { ...publico, latitud: p.latitud == null ? null : Number(p.latitud.toFixed(2)), longitud: p.longitud == null ? null : Number(p.longitud.toFixed(2)), oficios: p.oficios.filter((o) => oficios.find((item) => item.id === o.id)?.activo), reputacion: reputacion() }
+    return { ...publico, latitud: p.latitud == null ? null : Number(p.latitud.toFixed(2)), longitud: p.longitud == null ? null : Number(p.longitud.toFixed(2)), oficios: p.oficios.filter((o) => oficios.find((item) => item.id === o.id)?.activo), reputacion: dato === perfil ? reputacion() : { promedio: null, totalCalificaciones: 0, serviciosFinalizados: 0 } }
   }
   const autenticado = (headers) => {
     try {
@@ -40,7 +41,7 @@ export function crearApiSimulada() {
     } catch { return null }
   }
   function detallada(s) {
-    return { ...s, oficio: oficios.find((o) => o.id === s.oficioId), cliente: { id: s.clienteId, nombre: usuarios.find((u) => u.id === s.clienteId)?.nombre }, prestador: { id: perfil.id, nombre: perfil.nombre }, calificada: calificaciones.some((c) => c.solicitudId === s.id) }
+    return { ...s, oficio: oficios.find((o) => o.id === s.oficioId), cliente: { id: s.clienteId, nombre: usuarios.find((u) => u.id === s.clienteId)?.nombre }, prestador: { id: s.prestadorId, nombre: perfiles.find((p) => p.id === s.prestadorId)?.nombre }, calificada: calificaciones.some((c) => c.solicitudId === s.id) }
   }
   function resolver({ method = 'GET', url, headers = {}, body }) {
     const ruta = new URL(url).pathname, query = new URL(url).searchParams
@@ -62,15 +63,14 @@ export function crearApiSimulada() {
     }
     if (ruta === '/api/oficios' && method === 'GET') return respuesta(200, oficios.filter((o) => o.activo))
     if (ruta === '/api/prestadores' && method === 'GET') {
-      const p = resumen(), q = (query.get('q') || '').toLocaleLowerCase('es')
-      const coincide = (!query.get('oficioId') || p.oficios.some((o) => o.id === query.get('oficioId'))) && (!q || [p.nombre, p.zonaCobertura, ...p.oficios.map((o) => o.nombre)].some((s) => s.toLocaleLowerCase('es').includes(q))) && (!query.has('disponible') || p.disponible === (query.get('disponible') === 'true')) && (!query.has('calificacionMin') || p.reputacion.promedio >= Number(query.get('calificacionMin')))
-      return respuesta(200, coincide ? [p] : [])
+      const q = (query.get('q') || '').toLocaleLowerCase('es')
+      return respuesta(200, perfiles.map(resumen).filter((p) => (!query.get('oficioId') || p.oficios.some((o) => o.id === query.get('oficioId'))) && (!q || [p.nombre, p.zonaCobertura, ...p.oficios.map((o) => o.nombre)].some((s) => (s || '').toLocaleLowerCase('es').includes(q))) && (!query.has('disponible') || p.disponible === (query.get('disponible') === 'true')) && (!query.has('calificacionMin') || p.reputacion.promedio >= Number(query.get('calificacionMin')))))
     }
     if (ruta === '/api/prestadores/mapa' && method === 'GET') {
-      const p = resumen()
-      return respuesta(200, p.disponible && p.latitud != null && p.longitud != null && p.oficios.length ? [{ id: p.id, nombre: p.nombre, latitud: p.latitud, longitud: p.longitud, oficioPrincipal: p.oficios[0].nombre, promedio: p.reputacion.promedio }] : [])
+      return respuesta(200, perfiles.map(resumen).filter((p) => p.disponible && p.latitud != null && p.longitud != null && p.oficios.length).map((p) => ({ id: p.id, nombre: p.nombre, latitud: p.latitud, longitud: p.longitud, oficioPrincipal: p.oficios[0].nombre, promedio: p.reputacion.promedio })))
     }
-    if (ruta === `/api/prestadores/${perfil.id}` && method === 'GET') return respuesta(200, { ...resumen(), telefono: perfil.telefono, whatsapp: perfil.whatsapp, emailContacto: perfil.emailContacto, comentarios: comentarios() })
+    const ficha = perfiles.find((p) => ruta === `/api/prestadores/${p.id}`)
+    if (ficha && method === 'GET') return respuesta(200, { ...resumen(ficha), telefono: ficha.telefono, whatsapp: ficha.whatsapp, emailContacto: ficha.emailContacto, comentarios: ficha === perfil ? comentarios() : [] })
     const usuario = autenticado(headers)
     if (!usuario) return fallo(401, 'Token no proporcionado, inválido o vencido')
     if (ruta === '/api/auth/me' && method === 'GET') return respuesta(200, { ...usuarioPublico(usuario), dni: usuario.dni })
@@ -96,9 +96,10 @@ export function crearApiSimulada() {
     }
     if (ruta === '/api/solicitudes' && method === 'POST') {
       if (usuario.rol !== 'CLIENTE') return fallo(403, 'Solo clientes')
-      if (body?.prestadorId !== perfil.id) return fallo(404, 'Prestador no encontrado')
-      if (!perfil.disponible) return fallo(409, 'Prestador no disponible')
-      if (!perfil.oficioIds.includes(body.oficioId) || !body.descripcion?.trim() || body.descripcion.length > 1000 || !oficios.some((o) => o.id === body.oficioId && o.activo)) return fallo(400, 'Datos inválidos')
+      const destinatario = perfiles.find((p) => p.id === body?.prestadorId)
+      if (!destinatario) return fallo(404, 'Prestador no encontrado')
+      if (!destinatario.disponible) return fallo(409, 'Prestador no disponible')
+      if (!destinatario.oficioIds.includes(body.oficioId) || !body.descripcion?.trim() || body.descripcion.length > 1000 || !oficios.some((o) => o.id === body.oficioId && o.activo)) return fallo(400, 'Datos inválidos')
       const nueva = { ...body, id: idQA(400 + ++contador), clienteId: usuario.id, estado: 'PENDIENTE', fechaCreacion: new Date().toISOString() }
       solicitudes.push(nueva); return respuesta(201, nueva)
     }
