@@ -5,6 +5,7 @@ import './App.css'
 import './styles/ServiMapPublico.css'
 import AppRoutes from './routes/AppRoutes'
 import DirectorioPrestadores from './components/DirectorioPrestadores'
+import LandingEntrada from './components/LandingEntrada'
 import { PanelAdministracion } from './components/PanelAdministracion'
 import NavegacionRoles from './components/auth/NavegacionRoles'
 import { useAuth } from './context/useAuth'
@@ -19,6 +20,7 @@ function App() {
 
   const esInicio = location.pathname === '/'
   const esAccesoPublico = ['/login', '/registro'].includes(location.pathname)
+  const TituloDirectorio = autenticado ? 'h1' : 'h2'
 
   async function handleCerrarSesion() {
     if (cerrandoSesion) return
@@ -79,23 +81,15 @@ function App() {
 
       {esInicio && (
         <main className="inicio">
-          <div className="inicio-presentacion">
+          {!autenticado && <LandingEntrada />}
+          <div className="inicio-presentacion inicio-directorio">
             <p className="etiqueta">Conectá con profesionales</p>
-            <h1>Encontrá prestadores de servicios</h1>
+            <TituloDirectorio>Encontrá prestadores de servicios</TituloDirectorio>
             <p>Buscá profesionales disponibles en ServiMap.</p>
 
-            {!autenticado && (
-              <div className="inicio-acciones">
-                <Link className="enlace-boton" to="/registro?rol=CLIENTE">Soy cliente</Link>
-                <Link className="enlace-boton secundario" to="/registro?rol=PRESTADOR">Soy prestador</Link>
-              </div>
-            )}
           </div>
           <DirectorioPrestadores />
 
-          <p>
-            <Link to="/login">Acceder a mi cuenta</Link>
-          </p>
         </main>
       )}
     </>

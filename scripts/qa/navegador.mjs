@@ -56,15 +56,20 @@ async function llenar(id, valor) {
   await evaluar(`(()=>{const e=document.getElementById(${texto(id)});const proto=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${texto(valor)});e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))})()`)
 }
 async function captura(nombre) {
-  const r = await cdp('Page.captureScreenshot', { format: 'png' })
+  const clip = nombre.startsWith('landing-') ? await evaluar(`({x:0,y:0,width:document.documentElement.clientWidth,height:Math.ceil(document.querySelector('.landing-entrada').getBoundingClientRect().bottom+scrollY),scale:1})`) : undefined
+  const r = await cdp('Page.captureScreenshot', { format: 'png', ...(clip ? { clip, captureBeyondViewport: true } : {}) })
   writeFileSync(path.join(carpeta, `${nombre}.png`), Buffer.from(r.data, 'base64'))
 }
 async function responsive(nombre) {
-  for (const width of [1365, 390]) {
+  for (const width of nombre === 'inicio' ? [1365, 768, 390, 320] : [1365, 390]) {
     await cdp('Emulation.setDeviceMetricsOverride', { width, height: width === 390 ? 844 : 1000, deviceScaleFactor: 1, mobile: width === 390 })
     await esperar(180)
-    check(await evaluar('document.documentElement.scrollWidth <= innerWidth'), `${nombre}: sin overflow ${width}px`)
+    check(await evaluar('document.documentElement.scrollWidth <= document.documentElement.clientWidth'), `${nombre}: sin overflow ${width}px`)
     check(await evaluar(`[...document.querySelectorAll('input:not([type=hidden]),select,textarea')].every(e=>e.labels?.length||e.getAttribute('aria-label'))`), `${nombre}: campos etiquetados ${width}px`)
+    if (nombre === 'inicio') {
+      check(await evaluar(`[...document.querySelectorAll('.landing-boton')].length===2&&[...document.querySelectorAll('.landing-boton')].every(e=>{const r=e.getBoundingClientRect();return r.height>=44&&r.left>=0&&r.right<=document.documentElement.clientWidth&&e.scrollWidth<=e.clientWidth})`), `landing: dos acciones legibles y táctiles ${width}px`)
+      await captura(`landing-${width}`)
+    }
     if (width === 1365) await captura(`${nombre}-escritorio`)
   }
   await captura(`${nombre}-movil`)
@@ -138,7 +143,17 @@ try {
   await responsive('inicio')
   const nav = await evaluar(`Math.min(...[...document.querySelectorAll('.app-header nav a')].map(e=>e.getBoundingClientRect().height))`)
   reporte.alturaNavegacion = nav
-  await click('Soy cliente'); await llenar('nombre', 'QA Registro'); await llenar('email', 'registro@example.test'); await llenar('dni', '98.765.432'); await llenar('contrasena', 'fixture-local-only'); await llenar('confirmarContrasena', 'fixture-local-only')
+  for (const rol of ['CLIENTE', 'PRESTADOR']) {
+    await evaluar(`document.querySelector('.landing-boton[href="/registro?rol=${rol}"]').click()`)
+    await hasta(`document.getElementById('rol')?.value===${texto(rol)}`, `registro preselecciona ${rol}`)
+    check(await evaluar(`![...document.querySelectorAll('#rol option')].some(e=>e.value==='ADMINISTRADOR')`), `landing: registro ${rol} sin administrador público`)
+    await ir('/'); await verTexto('¿Qué querés hacer hoy?')
+  }
+  await evaluar(`document.querySelector('.landing-login a').click()`); await verTexto('Ingresá tus datos para acceder a ServiMap.')
+  check(await evaluar(`location.pathname==='/login'`), 'landing: enlace inferior abre login')
+  await ir('/'); await verTexto('¿Qué querés hacer hoy?')
+  await evaluar(`document.querySelector('.landing-boton[href="/registro?rol=CLIENTE"]').click()`)
+  await llenar('nombre', 'QA Registro'); await llenar('email', 'registro@example.test'); await llenar('dni', '98.765.432'); await llenar('contrasena', 'fixture-local-only'); await llenar('confirmarContrasena', 'fixture-local-only')
   await llenar('dni', 'abc'); await click('Crear cuenta'); await verTexto('El DNI debe tener 7 u 8 números')
   check(true, 'DNI inválido bloqueado antes de registrar')
   await llenar('dni', '98.765.432')

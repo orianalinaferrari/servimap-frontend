@@ -1,0 +1,66 @@
+body:has(.landing-entrada) { min-width: 0; }
+.landing-entrada {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  min-height: 690px;
+  margin-inline: calc(-1 * var(--page-gutter));
+  background: var(--page-bg);
+}
+.landing-presentacion {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 64px 64px 28px max(32px, calc((100vw - 1136px) / 2));
+  border-bottom-right-radius: 45% 22%;
+  background: var(--accent);
+  color: var(--page-bg);
+  overflow: hidden;
+}
+.landing-mensaje { max-width: 440px; }
+.landing-etiqueta { color: var(--accent-bg); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 24px; }
+.landing-mensaje h1 { color: var(--page-bg); font-size: clamp(2.4rem, 3.7vw, 3.65rem); line-height: 1.12; margin-bottom: 24px; }
+.landing-mensaje > p:last-child { max-width: 340px; color: #e0e6e3; line-height: 1.8; }
+.landing-ciudad { display: block; width: 100%; max-width: 440px; height: auto; margin-top: 32px; }
+.landing-eleccion { position: relative; align-self: center; min-width: 0; padding: 48px clamp(24px, 5vw, 80px); }
+.landing-eleccion h2 { font-size: clamp(1.8rem, 2.8vw, 2.5rem); margin-bottom: 8px; }
+.landing-subtitulo { margin-bottom: 30px; }
+.landing-decoracion { position: absolute; top: 0; right: 48px; font-size: 2.4rem; color: var(--rose); }
+.landing-tarjetas { display: grid; gap: 20px; }
+.landing-tarjeta { display: flex; gap: 20px; padding: 26px; background: var(--bg); border: 1px solid #eae4db; border-radius: 20px; box-shadow: 0 8px 30px rgb(25 63 73 / 5%); }
+.landing-icono { display: grid; place-items: center; flex: 0 0 52px; height: 52px; border-radius: 15px; background: #edf2ef; color: var(--accent); }
+.landing-icono svg { width: 30px; height: 30px; }
+.landing-icono-rosa { background: var(--accent-bg); color: #9d5b6a; }
+.landing-tarjeta-contenido { min-width: 0; flex: 1; }
+.landing-tarjeta h3 { font-size: 1.4rem; margin: 0 0 8px; }
+.landing-tarjeta p { font-size: .9rem; line-height: 1.65; margin-bottom: 20px; }
+.landing-boton { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 46px; padding: 10px 16px; border-radius: 9px; background: var(--accent); color: var(--bg); text-decoration: none; font-size: .88rem; font-weight: 600; }
+.landing-boton:hover { background: var(--accent-hover); color: var(--bg); }
+.landing-tarjeta:last-child .landing-boton { background: var(--accent-bg); color: var(--accent); }
+.landing-tarjeta:last-child .landing-boton:hover { background: #efcbd5; }
+.landing-boton span { flex-shrink: 0; font-size: 1.3rem; line-height: 1; }
+.landing-login { margin: 26px 0 0; text-align: center; font-size: .85rem; }
+.landing-login a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+.inicio-directorio { padding-top: 48px; }
+@media (max-width: 1000px) {
+  .landing-presentacion { padding: 48px 32px 24px; }
+  .landing-eleccion { padding: 48px 28px; }
+  .landing-tarjeta { padding: 22px; gap: 14px; }
+}
+@media (max-width: 760px) {
+  .landing-entrada { grid-template-columns: minmax(0, 1fr); min-height: auto; }
+  .landing-presentacion { padding: 40px var(--page-gutter) 28px; border-bottom-right-radius: 38% 12%; }
+  .landing-mensaje { max-width: 520px; }
+  .landing-mensaje h1 { font-size: clamp(2.2rem, 7vw, 3rem); }
+  .landing-etiqueta { margin-bottom: 16px; }
+  .landing-ciudad { max-width: 300px; align-self: center; margin-top: 12px; }
+  .landing-eleccion { padding: 48px var(--page-gutter) 32px; }
+  .landing-decoracion { top: 8px; right: 24px; font-size: 1.8rem; }
+  .landing-tarjeta { padding: 20px; gap: 14px; }
+  .landing-icono { flex-basis: 44px; height: 44px; border-radius: 12px; }
+  .landing-tarjeta h3 { font-size: 1.25rem; }
+}
+@media (max-width: 380px) {
+  .landing-tarjeta { flex-direction: column; }
+  .landing-icono { flex-basis: auto; width: 44px; }
+  .landing-tarjeta-contenido { width: 100%; }
+}
