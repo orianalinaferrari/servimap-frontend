@@ -35,7 +35,7 @@ function App() {
 
     try {
       await logout()
-      navigate('/')
+      await navigate('/')
     } catch (error) {
       setErrorSesion(
         error instanceof Error
