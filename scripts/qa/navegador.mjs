@@ -7,7 +7,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { crearApiSimulada, CUENTAS_QA, idQA, politicaDeRed, API_SIMULADA_ORIGIN } from './api-simulada.mjs'
-import { esIntercepcionCancelada } from './protocolo-cdp.mjs'
+import { esIntercepcionCancelada, esperarPuertoChrome } from './protocolo-cdp.mjs'
 
 const base = process.env.SERVIMAP_QA_BASE_URL || 'http://localhost:5173'
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Solo se permite un frontend local')
@@ -94,9 +94,7 @@ async function crearSolicitud(descripcion) {
 }
 try {
   const activo = path.join(carpeta, 'perfil', 'DevToolsActivePort')
-  for (let n = 0; n < 100 && !existsSync(activo); n++) await esperar(100)
-  assert.ok(existsSync(activo), 'Chrome no expuso CDP')
-  const port = readFileSync(activo, 'utf8').split(/\r?\n/)[0]
+  const port = await esperarPuertoChrome(() => readFileSync(activo, 'utf8'))
   const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
   const tab = tabs.find((t) => t.type === 'page' && t.url === 'about:blank')
   ws = new WebSocket(tab.webSocketDebuggerUrl); await new Promise((r, j) => { ws.onopen = r; ws.onerror = j })

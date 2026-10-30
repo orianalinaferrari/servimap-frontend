@@ -5,6 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fusionarCobertura, guardarCobertura } from './helpers/fusionarCobertura.mjs'
+import { iniciarServidorQa } from './helpers/servidorQa.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 assert.equal(path.resolve(process.cwd()), path.resolve(root), 'Run from the frontend root')
@@ -23,32 +24,15 @@ function ejecutar(file, args = [], env = process.env) {
   })
 }
 
-const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', 'localhost', '--port', '5173', '--strictPort'], {
-  cwd: root, env: process.env, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
-})
+const { server, url } = await iniciarServidorQa({ root })
 try {
-  await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Local Vite startup timed out')), 20000)
-    const ready = (chunk) => {
-      if (chunk.toString().includes('http://localhost:5173')) { clearTimeout(timer); resolve() }
-    }
-    server.stdout.on('data', ready)
-    server.stderr.on('data', chunk => process.stderr.write(chunk))
-    server.once('error', error => { clearTimeout(timer); reject(error) })
-    server.once('exit', code => { clearTimeout(timer); reject(new Error(`Vite exited: ${code}`)) })
-  })
-  const env = { ...process.env, NODE_V8_COVERAGE: raw, SERVIMAP_QA_BASE_URL: 'http://localhost:5173' }
+  const env = { ...process.env, NODE_V8_COVERAGE: raw, SERVIMAP_QA_BASE_URL: url }
   // Fix the full scenario: never inherit a developer's shortened landing scope.
   delete env.SERVIMAP_QA_SCOPE
   await ejecutar('scripts/qa/navegador.mjs', [], env)
   await ejecutar('scripts/qa/build-estatico.mjs', [], env)
 } finally {
-  const stopped = new Promise(resolve => {
-    if (!server.pid || server.exitCode !== null || server.signalCode !== null) resolve()
-    else server.once('exit', resolve)
-  })
-  server.kill()
-  await stopped
+  await server.close()
 }
 const runs = readdirSync(raw).filter(file => file.endsWith('.json')).map(file => JSON.parse(readFileSync(path.join(raw, file), 'utf8')))
 assert.ok(runs.length, 'No native V8 execution reports collected')

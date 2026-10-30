@@ -439,7 +439,7 @@ git diff --check
 node scripts/qa/build-estatico.mjs
 ```
 
-El último requiere `dist` recién compilado y puerto 4173 libre; inicia/detiene su preview. Revisa fallback SPA, assets, worker y patrones de archivos privados. No contacta la API ni certifica routing remoto Vercel.
+El último requiere `dist` recién compilado y asigna un puerto loopback libre mediante la API de Vite; inicia/detiene su preview sin interpretar logs de consola. Revisa fallback SPA, assets, worker y patrones de archivos privados. No contacta la API ni certifica routing remoto Vercel.
 
 | Control ejecutado el 30/10/2026 | Resultado |
 | --- | --- |
