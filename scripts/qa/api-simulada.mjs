@@ -1,4 +1,5 @@
-﻿// Datos exclusivamente sintéticos. Nunca se envían a una API real.
+import { randomBytes } from 'node:crypto'
+// Datos exclusivamente sintéticos. Nunca se envían a una API real.
 export const idQA = (numero) => `00000000-0000-4000-8000-${String(numero).padStart(12, '0')}`
 export const API_SIMULADA_ORIGIN = 'https://servimap-backend.vercel.app'
 export function politicaDeRed({ url, method }) {
@@ -6,9 +7,9 @@ export function politicaDeRed({ url, method }) {
   return ['GET', 'HEAD'].includes(method) ? 'lectura' : 'bloquear'
 }
 export const CUENTAS_QA = {
-  CLIENTE: { email: 'cliente@example.test', password: 'fixture-local-only' },
-  PRESTADOR: { email: 'prestador@example.test', password: 'fixture-local-only' },
-  ADMINISTRADOR: { email: 'admin@example.test', password: 'fixture-local-only' },
+  CLIENTE: { email: 'cliente@example.test', password: randomBytes(32).toString('hex') },
+  PRESTADOR: { email: 'prestador@example.test', password: randomBytes(32).toString('hex') },
+  ADMINISTRADOR: { email: 'admin@example.test', password: randomBytes(32).toString('hex') },
 }
 const respuesta = (status, body) => ({ status, body })
 const fallo = (status, error) => respuesta(status, { error })
@@ -48,6 +49,7 @@ export function crearApiSimulada({ perfilesAdicionales = [] } = {}) {
     const forzado = errores.findIndex((e) => e.method === method && e.path === ruta)
     if (forzado >= 0) { const [e] = errores.splice(forzado, 1); return fallo(e.status, `Error simulado ${e.status}`) }
     if (method === 'OPTIONS') return respuesta(204, null)
+    if (ruta === '/health' && method === 'GET') return respuesta(200, { status: 'ok' })
     if (ruta === '/api/auth/register' && method === 'POST') {
       const { nombre, email, password, rol } = body || {}, dni = String(body?.dni || '').replace(/[.\s]/g, '')
       if (!nombre?.trim() || !/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email || '') || !/^\d{7,8}$/.test(dni) || typeof password !== 'string' || password.length < 8 || !['CLIENTE', 'PRESTADOR'].includes(rol)) return fallo(400, 'Datos inválidos')

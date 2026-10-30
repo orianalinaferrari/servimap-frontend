@@ -21,6 +21,12 @@ describe('Oficios remotos del prestador', () => {
     const [url, config] = http.mock.calls.find(([, c]) => c.method === 'PUT'); expect(url).toBe(BASE + '/api/prestadores/me/oficios'); expect(JSON.parse(config.body)).toEqual({ oficioIds: ['o1','o2'] })
   })
   it('evita duplicados', async () => { await mostrar(); fireEvent.change(screen.getByLabelText('Seleccionar oficio'), { target: { value: 'o1' } }); fireEvent.click(screen.getByRole('button', { name: 'Agregar oficio' })); expect(screen.getAllByRole('button', { name: 'Quitar Plomero' })).toHaveLength(1) })
+  it('no ofrece oficios ya asociados y los vuelve a ofrecer al quitarlos', async () => {
+    await mostrar(); expect(screen.queryByRole('option', { name: 'Plomero' })).toBeNull()
+    fireEvent.change(screen.getByLabelText('Seleccionar oficio'), { target: { value: 'o2' } }); fireEvent.click(screen.getByRole('button', { name: 'Agregar oficio' }))
+    expect(screen.queryByRole('option', { name: 'Electricista' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar Plomero' })); expect(screen.getByRole('option', { name: 'Plomero' })).toHaveValue('o1')
+  })
   it('permite guardar una lista vacía según el contrato', async () => { await mostrar(); fireEvent.click(screen.getByRole('button', { name: 'Quitar Plomero' })); fireEvent.click(screen.getByRole('button', { name: 'Guardar oficios' })); await screen.findByText('Oficios guardados en el servidor.'); expect(JSON.parse(http.mock.calls.find(([, c]) => c.method === 'PUT')[1].body)).toEqual({ oficioIds: [] }) })
   it('no confirma cambios rechazados por el backend', async () => { await mostrar(); http.mockResolvedValueOnce(respuesta({ error: 'Oficio desactivado' },400)); fireEvent.click(screen.getByRole('button', { name: 'Guardar oficios' })); expect(await screen.findByRole('alert')).toHaveTextContent('Oficio desactivado'); expect(screen.queryByText('Oficios guardados en el servidor.')).toBeNull() })
 })

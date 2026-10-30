@@ -1,5 +1,7 @@
 # ServiMap
 
+**Revisión del PR #31 (30/10/2026):** en `feature/sonarqube-seguridad-servimap`: 508 tests, lint/build correctos, audit npm con 0 vulnerabilidades y cobertura fusionada de 77,20% global (93,07% en `src`). La ejecución pull_request #37 del commit `064978e` aprobó CI y el Gate con cobertura nueva 94,1%, ratings A/A/A y hotspots 100%. Tras la estabilización (`9b61e2f`), las ejecuciones push #38 y pull_request #39 terminaron en éxito; también #40/#41 del commit `8a452ec` (redirección por rol). **Cambios locales posteriores, sin commit:** perfil de solo lectura del cliente, completar perfil del prestador tras el login y avatar con iniciales; 553 tests, lint/build y QA de navegador correctos; cobertura local fusionada 78,46% global (líneas + ramas) y 90,94% en `src`. Ver [causas, cambios y evidencia](docs/seguridad-sonarqube.md); las cifras de la entrega original que siguen son históricas respecto de esta revisión.
+
 Frontend de una plataforma de servicios del hogar, desarrollado con **React y Vite** para la materia **Construcción de Software**. Conecta clientes con prestadores mediante un directorio, un mapa y un circuito de solicitudes, calificaciones y administración.
 
 La interfaz web vive en este repositorio. La API Node.js/Express, Prisma y PostgreSQL se mantienen en un [repositorio independiente](https://github.com/valenbalda/servimap-backend).
@@ -62,7 +64,7 @@ El administrador no hereda las operaciones de cliente o prestador. La UI restrin
 
 1. Elegir «Empezar como cliente» en la landing, o explorar servicios sin sesión.
 2. Registrarse y luego iniciar sesión; el registro no inicia sesión automáticamente.
-3. El login actual vuelve a `/`. Entrar en «Explorar servicios» para acceder al directorio y a la navegación de la cuenta.
+3. El login lleva a `/cliente`. El avatar con iniciales del header abre «Mi perfil» (`/cliente/perfil`): nombre, email, DNI y fecha de alta de `GET /api/auth/me`, de solo lectura.
 4. Buscar un prestador, abrir su ficha y pulsar «Solicitar servicio» si está disponible.
 5. Seleccionar un oficio ofrecido, describir el trabajo y, opcionalmente, indicar dirección/contacto preferido.
 6. Consultar «Mis solicitudes», abrir el detalle y cancelar una pendiente o aceptada con confirmación.
@@ -71,8 +73,8 @@ El administrador no hereda las operaciones de cliente o prestador. La UI restrin
 ### Prestador
 
 1. Elegir «Empezar como prestador», registrarse e iniciar sesión.
-2. Acceder a «Mi panel de prestador» desde la navegación del directorio.
-3. Completar perfil profesional, zona, contactos, precios, disponibilidad y coordenadas privadas si corresponde.
+2. El login lleva a `/prestador`, o a `/prestador/completar-perfil` si `GET /api/prestadores/me` indica datos faltantes (descripción, zona, algún contacto u oficios). «Completar más tarde» o «Ir al panel» permiten seguir sin bloquear; se vuelve a sugerir en el próximo login mientras el servidor siga informando datos faltantes.
+3. Desde el avatar del header («Ir a mi perfil»), completar perfil profesional, zona, contactos, precios, disponibilidad y coordenadas privadas si corresponde.
 4. En «Mis oficios», agregar/quitar asociaciones del catálogo activo y guardar.
 5. Revisar el panel, las solicitudes recibidas y sus detalles.
 6. Aceptar o rechazar pendientes; finalizar aceptadas cuando termine el trabajo.
@@ -96,7 +98,7 @@ Versiones resueltas comprobadas en `package-lock.json` y la instalación con `np
 | npm | `10.9.3` en la terminal inspeccionada | Dependencias; no se fija una versión de npm en el proyecto. |
 | React / React DOM | `19.3.0` | Componentes, estado y renderizado. |
 | React Router DOM | `7.18.4` | Navegación SPA y rutas protegidas. |
-| Vite | `8.3.2` | Desarrollo y compilación. |
+| Vite | `8.3.5` | Desarrollo y compilación; parche de seguridad validado localmente. |
 | Plugin React para Vite | `6.1.2` | Integración de React. |
 | MapLibre GL JS | `6.16.0` | Mapa vectorial y marcadores. |
 | Vitest | `5.0.3` | Pruebas automatizadas. |
@@ -131,7 +133,7 @@ Una modificación solo se confirma después de una respuesta exitosa. Las transi
 
 ```text
 servimap-frontend/
-├── .github/workflows/frontend-tests.yml  # CI de PR hacia develop
+├── .github/workflows/frontend-tests.yml  # CI de PR hacia main/develop, push y Sonar
 ├── public/
 │   ├── fonts/                           # Inter y licencia
 │   ├── illustrations/                   # SVG de la landing
@@ -178,7 +180,7 @@ Referencias: [rutas](src/routes/AppRoutes.jsx), [HTTP](src/services/apiClient.js
 
 | URL | Acceso | Contenido |
 | --- | --- | --- |
-| `/` | Público | Landing; también después del login/logout. |
+| `/` | Público | Landing; también después del logout. El login lleva al panel del rol. |
 | `/registro` | Público | Registro con rol inicialmente sin seleccionar. |
 | `/registro?rol=CLIENTE` | Público | Cliente preseleccionado. |
 | `/registro?rol=PRESTADOR` | Público | Prestador preseleccionado. |
@@ -186,15 +188,19 @@ Referencias: [rutas](src/routes/AppRoutes.jsx), [HTTP](src/services/apiClient.js
 | `/prestadores` | Público | Directorio, mapa, ficha y estado de creación de solicitud. |
 | `/cliente` | CLIENTE | Panel de accesos. |
 | `/cliente/solicitudes` | CLIENTE | Historial, detalle, cancelación y calificación. |
+| `/cliente/perfil` | CLIENTE | Datos personales de solo lectura (DNI no editable). |
 | `/prestador` | PRESTADOR | Resumen y actividad reciente. |
 | `/prestador/solicitudes` | PRESTADOR | Pedidos recibidos y transiciones. |
 | `/prestador/perfil` | PRESTADOR | Perfil propio y edición. |
+| `/prestador/completar-perfil` | PRESTADOR | Datos pendientes y formulario de edición reutilizado; al guardar vuelve al panel. |
 | `/prestador/oficios` | PRESTADOR | Asociaciones de oficios. |
 | `/admin` | ADMINISTRADOR | Oficios/moderación mediante secciones internas. |
 | `/acceso-denegado` | Público | Aviso de rol no autorizado. |
 | Cualquier otra URL | Público | Página no encontrada y regreso al inicio. |
 
-La ficha, creación de solicitud, detalles, edición de perfil y secciones administrativas son **estados de pantallas existentes**, no URLs nuevas. No existe una ruta de perfil personal del cliente.
+La ficha, creación de solicitud, detalles, edición de perfil y secciones administrativas son **estados de pantallas existentes**, no URLs nuevas.
+
+El header con sesión muestra un avatar circular con iniciales (primera y última palabra del nombre: «Oriana Lina Ferrari» → OF; una palabra → una inicial; sin nombre → ícono SVG) inmediatamente a la izquierda de «Cerrar sesión». Para CLIENTE y PRESTADOR es un botón «Ir a mi perfil»; reemplaza el enlace textual «Mi perfil». ADMINISTRADOR no tiene perfil en la API, así que su avatar solo identifica la sesión y no navega. Limitación: con apellidos compuestos o dos apellidos se toma la última palabra.
 
 Sin sesión, una ruta protegida redirige a `/login`; con rol incorrecto, a `/acceso-denegado`. Antes de mostrar una ruta autorizada se revalida la sesión con el servidor.
 
@@ -213,6 +219,8 @@ Se solicitan hasta **50 prestadores por consulta**, sin paginación en la UI. El
 La ficha remota muestra la información disponible, contactos, precios, reputación y comentarios no moderados. No se rellenan datos inexistentes con información ficticia.
 
 ### Cliente
+
+«Mi perfil» muestra los datos de `GET /api/auth/me` sin campos editables. **Dependencia del backend:** Swagger no ofrece un endpoint para actualizar datos del cliente o del usuario (solo `PUT /api/prestadores/me`); hasta que exista, el frontend no simula guardados (ni localStorage ni estado temporal). Pedido al equipo backend: por ejemplo `PUT /api/usuarios/me` con los campos editables y sus validaciones, manteniendo el DNI inmutable.
 
 El panel ofrece accesos; no tiene contadores. El historial muestra oficio, prestador, identificador, estado y detalle. Crear una solicitud utiliza los IDs reales del perfil y del oficio obtenidos de la ficha; el nombre del oficio solo sirve para selección/presentación.
 
@@ -430,17 +438,18 @@ Ejecutar uno por vez para reducir memoria:
 
 ```powershell
 npm.cmd test -- --maxWorkers=1
+npm.cmd run test:coverage
 npm.cmd run lint
 npm.cmd run build
 git diff --check
 node scripts/qa/build-estatico.mjs
 ```
 
-El último requiere `dist` recién compilado y puerto 4173 libre; inicia/detiene su preview. Revisa fallback SPA, assets, worker y patrones de archivos privados. No contacta la API ni certifica routing remoto Vercel.
+El último requiere `dist` recién compilado y asigna un puerto loopback libre mediante la API de Vite; inicia/detiene su preview sin interpretar logs de consola. Revisa fallback SPA, assets, worker y patrones de archivos privados. No contacta la API ni certifica routing remoto Vercel.
 
 | Control ejecutado el 30/10/2026 | Resultado |
 | --- | --- |
-| Vitest, Node 24.22.2, un worker | **431 aprobadas, 54 archivos**, sin suites omitidas. |
+| Vitest, Node 24.22.2, un worker | **484 aprobadas, 56 archivos**, sin suites omitidas. Revisión local posterior (Node 22.19.0): **553 aprobadas, 65 archivos**. |
 | ESLint | Correcto. |
 | Build Vite | Correcto; advertencia de chunks de más de 500 kB, especialmente MapLibre. |
 | Smoke del build | **13 rutas SPA y 11 archivos** correctos; worker emitido, sin privados/sourcemaps en `dist`. |
@@ -450,7 +459,7 @@ El último requiere `dist` recién compilado y puerto 4173 libre; inicia/detiene
 
 Vitest bloquea `fetch` no simulado. Los tests `Backend*.test` son contratos interceptados, no ejecución contra PostgreSQL real. jsdom carece de WebGL: algunos tests de fallback imprimen mensajes esperados de mapa aunque sus aserciones pasen.
 
-El workflow [frontend-tests.yml](.github/workflows/frontend-tests.yml) corre instalación, tests, lint y build en PR hacia `develop`, con Node 24. Usa `npm run test` sin límite explícito de workers; localmente se recomienda uno para evitar OOM.
+El workflow [frontend-tests.yml](.github/workflows/frontend-tests.yml) corre instalación sin lifecycle scripts, cobertura con un worker, lint, build, audit y Sonar en secuencia, con Node 24. Cubre PR hacia `main`/`develop`, push a esas ramas y a la rama de seguridad, y ejecución manual. Sonar requiere `SONAR_TOKEN`, análisis desde CI y acceso al proyecto; el scanner se omite para PR de forks. Ver [configuración y límites](docs/seguridad-sonarqube.md).
 
 ## 20. Estrategia de QA y alcance de evidencia
 
@@ -485,7 +494,9 @@ Realizan solo **GET y OPTIONS**. El segundo usa además una cadena Bearer delibe
 
 El 30/10/2026: **9 GET correctos**, salud/públicos 200 y protegidos 401 esperado; 1 oficio, 1 prestador y 0 marcadores. También **26 controles** CORS/permisos aprobados. Son datos de esa ejecución, no cantidades fijas del sistema.
 
-Existe `node scripts/qa/navegador-lecturas.mjs` para navegación real de lectura con bloqueo de escrituras; su evidencia anterior está en [validación final](docs/validacion-final.md). No se volvió a ejecutar en esta auditoría.
+Existe `node scripts/qa/navegador-lecturas.mjs` para navegación real de lectura con bloqueo de escrituras; su evidencia anterior está en [validación final](docs/validacion-final.md). Contra el backend real no se volvió a ejecutar en esta auditoría.
+
+**Modo local explícito, solo QA:** con `SERVIMAP_QA_LECTURAS_API` (origen http de loopback) y `SERVIMAP_QA_BASE_URL`, `lecturas-reales.mjs` y `navegador-lecturas.mjs` validan los mismos contratos de lectura contra una fixture local sobre la API simulada; cualquier origen que no sea loopback se rechaza. Sin esa variable conservan el comportamiento original contra `https://servimap-backend.vercel.app`. `npm run test:coverage:qa` y CI usan solo el modo local, sin depender de producción.
 
 <a id="demos"></a>
 
@@ -501,7 +512,7 @@ Procesos de desarrollo independientes: `envDir: false`, API local en memoria, se
 | PRESTADOR | `node scripts/qa/prestador-demo.mjs` | `http://127.0.0.1:4192/prestador` | `http://127.0.0.1:4193` |
 | CLIENTE | `node scripts/qa/cliente-demo.mjs` | `http://127.0.0.1:4194/cliente` | `http://127.0.0.1:4195` |
 
-Los JWT de fixtures tienen firma inválida para producción. Cliente/prestador agregan CSP de conexiones locales/cartografía; la demo administrativa tiene su servidor separado y no incorpora esa misma CSP. La diferencia figura en la auditoría y requiere revisión ante futuros cambios.
+Los JWT de fixtures tienen firma inválida para producción. Las tres demos comparten el servidor de `demo-local.mjs`. Cliente/prestador agregan CSP de conexiones locales/cartografía; la demo administrativa conserva su comportamiento sin esa CSP (`restringirConexiones: false`). La diferencia figura en la auditoría y requiere revisión ante futuros cambios.
 
 Con la demo correspondiente iniciada, los recorridos específicos son:
 
@@ -510,7 +521,7 @@ node scripts/qa/prestador-navegador.mjs
 node scripts/qa/cliente-navegador.mjs
 ```
 
-Son **alternativas**, no comandos para lanzar juntos. Requieren Chrome en la ruta Windows definida en cada script. No hay `admin-navegador.mjs`: el recorrido general cubre administración interceptada y su demo permite revisión manual.
+Son **alternativas**, no comandos para lanzar juntos. Comparten `runner-demo.mjs` y el arranque de Chrome/Edge de `chrome-cdp.mjs` (Windows o Linux; `SERVIMAP_QA_BROWSER` opcional). `npm run test:coverage:qa` y CI los ejecutan en el escenario `completo`, cada uno contra su demo, después del recorrido general, y fusionan su cobertura V8. No hay `admin-navegador.mjs`: el recorrido general cubre administración interceptada y su demo permite revisión manual.
 
 | Demo | Opción | Contenido |
 | --- | --- | --- |
@@ -579,7 +590,7 @@ No transferir `node_modules`, `dist`, `.env.local`, perfiles Chrome ni credencia
 
 ## 25. Ramas, commits y Pull Requests
 
-Rama de entrega: **`feature/landing-final-servimap`**, implementación publicada en `396d4f2`, con autoría de `orianalinaferrari` y sin coautores. La integración prevista es un PR hacia `main`; todavía no se creó ese PR ni se hizo el merge. Estas correcciones documentales se publican en la misma rama, sin modificar `main`, `develop` o backend.
+Entrega visual: **`feature/landing-final-servimap`**, implementación publicada en `396d4f2` y documentación en `52f791a`, integradas a `main` mediante PR #30 (`595231f`). La revisión actual está en **`feature/sonarqube-seguridad-servimap`**, desde ese main actualizado, publicada y en revisión mediante el PR #31 hacia `main`. No se modifica directamente `main`, `develop` o backend.
 
 Para el trabajo posterior del equipo:
 
@@ -587,11 +598,11 @@ Para el trabajo posterior del equipo:
 - Revisar status/diff antes de agregar archivos; separar documentación, diseño y correcciones cuando sea posible.
 - Incluir archivos nuevos necesarios y revisar secretos/fixtures antes de versionar.
 - Usar mensajes concretos con prefijos como `feat:`, `fix:`, `style:`, `docs:` o `test:`.
-- Para esta entrega, preparar el PR de `feature/landing-final-servimap` hacia `main`. El workflow existente solo se activa para PR hacia `develop`: no asumir que ejecutará validaciones para `main`; conservar la evidencia local y acordar la cobertura de CI antes de integrar.
+- La entrega visual ya se integró a `main` mediante el PR #30 (`595231f`). La revisión de seguridad parte de ese main en `feature/sonarqube-seguridad-servimap`, publicada en el PR #31 (sin merge). El workflow local actualizado cubre PR hacia `main` y `develop`.
 - Explicar problema, resultado final, validaciones y límites; solicitar revisión antes de integrar.
 - Acordar promoción a rama estable; no asumir políticas de protección o aprobación no verificadas.
 
-El respaldo en GitHub ya está publicado; la revisión por PR y la integración a `main` siguen pendientes.
+El respaldo de la entrega visual ya está publicado e integrado a `main`. La revisión de seguridad sigue local y requiere aprobación antes de commit, push o PR.
 
 ## 26. Problemas habituales
 
@@ -626,7 +637,7 @@ El DNI se usa en registro y no es público en directorio. Las coordenadas exacta
 
 La revisión por patrones no detectó claves privadas, credenciales de base ni tokens de proveedor en los archivos examinados o el artefacto. `.env.local` está ignorado y fuera del índice, sin publicar valores. No sustituye analizar todo el historial Git ni una auditoría de seguridad completa.
 
-**Pendiente importante:** tres alertas npm altas en Vite, undici de jsdom y zod de herramientas de lint. `npm audit --omit=dev` no reportó alertas de producción en esta consulta; no certifica ausencia de vulnerabilidades. No se aplicó `npm audit fix` ni se modificó el lockfile; las actualizaciones requieren una corrección separada con regresión.
+**Actualización de seguridad local:** las tres alertas npm altas de la entrega original se trataron actualizando Vite, undici y zod dentro de sus rangos compatibles. Instalación limpia sin lifecycle scripts, 484 tests, lint/build y audit final con **0 vulnerabilidades** verificados. Ver [informe de seguridad](docs/seguridad-sonarqube.md) para versiones, cobertura y límites. No certifica ausencia de vulnerabilidades desconocidas ni sustituye el nuevo análisis de Sonar.
 
 <a id="estado"></a>
 
@@ -635,15 +646,15 @@ La revisión por patrones no detectó claves privadas, credenciales de base ni t
 | Estado | Alcance |
 | --- | --- |
 | Implementado | Módulos públicos/por rol descritos, servicios API y estados reales. |
-| Verificado localmente | 431 tests, lint/build, smoke SPA, 84 controles Chrome simulados y contratos backend. |
+| Verificado localmente | 484 tests, lint/build, smoke SPA, 84 controles Chrome simulados y contratos backend; cobertura global 63,04%. |
 | Verificado contra API publicada | Lecturas públicas, rechazos protegidos y CORS/preflight; sin escrituras reales. |
-| Pendiente | E2E autenticado real, base autorizada, preview/CORS, alertas npm y aceptación de accesibilidad. |
+| Pendiente | E2E autenticado real, base autorizada, preview/CORS, cobertura global >=90% (78,46% local; los scripts QA manuales concentran 640 de 883 elementos sin cubrir), duplicación 0% y aceptación de accesibilidad. |
 | Parcial | Búsqueda geográfica, filtros sobre conjuntos limitados y detalle de calificación tras recarga. |
-| Fuera del alcance implementado | Perfil editable de cliente, propuestas/presupuestos, pagos, chat, agenda/fecha preferida, carga de fotos, refresh token y finalización confirmada por cliente. |
+| Fuera del alcance implementado | Edición del perfil de cliente (falta endpoint backend; existe la vista de solo lectura), propuestas/presupuestos, pagos, chat, agenda/fecha preferida, carga de fotos, refresh token y finalización confirmada por cliente. |
 
 - **CRÍTICOS:** ninguno confirmado en el frontend revisado; no se requirieron correcciones funcionales.
-- **IMPORTANTES:** tres alertas altas de desarrollo; validación autenticada/deploy pendientes; alcance geográfico parcial y poslogin a landing en vez de panel/origen.
-- **MENORES:** documentos históricos, nombres administrativos de respaldo, estrellas de texto públicas, detalles de accesibilidad y CI sin workers limitados.
+- **IMPORTANTES:** cobertura global y ratings Sonar pendientes de confirmar tras las correcciones; validación autenticada/deploy pendientes; alcance geográfico parcial. Corregido: el login ya no vuelve a la landing; cada rol entra a su panel (`/cliente`, `/prestador`, `/admin`) o a la ruta protegida de origen solo si pertenece a ese rol.
+- **MENORES:** documentos históricos, nombres administrativos de respaldo, estrellas de texto públicas y detalles de accesibilidad. CI ahora usa un worker.
 - **LIMITACIONES CONOCIDAS:** las de la sección siguiente.
 
 Los hallazgos actuales se resumen en esta sección y las limitaciones en la siguiente. Las verificaciones históricas están en [QA de integración](docs/qa-integracion-backend.md) y [validación final](docs/validacion-final.md). Una advertencia documentada no se presenta como corregida.
@@ -658,7 +669,7 @@ Los hallazgos actuales se resumen en esta sección y las limitaciones en la sigu
 6. **Búsqueda limitada:** 50 por consulta, zona/precio locales y sin radio; geolocalizar/recentrar no filtra por cercanía.
 7. **Perfil:** algunos campos guardados no se borran enviando vacío. Sin carga de archivos ni edición de nombre/email de cuenta.
 8. **Dispositivos/accesibilidad:** Chrome a cuatro anchos no certifica todos los navegadores, lectores de pantalla o contenidos.
-9. **Herramientas:** siguen alertas npm y tamaño MapLibre; no se cambiaron dependencias para ocultarlas.
+9. **Herramientas:** persiste el aviso de tamaño MapLibre; las alertas npm conocidas se corrigieron y el audit local final devuelve cero. Sigue pendiente confirmar las métricas Sonar de la nueva rama.
 
 ## 30. Documentación complementaria
 
@@ -666,6 +677,7 @@ Este README describe el estado de la entrega. Los documentos anteriores conserva
 
 | Documento | Contenido |
 | --- | --- |
+| [Seguridad y SonarQube](docs/seguridad-sonarqube.md) | Diagnóstico remoto, correcciones locales, cobertura real y validaciones pendientes. |
 | [Integración backend](docs/integracion-backend.md) | Contratos, adaptaciones y decisiones. |
 | [QA de integración](docs/qa-integracion-backend.md) | Verificaciones previas y checklist real. |
 | [Mapa de prestadores](docs/mapa-prestadores.md) | Proveedor y condiciones cartográficas. |
@@ -673,7 +685,7 @@ Este README describe el estado de la entrega. Los documentos anteriores conserva
 | [Despliegue](docs/despliegue-servimap.md) | Preparación Vercel y coordinación CORS. |
 | [Entrega final](docs/entrega-final.md) | Trazabilidad y aceptación académica anterior. |
 | [Casos de prueba](docs/casos-de-prueba.md) | Casos manuales históricos del prototipo. |
-| [Registro de defectos](docs/registro-de-defectos.md) | Defectos previos; DEF-06 continúa abierto. |
+| [Registro de defectos](docs/registro-de-defectos.md) | Defectos previos y corrección local de DEF-06. |
 | [Release](docs/release-servimap.md) | Historial de validación y ramas anteriores. |
 
 Las demos tienen guías de [cliente](scripts/qa/CLIENTE-DEMO.md) y [prestador](scripts/qa/PRESTADOR-DEMO.md). Capturas/reportes temporales no son assets públicos ni enlaces permanentes; los runners permiten reproducirlos.
@@ -706,4 +718,4 @@ Guion sugerido:
 
 Las demos separadas no intercambian cambios: cada proceso tiene su memoria y reiniciar restaura fixtures. Explicar la transición y usar la vista del siguiente rol sin afirmar que ambas comparten una base de datos.
 
-La implementación está respaldada en GitHub y queda preparada para revisión antes del PR hacia `main`; todavía no es una certificación de aceptación integral o producción.
+La implementación visual está respaldada en GitHub e integrada a `main`. Las correcciones de seguridad/cobertura están publicadas en el PR #31 para revisión y aprobación antes del merge; «Mis oficios» ya no ofrece oficios asociados al perfil. Todavía no es una certificación de aceptación integral o producción.

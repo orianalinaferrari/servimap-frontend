@@ -1,17 +1,16 @@
 // Navegación pública con API REAL. Bloquea escrituras antes de enviarlas.
+// Con SERVIMAP_QA_LECTURAS_API (solo loopback) recorre una fixture local de QA; nunca producción.
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { abrirChromeCdp } from './chrome-cdp.mjs'
+import { configuracionLecturasQa } from './protocolo-cdp.mjs'
 
-const base = 'http://localhost:5173'
-const api = 'https://servimap-backend.vercel.app'
-const chrome = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/chromium', '/usr/bin/google-chrome'].find(existsSync)
-assert.ok(chrome, 'Se requiere Chrome/Edge instalado')
+const { local, api, web: base } = configuracionLecturasQa()
 const carpeta = mkdtempSync(path.join(os.tmpdir(), 'servimap-qa-lecturas-'))
-const proceso = spawn(chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${path.join(carpeta, 'perfil')}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: 'ignore' })
-const reporte = { tipo: 'Navegador público, API real, solo lecturas', verificaciones: [], api: [], bloqueadas: [], errores: [], carpeta }
+let proceso
+const reporte = { tipo: local ? 'Navegador público, fixture local de QA, solo lecturas' : 'Navegador público, API real, solo lecturas', verificaciones: [], api: [], bloqueadas: [], errores: [], carpeta }
 const pendientes = new Map()
 let ws, numero = 0, falloRed
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -43,12 +42,9 @@ async function captura(nombre) {
   writeFileSync(path.join(carpeta, `${nombre}.png`), Buffer.from(r.data, 'base64'))
 }
 try {
-  const activo = path.join(carpeta, 'perfil', 'DevToolsActivePort')
-  for (let i = 0; i < 100 && !existsSync(activo); i++) await esperar(100)
-  assert.ok(existsSync(activo), 'Chrome no expuso CDP')
-  const port = readFileSync(activo, 'utf8').split(/\r?\n/)[0]
-  const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
-  ws = new WebSocket(tabs.find((t) => t.type === 'page').webSocketDebuggerUrl)
+  const chrome = await abrirChromeCdp(carpeta)
+  proceso = chrome.proceso
+  ws = new WebSocket(chrome.pagina.webSocketDebuggerUrl)
   await new Promise((r, j) => { ws.onopen = r; ws.onerror = j })
   ws.onmessage = ({ data }) => {
     const m = JSON.parse(data)
@@ -110,5 +106,5 @@ try {
 } finally {
   writeFileSync(path.join(carpeta, 'resultado.json'), JSON.stringify(reporte, null, 2))
   console.log(JSON.stringify({ ...reporte, verificaciones: reporte.verificaciones.length }))
-  if (ws?.readyState === WebSocket.OPEN) { await cdp('Browser.close').catch(() => {}); ws.close() } else proceso.kill()
+  if (ws?.readyState === WebSocket.OPEN) { await cdp('Browser.close').catch(() => {}); ws.close() } else proceso?.kill()
 }

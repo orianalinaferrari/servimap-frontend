@@ -35,8 +35,6 @@ function NavegacionRoles() {
         <>
           <NavLink to="/prestador" end>Mi panel de prestador</NavLink>
 
-          <NavLink to="/prestador/perfil">Mi perfil</NavLink>
-
           <NavLink to="/prestador/oficios">Mis oficios</NavLink>
         </>
       )}

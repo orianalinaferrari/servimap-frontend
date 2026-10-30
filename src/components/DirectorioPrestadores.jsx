@@ -23,7 +23,7 @@ export default function DirectorioPrestadores() {
       if (mapa.status === 'rejected') setErrorMapa(mapa.reason.message)
       setCargando(false)
     }
-    cargar()
+    void cargar()
     return () => { activo = false }
   }, [revision])
   return <>

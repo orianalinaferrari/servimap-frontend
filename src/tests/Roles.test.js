@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   ROLES,
   normalizarRol,
+  obtenerDestinoPostLogin,
+  obtenerPanelPorRol,
   tieneRol,
 } from '../utils/roles'
 
@@ -46,5 +48,23 @@ describe('F-04 - Roles y permisos', () => {
     expect(tieneRol(null, [ROLES.CLIENTE])).toBe(false)
     expect(tieneRol({ rol: 'DESCONOCIDO' }, [ROLES.CLIENTE])).toBe(false)
     expect(tieneRol({ rol: 'CLIENTE' }, null)).toBe(false)
+  })
+
+  it('asigna el panel de cada rol tras iniciar sesión', () => {
+    expect(obtenerPanelPorRol('CLIENTE')).toBe('/cliente')
+    expect(obtenerPanelPorRol(' prestador ')).toBe('/prestador')
+    expect(obtenerPanelPorRol('ADMINISTRADOR')).toBe('/admin')
+    expect(obtenerPanelPorRol('ROOT')).toBe('/')
+    expect(obtenerPanelPorRol(undefined)).toBe('/')
+  })
+
+  it('solo conserva el origen protegido del propio rol', () => {
+    expect(obtenerDestinoPostLogin('PRESTADOR', '/prestador/oficios')).toBe('/prestador/oficios')
+    expect(obtenerDestinoPostLogin('PRESTADOR', '/prestador')).toBe('/prestador')
+    expect(obtenerDestinoPostLogin('PRESTADOR', '/admin')).toBe('/prestador')
+    expect(obtenerDestinoPostLogin('PRESTADOR', '/prestadores')).toBe('/prestador')
+    expect(obtenerDestinoPostLogin('CLIENTE', '//externo.example')).toBe('/cliente')
+    expect(obtenerDestinoPostLogin('CLIENTE', undefined)).toBe('/cliente')
+    expect(obtenerDestinoPostLogin('DESCONOCIDO', '/cliente')).toBe('/')
   })
 })

@@ -1,18 +1,18 @@
-﻿// Chrome/Edge headless + CDP, sin dependencias externas. Toda API se intercepta.
+import { randomBytes } from 'node:crypto'
+const claveRegistro = randomBytes(32).toString('hex')
+// Chrome/Edge headless + CDP, sin dependencias externas. Toda API se intercepta.
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { crearApiSimulada, CUENTAS_QA, idQA, politicaDeRed, API_SIMULADA_ORIGIN } from './api-simulada.mjs'
-import { esIntercepcionCancelada } from './protocolo-cdp.mjs'
+import { esIntercepcionCancelada, campoQaListo } from './protocolo-cdp.mjs'
+import { abrirChromeCdp } from './chrome-cdp.mjs'
 
 const base = process.env.SERVIMAP_QA_BASE_URL || 'http://localhost:5173'
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Solo se permite un frontend local')
-const chrome = [process.env.SERVIMAP_QA_BROWSER, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/chromium', '/usr/bin/google-chrome'].find((p) => p && existsSync(p))
-assert.ok(chrome, 'No hay Chrome/Edge instalado; no se descarga ningún navegador')
 const carpeta = mkdtempSync(path.join(os.tmpdir(), 'servimap-qa-browser-'))
-const proceso = spawn(chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${path.join(carpeta, 'perfil')}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: 'ignore' })
+let proceso
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
 const api = crearApiSimulada(), pendientes = new Map()
 const canceladas = new Set()
@@ -52,7 +52,7 @@ async function click(nombre, idSolicitud) {
   await hasta(expr, `click ${nombre}`)
 }
 async function llenar(id, valor) {
-  await hasta(`!!document.getElementById(${texto(id)})`, `campo ${id}`)
+  await hasta(`(${campoQaListo.toString()})(document,${texto(id)},${texto(valor)})`, `campo disponible ${id}`)
   await evaluar(`(()=>{const e=document.getElementById(${texto(id)});const proto=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${texto(valor)});e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))})()`)
 }
 async function captura(nombre) {
@@ -91,12 +91,9 @@ async function crearSolicitud(descripcion) {
   return api.solicitudes.at(-1).id
 }
 try {
-  const activo = path.join(carpeta, 'perfil', 'DevToolsActivePort')
-  for (let n = 0; n < 100 && !existsSync(activo); n++) await esperar(100)
-  assert.ok(existsSync(activo), 'Chrome no expuso CDP')
-  const port = readFileSync(activo, 'utf8').split(/\r?\n/)[0]
-  const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
-  const tab = tabs.find((t) => t.type === 'page' && t.url === 'about:blank')
+  const chrome = await abrirChromeCdp(carpeta)
+  proceso = chrome.proceso
+  const tab = chrome.pagina
   ws = new WebSocket(tab.webSocketDebuggerUrl); await new Promise((r, j) => { ws.onopen = r; ws.onerror = j })
   ws.onmessage = ({ data }) => {
     const m = JSON.parse(data)
@@ -176,14 +173,14 @@ try {
   // Modo acotado para cambios visuales: navegación, modal, mapa y ambos roles.
   if (process.env.SERVIMAP_QA_SCOPE === 'landing') break recorrido
   await evaluar(`document.querySelector('.landing-boton[href="/registro?rol=CLIENTE"]').click()`)
-  await llenar('nombre', 'QA Registro'); await llenar('email', 'registro@example.test'); await llenar('dni', '98.765.432'); await llenar('contrasena', 'fixture-local-only'); await llenar('confirmarContrasena', 'fixture-local-only')
+  await llenar('nombre', 'QA Registro'); await llenar('email', 'registro@example.test'); await llenar('dni', '98.765.432'); await llenar('contrasena', claveRegistro); await llenar('confirmarContrasena', claveRegistro)
   await llenar('dni', 'abc'); await click('Crear cuenta como cliente'); await verTexto('El DNI debe tener 7 u 8 números')
   check(true, 'DNI inválido bloqueado antes de registrar')
   await llenar('dni', '98.765.432')
-  await click('Mostrar contraseña'); check(await evaluar(`document.getElementById('contrasena').type==='text'&&document.getElementById('contrasena').value==='fixture-local-only'`), 'ojo conserva contraseña')
+  await click('Mostrar contraseña'); check(await evaluar(`document.getElementById('contrasena').type==='text'&&document.getElementById('contrasena').value===${JSON.stringify(claveRegistro)}`), 'ojo conserva contraseña')
   await click('Ocultar contraseña'); await responsive('registro'); await click('Crear cuenta como cliente'); await verTexto('Tu cuenta fue creada.')
   check(!await evaluar(`sessionStorage.getItem('servimap-jwt')`), 'registro no inicia sesión implícitamente')
-  const cliente = { email: 'registro@example.test', password: 'fixture-local-only' }
+  const cliente = { email: 'registro@example.test', password: claveRegistro }
   fase = 'cliente'
   await login(cliente); await ir('/cliente'); await verTexto('Panel del cliente'); await cdp('Page.reload'); await verTexto('Panel del cliente')
   check(await evaluar(`!!sessionStorage.getItem('servimap-jwt')`), 'JWT persiste al recargar')
@@ -199,7 +196,7 @@ try {
   await llenar('telefono', '+54 11 4567-8901'); await llenar('whatsapp', '+54 11 4567-8901'); await llenar('emailContacto', 'contacto@example.test')
   await llenar('latitud', '-34.601234'); await llenar('longitud', '-58.381234'); await llenar('precioMin', '100'); await llenar('precioMax', '200')
   await responsive('perfil'); await click('Guardar cambios'); await verTexto('Perfil actualizado en el servidor.')
-  check(api.perfil.latitud === -34.601234, 'perfil guarda ubicación privada solo en API simulada')
+  check(Math.abs(api.perfil.latitud - (-34.601234)) < 1e-8, 'perfil guarda ubicación privada solo en API simulada')
   await ir('/prestador/oficios'); await llenar('nuevo-oficio', idQA(202)); await click('Agregar oficio'); await click('Guardar oficios'); await verTexto('Oficios guardados en el servidor.')
   check(api.perfil.oficioIds.includes(idQA(202)), 'oficios guardados por ID')
   await ir('/prestador/solicitudes'); await click('Aceptar solicitud', finalizar); await click('Confirmar aceptación', finalizar)
@@ -233,7 +230,7 @@ try {
   await click('Usar mi ubicación'); await verTexto('Ubicación obtenida correctamente.'); await click('Centrar en mi ubicación')
   check(await evaluar(`!!document.querySelector('.mapa-ubicacion')`), 'geolocalización simulada y recentrado, sin usar ubicación personal')
   const mapa = api.responder({ method: 'GET', url: `${API_SIMULADA_ORIGIN}/api/prestadores/mapa` }).body[0]
-  check(mapa.latitud === -34.6 && mapa.longitud === -58.38, 'coordenadas públicas redondeadas, distintas de las privadas')
+  check(Math.abs(mapa.latitud - (-34.6)) < 1e-8 && Math.abs(mapa.longitud - (-58.38)) < 1e-8, 'coordenadas públicas redondeadas, distintas de las privadas')
   await evaluar(`document.querySelector('.mapa-marcador').click()`); await verTexto('Cómo llegar en Google Maps')
   await evaluar(`document.querySelector('.mapa-info a').scrollIntoView({block:'center'})`)
   await hasta(`(()=>{const a=document.querySelector('.mapa-info a'),m=document.querySelector('.mapa-interactivo'),c=document.querySelector('.maplibregl-ctrl-attrib');if(!a||!m||!c)return false;const r=a.getBoundingClientRect(),b=m.getBoundingClientRect(),creditos=c.getBoundingClientRect();return r.top>=b.top&&r.bottom<=creditos.top&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===a})()`, 'indicaciones visibles sin recorte ni superposición')
@@ -252,7 +249,7 @@ try {
     const obtenido = await evaluar(`(async()=>{try{const {apiRequest}=await import('/src/services/apiClient.js');await apiRequest('/api/solicitudes');return 0}catch(e){return e.status}})()`)
     check(obtenido === status, `manejo HTTP ${status} con API simulada`)
   }
-  await ir('/login'); await llenar('email', 'nadie@example.test'); await llenar('contrasena', 'fixture-local-only'); await click('Iniciar sesión'); await verTexto('Email o contraseña incorrectos')
+  await ir('/login'); await llenar('email', 'nadie@example.test'); await llenar('contrasena', claveRegistro); await click('Iniciar sesión'); await verTexto('Email o contraseña incorrectos')
   await responsive('login')
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab' }); await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab' })
   check(await evaluar(`['A','BUTTON','INPUT','SELECT','TEXTAREA','SUMMARY'].includes(document.activeElement.tagName)`), 'navegación básica mediante teclado')
@@ -272,6 +269,6 @@ try {
   console.log(JSON.stringify({ aprobado: reporte.aprobado, verificaciones: reporte.verificaciones.length, faseFallida: reporte.faseFallida, error: reporte.error, alturaNavegacion: reporte.alturaNavegacion, erroresJavaScript: reporte.erroresConsola.length, llamadasSimuladas: api.llamadas.length, escriturasSimuladas: api.llamadas.filter((r) => !['GET','OPTIONS'].includes(r.method)).length, reporte: path.join(carpeta, 'resultado.json') }))
   writeFileSync(path.join(carpeta, 'resultado.json'), JSON.stringify(reporte, null, 2))
   } finally {
-  if (ws?.readyState === WebSocket.OPEN) { await cdp('Browser.close').catch(() => {}); ws.close() } else proceso.kill()
+  if (ws?.readyState === WebSocket.OPEN) { await cdp('Browser.close').catch(() => {}); ws.close() } else proceso?.kill()
   }
 }

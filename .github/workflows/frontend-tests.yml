@@ -4,30 +4,119 @@ on:
   pull_request:
     branches:
       - develop
+      - main
+  push:
+    branches: [main, develop, feature/sonarqube-seguridad-servimap]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   validar-frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Descargar código
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           cache: npm
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Ejecutar pruebas
-        run: npm run test
+        run: npm run test:coverage
 
       - name: Ejecutar lint
         run: npm run lint
 
       - name: Verificar build
         run: npm run build
-        
+
+      - name: Ejecutar QA local y fusionar cobertura V8
+        timeout-minutes: 5
+        env:
+          SERVIMAP_QA_BROWSER: /usr/bin/google-chrome
+          SERVIMAP_QA_SOFTWARE_GL: '1'
+        run: npm run test:coverage:qa
+
+      - name: Verificar integridad y alcance de LCOV
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+          const inventory = ['src', 'scripts'].flatMap(root =>
+            readdirSync(root, { recursive: true }).map(file => `${root}/${file.replaceAll('\\', '/')}`)
+          ).filter(file => /\.(?:jsx?|mjs)$/.test(file) && !file.startsWith('src/tests/'));
+          const report = readFileSync('coverage/lcov.info', 'utf8').replace(/^SF:(.+)$/gm,
+            (_, file) => `SF:${file.trim().replaceAll('\\', '/')}`);
+          const records = report.split('end_of_record').filter(record => record.includes('SF:'));
+          const sources = records.map(record => record.match(/^SF:(.+)$/m)[1].trim());
+          assert.equal(new Set(sources).size, sources.length, 'Duplicate LCOV source');
+          assert.deepEqual([...sources].sort(), inventory.sort(), 'LCOV must include every application and QA source');
+          const properties = readFileSync('sonar-project.properties', 'utf8');
+          const scope = properties.match(/^sonar.sources=(.+)$/m)[1].trim().split(',');
+          assert.ok(inventory.every(file => scope.some(root => file === root || file.startsWith(`${root}/`))), 'Application/QA source missing from Sonar scope');
+          assert.equal(properties.match(/^sonar.tests=(.+)$/m)[1].trim(), 'src/tests');
+          assert.ok(!scope.some(root => root === 'src' || root.startsWith('src/tests')), 'Overlapping Sonar source/test scopes');
+          assert.equal(properties.match(/^sonar\.javascript\.lcov\.reportPaths=(.+)$/m)[1].trim(), 'coverage/lcov.info');
+          const totals = { src: { found: 0, hit: 0 }, scripts: { found: 0, hit: 0 } };
+          for (const record of records) {
+            const source = record.match(/^SF:(.+)$/m)[1].trim();
+            const found = Number(record.match(/^LF:(\d+)$/m)[1]);
+            const hit = Number(record.match(/^LH:(\d+)$/m)[1]);
+            const lines = [...record.matchAll(/^DA:(\d+),(\d+)(?:,.*)?$/gm)];
+            assert.equal(lines.length, found, `${source}: DA count`);
+            assert.equal(new Set(lines.map(line => line[1])).size, found, `${source}: LF`);
+            assert.equal(lines.filter(line => Number(line[2]) > 0).length, hit, `${source}: LH`);
+            const length = readFileSync(source, 'utf8').split('\n').length;
+            assert.ok(lines.every(line => Number(line[1]) > 0 && Number(line[1]) <= length), `${source}: line range`);
+            const group = totals[source.startsWith('src/') ? 'src' : 'scripts'];
+            group.found += found;
+            group.hit += hit;
+          }
+          const summary = JSON.parse(readFileSync('coverage/coverage-summary.json', 'utf8')).total.lines;
+          assert.equal(totals.src.found + totals.scripts.found, summary.total);
+          assert.equal(totals.src.hit + totals.scripts.hit, summary.covered);
+          writeFileSync('coverage/lcov.info', report);
+          console.log(JSON.stringify({ sources: sources.length, totals, summary }));
+          NODE
+
+      - name: Conservar evidencia de cobertura
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            coverage/lcov.info
+            coverage/coverage-summary.json
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Auditar dependencias
+        run: npm audit --audit-level=high
+
+      - name: Comprobar configuración del secreto Sonar
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo '::error::Configurar SONAR_TOKEN en Settings > Secrets and variables > Actions del repositorio.'
+            exit 1
+          fi
+
+      - name: Analizar SonarQube Cloud y esperar Quality Gate
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import { IconoPrestador } from './IconoPrestador'
+import { obtenerIniciales } from '../../utils/perfilUsuario'
 
 export function VistaPerfilPrestador({ perfil, onEditar }) {
-  const iniciales = (perfil.nombre || '').split(/[\s—]+/).filter(Boolean).slice(-2).map((palabra) => palabra[0]).join('')
+  const iniciales = obtenerIniciales(perfil.nombre)
   const precio = (valor) => `$ ${valor.toLocaleString('es-AR')}`
   const rango = Number.isFinite(perfil.precioMin) && Number.isFinite(perfil.precioMax) ? `${precio(perfil.precioMin)} – ${precio(perfil.precioMax)}` : Number.isFinite(perfil.precioMin) ? `Desde ${precio(perfil.precioMin)}` : Number.isFinite(perfil.precioMax) ? `Hasta ${precio(perfil.precioMax)}` : 'Sin informar'
   return <>

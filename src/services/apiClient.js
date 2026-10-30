@@ -38,14 +38,22 @@ export function obtenerApiUrl() {
   }
 
   if (parsed.username || parsed.password ||
-      parsed.search || parsed.hash) {
+      parsed.search || parsed.hash || parsed.pathname !== '/') {
     throw new ApiError(
       'La URL de la API no debe incluir credenciales ni parámetros.',
       { codigo: 'API_URL_INVALIDA' }
     )
   }
 
-  return url.replace(/\/+$/, '')
+  const esLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)
+  if (parsed.protocol !== 'https:' && !esLoopback) {
+    throw new ApiError(
+      'La API debe utilizar HTTPS fuera del entorno local.',
+      { codigo: 'API_URL_INVALIDA' }
+    )
+  }
+
+  return parsed.origin
 }
 
 export function validarRutaApi(ruta) {

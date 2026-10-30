@@ -1,4 +1,5 @@
 import EstadoSolicitud from '../components/EstadoSolicitud'
+import CamposDetalleSolicitud from '../components/CamposDetalleSolicitud'
 import { IconoPrestador as IconoCliente } from '../components/prestador/IconoPrestador'
 import { EstrellasCalificacion } from '../components/cliente/EstrellasCalificacion'
 import CalificarPrestador from '../components/CalificarPrestador'
@@ -56,20 +57,7 @@ function DetalleSolicitud({ solicitud, onCerrar }) {
         <dt>Prestador</dt>
         <dd>{obtenerNombrePrestador(solicitud)}</dd>
 
-        <dt>Servicio</dt>
-        <dd>{mostrarValor(solicitud.servicio)}</dd>
-
-        <dt>Descripción</dt>
-        <dd>{mostrarValor(solicitud.descripcion)}</dd>
-
-        <dt>Dirección</dt>
-        <dd>{mostrarValor(solicitud.direccion)}</dd>
-
-        <dt>Contacto preferido</dt>
-        <dd>{mostrarValor(solicitud.contactoPreferido)}</dd>
-
-        <dt>Fecha de creación</dt>
-        <dd>{mostrarValor(solicitud.fechaCreacion)}</dd>
+        <CamposDetalleSolicitud solicitud={solicitud} formatear={mostrarValor} />
       </dl>
     </section>
   )
@@ -132,7 +120,7 @@ function SolicitudesCliente() {
       }
     }
 
-    cargarInicial()
+    void cargarInicial()
 
     return () => {
       activo = false

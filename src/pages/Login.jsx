@@ -1,12 +1,15 @@
 
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import '../styles/Login.css'
 import CampoContrasena from '../components/CampoContrasena'
+import { esEmailValido } from '../utils/email'
+import { resolverDestinoPostLogin } from '../services/destinoPostLogin'
 
 function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
 
   const [formulario, setFormulario] = useState({
@@ -39,7 +42,7 @@ function Login() {
 
     if (!formulario.email.trim()) {
       nuevosErrores.email = 'El email es obligatorio'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.email)) {
+    } else if (!esEmailValido(formulario.email)) {
       nuevosErrores.email = 'Ingresá un email válido'
     }
 
@@ -63,12 +66,15 @@ function Login() {
     setEnviando(true)
 
     try {
-      await login(
+      const usuario = await login(
         formulario.email.trim(),
         formulario.contrasena
       )
 
-      navigate('/')
+      await navigate(
+        await resolverDestinoPostLogin(usuario, location.state?.from),
+        { replace: true }
+      )
     } catch (error) {
       setErrorServidor(
         error instanceof Error
