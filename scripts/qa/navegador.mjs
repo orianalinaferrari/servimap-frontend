@@ -14,7 +14,10 @@ assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Solo se 
 const chrome = [process.env.SERVIMAP_QA_BROWSER, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/chromium', '/usr/bin/google-chrome'].find((p) => p && existsSync(p))
 assert.ok(chrome, 'No hay Chrome/Edge instalado; no se descarga ningún navegador')
 const carpeta = mkdtempSync(path.join(os.tmpdir(), 'servimap-qa-browser-'))
-const proceso = spawn(chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${path.join(carpeta, 'perfil')}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: 'ignore' })
+const proceso = spawn(chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${path.join(carpeta, 'perfil')}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] })
+let falloChrome, diagnosticoChrome = ''
+proceso.once('error', error => { falloChrome = error })
+proceso.stderr.on('data', chunk => { diagnosticoChrome = (diagnosticoChrome + chunk).slice(-2000) })
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
 const api = crearApiSimulada(), pendientes = new Map()
 const canceladas = new Set()
@@ -94,7 +97,13 @@ async function crearSolicitud(descripcion) {
 }
 try {
   const activo = path.join(carpeta, 'perfil', 'DevToolsActivePort')
-  const port = await esperarPuertoChrome(() => readFileSync(activo, 'utf8'))
+  const port = await esperarPuertoChrome(() => {
+    if (falloChrome) throw falloChrome
+    if (proceso.exitCode !== null || proceso.signalCode !== null) {
+      throw new Error(`Chrome terminó antes de exponer CDP (exit ${proceso.exitCode}, signal ${proceso.signalCode}): ${diagnosticoChrome}`)
+    }
+    return readFileSync(activo, 'utf8')
+  })
   const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
   const tab = tabs.find((t) => t.type === 'page' && t.url === 'about:blank')
   ws = new WebSocket(tab.webSocketDebuggerUrl); await new Promise((r, j) => { ws.onopen = r; ws.onerror = j })
