@@ -69,7 +69,7 @@ function Login() {
         formulario.contrasena
       )
 
-      navigate('/')
+      await navigate('/')
     } catch (error) {
       setErrorServidor(
         error instanceof Error

@@ -15,7 +15,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.{js,jsx}', 'scripts/**/*.mjs'],
       exclude: ['src/tests/**'],
-      reporter: ['text', 'lcov', 'json-summary', 'json'],
+      reporter: ['text', 'lcov', 'json-summary', ['json', { file: 'coverage-unit.json' }]],
     },
   },
 })

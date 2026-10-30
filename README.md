@@ -1,6 +1,6 @@
 # ServiMap
 
-**Revisión de seguridad local (30/10/2026):** en `feature/sonarqube-seguridad-servimap`, sin commit/push todavía: 484 tests, lint/build correctos, audit npm con 0 vulnerabilidades y cobertura de líneas global 63,04% (93,07% en `src`). Se conservan los scripts QA en la medición global. Sonar requiere un nuevo análisis para certificar los ratings y el Gate de estas correcciones. Ver [diagnóstico, cambios y validación](docs/seguridad-sonarqube.md); los resultados de la entrega original que siguen son históricos respecto de esta revisión.
+**Corrección local del PR #31 (30/10/2026):** sobre `79cb898`, en `feature/sonarqube-seguridad-servimap`, sin nuevo commit/push: 491 tests, lint/build correctos, audit npm con 0 vulnerabilidades y cobertura de líneas fusionada unitarios + QA de 77,10% global (93,07% en `src`), con el mismo denominador. El análisis publicado todavía falla por cobertura nueva 74,5% y fiabilidad C; las correcciones locales requieren otra ejecución de CI/Sonar para confirmar el Gate. Ver [causas de Actions #28/#29, cambios y validación](docs/seguridad-sonarqube.md); las cifras de la entrega original que siguen son históricas respecto de esta revisión.
 
 Frontend de una plataforma de servicios del hogar, desarrollado con **React y Vite** para la materia **Construcción de Software**. Conecta clientes con prestadores mediante un directorio, un mapa y un circuito de solicitudes, calificaciones y administración.
 

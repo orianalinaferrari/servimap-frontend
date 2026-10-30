@@ -36,6 +36,16 @@ jobs:
       - name: Ejecutar pruebas
         run: npm run test:coverage
 
+      - name: Ejecutar lint
+        run: npm run lint
+
+      - name: Verificar build
+        run: npm run build
+
+      - name: Ejecutar QA local y fusionar cobertura V8
+        timeout-minutes: 5
+        run: npm run test:coverage:qa
+
       - name: Verificar integridad y alcance de LCOV
         run: |
           node --input-type=module <<'NODE'
@@ -88,12 +98,6 @@ jobs:
             coverage/coverage-summary.json
           retention-days: 14
           if-no-files-found: warn
-
-      - name: Ejecutar lint
-        run: npm run lint
-
-      - name: Verificar build
-        run: npm run build
 
       - name: Auditar dependencias
         run: npm audit --audit-level=high

@@ -1,5 +1,7 @@
 # Seguridad, SonarQube y cobertura — 30/10/2026
 
+> La auditoría inicial y sus cifras se conservan como historial. La sección final «Corrección de Actions #28/#29 y PR #31» registra el diagnóstico remoto posterior a publicar `79cb898` y las nuevas correcciones locales. No interpretar los estados anteriores de «sin commit/push/PR» como el estado actual de esa entrega.
+
 Rama local `feature/sonarqube-seguridad-servimap`, creada desde `origin/main` actualizado en `595231f`. Cambios sin commit ni push; no se modificaron backend, diseños ni otras ramas. Se usó Node 24.22.2 temporal porque el Node predeterminado de la notebook es 22.19.0. No se cambió la instalación del sistema.
 
 ## Diagnóstico remoto verificable
@@ -145,3 +147,75 @@ También aprobaron los runners modificados CLIENTE (49 controles) y PRESTADOR (6
 - Documentación: `README.md`, `docs/registro-de-defectos.md`, este informe.
 
 Total: 28 archivos (23 modificados y 5 nuevos), sin cambios CSS/diseños, sin stage, commit, push, PR ni merge. Las exclusiones de `.gitignore`/ESLint son únicamente artefactos generados (`coverage` y `.scannerwork`), no fuentes.
+
+## Corrección de Actions #28/#29 y PR #31
+
+### Estado consultado y causas exactas
+
+La entrega anterior se publicó como `79cb898f2ca02903c4678a250c56d191dc1e9cd8`. Se confirmó por GitHub que el [PR #31](https://github.com/orianalinaferrari/servimap-frontend/pull/31) está abierto, no es draft, sale de `feature/sonarqube-seguridad-servimap` hacia `main`, es combinable y tiene checks fallidos (`unstable`). La rama local estaba limpia y sincronizada en ese commit al comenzar. No se modificaron otras ramas.
+
+**[#28, evento push](https://github.com/orianalinaferrari/servimap-frontend/actions/runs/41041053782):** job `124013663005`, falló en «Comprobar configuración del secreto Sonar». El log muestra el mensaje de configuración y el scanner fue omitido. Tests, validación LCOV, lint, build y audit habían aprobado. Causa: `SONAR_TOKEN` vacío en esa ejecución, no un problema de cobertura o permisos del scanner.
+
+**[#29, pull_request, intento 2](https://github.com/orianalinaferrari/servimap-frontend/actions/runs/41045521060/attempts/2):** job `124035847149`, la comprobación del secreto aprobó. El scanner detectó PR 31 hacia main, importó `coverage/lcov.info`, subió el reporte y esperó el procesamiento. Falló después con `QUALITY GATE STATUS: FAILED`. Esto demuestra que el secreto configurado sirve para autenticar/subir el análisis. No se regeneró ni se imprimió. La causa original de #28 está subsanada en cuanto a configuración, pero **no se reejecutó ni se certifica verde el evento push**.
+
+No se amplían permisos: `contents: read` fue suficiente para checkout/análisis y el secreto se pasa mediante `env` únicamente a comprobación/scanner. La decoración del PR se realiza desde la integración Sonar, no exige otorgar escritura al GITHUB_TOKEN de este job. Se mantiene el guard para forks y no se usa `pull_request_target`. Automatic Analysis permanece desactivado; no se cambió esa opción ni ningún estado remoto de Sonar.
+
+Se consultaron las API públicas con `pullRequest=31`: `qualitygates/project_status`, `measures/component`, `measures/component_tree`, `issues/search` y `sources/lines`. Son los resultados del código publicado, no predicciones locales:
+
+| Condición del Gate sobre código nuevo | Valor real PR #31 | Umbral | Resultado |
+| --- | --- | --- | --- |
+| Reliability Rating | C (3) | A (1) | FAILED |
+| Security Rating | A (1) | A (1) | OK |
+| Maintainability Rating | A (1) | A (1) | OK |
+| Coverage | 74,5% (74,545454...) | >=80% | FAILED |
+| Duplicated Lines Density | 0,749063...% (Gate: 0,7%) | <=3% | OK |
+| Security Hotspots Reviewed | 100% | 100% | OK |
+
+El informe tiene **30 líneas nuevas, 12 sin cubrir; 25 condiciones, 2 sin cubrir**. Línea nueva: 60%; condiciones nuevas: 92%; cobertura combinada: `(18 + 23)/(30 + 25) = 74,545454...%`. El error #29 no fue falta de token, fallo de subida ni pérdida de LCOV. El Gate publicado exige 80%, mientras que el objetivo del equipo sigue siendo >=90% donde corresponda; no se rebajó ningún umbral.
+
+`issues/search` devolvió exactamente **una incidencia abierta del PR**, bug MAJOR `AaGMkFHbbGMtFS3dR5Ye`, regla `javascript:S9383`, `src/pages/Login.jsx:72`: promesa de `navigate('/')` sin esperar/manejar explícitamente. No devolvió vulnerabilidades abiertas del PR. Esto no debe extrapolarse al rating de la rama main ni a vulnerabilidades desconocidas.
+
+La anotación exacta de líneas nuevas sin hits fue:
+
+| Archivo | Líneas de la revisión `79cb898` |
+| --- | --- |
+| scripts/qa/navegador.mjs | 2, 181, 185, 188, 204, 238, 257; dos condiciones pendientes en 238 |
+| scripts/qa/build-estatico.mjs | 12 |
+| scripts/qa/cors-permisos-reales.mjs | 28, 30 |
+| scripts/qa/cliente-navegador.mjs | 4 |
+| scripts/qa/prestador-navegador.mjs | 4 |
+
+El log también contiene un warning al leer la fuente binaria InterVariable.woff2 como UTF-8. No es la condición fallida ni un error de importación LCOV; no se cambió la fuente ni se excluyó código para esconderlo.
+
+### Correcciones locales dirigidas
+
+- `Login.jsx`: `await navigate('/')` dentro del try/catch existente. Se conserva la ruta de destino y el diseño. Dos pruebas verifican que el submit siga bloqueado mientras navega y que un rechazo se muestre como error en vez de quedar como promesa sin manejar.
+- `RunnerCorsAislado.test.js`: ejecuta el runner real con fetch completamente simulado; verifica 26 GET/OPTIONS, espacios en cabeceras y rechazo de CORS permisivo. No hay peticiones reales ni escrituras productivas.
+- `src/tests/qa-cobertura.mjs`: harness de integración que levanta un Vite exclusivo, ejecuta el recorrido completo de 84 controles (API interceptada) y el smoke del build. Los procesos Node generan contadores nativos mediante `NODE_V8_COVERAGE` en una carpeta nueva bajo coverage; el servidor se detiene incluso si falla el recorrido. Se fuerza el escenario completo, sin heredar `SERVIMAP_QA_SCOPE=landing`.
+- `src/tests/helpers/fusionarCobertura.mjs`: convierte los contadores con el mismo `ast-v8-to-istanbul` usado por Vitest y fusiona con el mapa unitario. Acepta solo archivos del inventario original y comprueba que no cambien los denominadores de líneas, statements, funciones ni branches. Los mapas se serializan del mismo modo que el JSON unitario para no duplicar ramas con columnas abiertas Infinity/null. Una fusión inicialmente rechazada por ese guard detectó este caso; se corrigió y tres pruebas con procesos reales verifican ramas parciales/completas y ausencia de duplicaciones.
+- `vite.config.js`: guarda el mapa unitario en `coverage-unit.json`; el fusionado queda en `coverage-final.json`, LCOV y resumen. Se conserva la evidencia unitaria sin confundirla con la fusión ni acumular reportes viejos.
+- `package.json`/lock: comando `test:coverage:qa` y dependencias directas de las herramientas ya presentes: ast-v8-to-istanbul 1.0.7 y librerías Istanbul de Vitest 1.0.2. No se cambia ninguna versión de runtime ni de esas herramientas.
+- Workflow: unitarios con un worker -> lint -> build -> QA instrumentado/fusión -> integridad LCOV -> artefacto -> audit -> secreto/scanner/Gate. Se mantienen token, guard de forks, acciones fijadas y permisos. No se añade código productivo a exclusiones. ESLint aplica globals Node a los nuevos helpers MJS de pruebas.
+
+Los nuevos harness/fixtures están en `src/tests` porque son pruebas e infraestructura de instrumentación; no se movió allí ningún archivo productivo o runner existente. Los 81 archivos src/scripts continúan analizados e instrumentados. Las fuentes, los thresholds y las reglas de Sonar no se modificaron. La instrumentación se basa en [contadores V8 y conversión AST](https://vitest.dev/guide/coverage), no en asignar hits por un resultado de test aprobado. El runner Ubuntu utilizado por CI [incluye Chrome](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md); no se descarga un navegador ni se desactiva su sandbox.
+
+### Validación final local y límites de aceptación
+
+Secuencia final con Node 24.22.2: `npm run test:coverage` (**491/491**, 59 archivos, un worker), lint y build aprobados, `npm run test:coverage:qa` aprobado de punta a punta. El recorrido final tuvo **84 controles**, 211 llamadas y 22 escrituras simuladas en memoria, cero excepciones JavaScript; el smoke comprobó **13 rutas y 11 assets**. Se verificaron los flujos públicos y los tres roles, sin escrituras productivas y sin cambios de diseño/CSS. Servidores y navegador cerrados. Persisten las advertencias conocidas del estilo remoto OpenFreeMap y tamaño de MapLibre.
+
+`npm audit --json` final: **0 vulnerabilidades**, sin cambios de versión en las herramientas declaradas como dependencias directas. YAML parseado y el bloque exacto de integridad LCOV del workflow ejecutado sobre el reporte fusionado: **81 fuentes**, sin faltantes/duplicados, contadores consistentes. `git diff --check` aprobado, incluidos los nuevos archivos revisados por whitespace. No se almacenaron credenciales ni se subieron datos a Sonar desde esta notebook.
+
+| Medición local | Líneas | Condiciones/branches | Statements | Funciones |
+| --- | --- | --- | --- | --- |
+| Unitarios actuales | 1328/2062 = 64,40% | 1315/1883 = 69,83% | 1610/2912 = 55,28% | 425/589 = 72,15% |
+| Unitarios + QA real | 1590/2062 = 77,10% | 1428/1883 = 75,83% | 2045/2912 = 70,22% | 469/589 = 79,62% |
+| src, sin cambiar alcance | 1169/1256 = 93,07% | 1098/1302 = 84,33% | 1369/1501 = 91,21% | 371/398 = 93,22% |
+| scripts/qa, fusionado | 421/806 = 52,23% | 330/581 = 56,80% | — | — |
+
+Cada denominador se comprueba por archivo antes/después de fusionar, no solo en el total. La configuración no retira código para lograr un porcentaje. El mapa unitario queda en `coverage-unit.json` y su resumen en `coverage-unit-summary.json`; el mapa combinado en `coverage-final.json` y sus LCOV/resumen son los que recibe Sonar. Los archivos nativos V8 son locales e ignorados por Git; el artefacto de CI conserva únicamente LCOV + resumen, sin sesiones ni tokens.
+
+El contraste del LCOV local con las anotaciones exactas de `79cb898` muestra hits reales en las 7 líneas de navegador, la línea 12 del smoke y las líneas 28/30 de CORS; las dos condiciones de navegador:238 también se ejecutaron. Sobre **esa huella anterior** quedarían 28/30 líneas y 25/25 condiciones cubiertas: **53/55 = 96,36% combinado**. Es una comprobación local sobre líneas ya identificadas, **no un valor publicado ni garantía del siguiente análisis**: Sonar recalculará el código nuevo al incorporar `await navigate` y las demás modificaciones. Las dos líneas de arranque de cliente/prestador siguen sin hits en el LCOV; no se excluyen. La meta global >=90% sigue sin alcanzarse.
+
+**Estado Git:** cambios nuevos solo en `feature/sonarqube-seguridad-servimap`, HEAD publicado sigue en `79cb898`; sin stage, nuevo commit, push, merge ni otro PR. Se conservan todas las correcciones anteriores. Archivos actuales: workflow, README, este informe, eslint.config.js, package.json/lock, Login.jsx, vite.config.js; nuevos tests FusionCobertura, NavegacionLoginAsync, RunnerCorsAislado y los dos harness/helpers MJS bajo src/tests.
+
+**Listo para revisión y, con aprobación, commit/push a la rama del PR #31.** No está certificado en verde remoto. Tras publicar hay que comprobar ejecuciones push/pull_request y su importación LCOV fusionada, ausencia de S9383, ratings A, hotspots 100%, duplicación <=3% y Gate aprobado. No se reejecutan ni cambian desde aquí workflows del commit antiguo para presentar un resultado verde artificial; no se regeneran secretos, no se reactiva Automatic Analysis y no se alteran condiciones del Gate.
