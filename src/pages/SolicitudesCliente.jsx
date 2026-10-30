@@ -132,7 +132,7 @@ function SolicitudesCliente() {
       }
     }
 
-    cargarInicial()
+    void cargarInicial()
 
     return () => {
       activo = false

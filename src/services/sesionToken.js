@@ -5,7 +5,9 @@ export function expiracionToken(token) {
   try {
     const parte = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
     const { exp } = JSON.parse(atob(parte))
-    return Number.isFinite(exp) ? exp * 1000 : 0
+    const milisegundos = exp * 1000
+    return typeof exp === 'number' && Number.isFinite(milisegundos) &&
+      milisegundos > 0 && milisegundos <= Number.MAX_SAFE_INTEGER ? milisegundos : 0
   } catch { return 0 }
 }
 

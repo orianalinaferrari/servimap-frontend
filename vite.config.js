@@ -8,8 +8,15 @@ export default defineConfig({
     include: ['maplibre-gl'],
   },
   test: {
+    maxWorkers: 1,
     environment: 'jsdom',
     setupFiles: ['./src/tests/setup.js'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{js,jsx}', 'scripts/**/*.mjs'],
+      exclude: ['src/tests/**'],
+      reporter: ['text', 'lcov', 'json-summary', 'json'],
+    },
   },
 })
 

@@ -81,7 +81,7 @@ function PanelPrestador() {
       }
     }
 
-    cargarInicial()
+    void cargarInicial()
 
     return () => {
       activo = false

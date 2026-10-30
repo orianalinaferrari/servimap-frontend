@@ -1,4 +1,5 @@
 import { validarOficios } from './oficiosPrestador'
+import { esEmailValido } from './email'
 
 export function crearPerfilInicial(usuario = {}) {
   return {
@@ -31,7 +32,7 @@ export function validarPerfilPrestador(perfil) {
 
   if (
     perfil.email.trim() &&
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(perfil.email)
+    !esEmailValido(perfil.email)
   ) {
     errores.email = 'Ingresá un correo válido'
   }

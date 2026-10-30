@@ -1,4 +1,6 @@
-﻿// Chrome/Edge headless + CDP, sin dependencias externas. Toda API se intercepta.
+import { randomBytes } from 'node:crypto'
+const claveRegistro = randomBytes(32).toString('hex')
+// Chrome/Edge headless + CDP, sin dependencias externas. Toda API se intercepta.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
@@ -176,14 +178,14 @@ try {
   // Modo acotado para cambios visuales: navegación, modal, mapa y ambos roles.
   if (process.env.SERVIMAP_QA_SCOPE === 'landing') break recorrido
   await evaluar(`document.querySelector('.landing-boton[href="/registro?rol=CLIENTE"]').click()`)
-  await llenar('nombre', 'QA Registro'); await llenar('email', 'registro@example.test'); await llenar('dni', '98.765.432'); await llenar('contrasena', 'fixture-local-only'); await llenar('confirmarContrasena', 'fixture-local-only')
+  await llenar('nombre', 'QA Registro'); await llenar('email', 'registro@example.test'); await llenar('dni', '98.765.432'); await llenar('contrasena', claveRegistro); await llenar('confirmarContrasena', claveRegistro)
   await llenar('dni', 'abc'); await click('Crear cuenta como cliente'); await verTexto('El DNI debe tener 7 u 8 números')
   check(true, 'DNI inválido bloqueado antes de registrar')
   await llenar('dni', '98.765.432')
-  await click('Mostrar contraseña'); check(await evaluar(`document.getElementById('contrasena').type==='text'&&document.getElementById('contrasena').value==='fixture-local-only'`), 'ojo conserva contraseña')
+  await click('Mostrar contraseña'); check(await evaluar(`document.getElementById('contrasena').type==='text'&&document.getElementById('contrasena').value===${JSON.stringify(claveRegistro)}`), 'ojo conserva contraseña')
   await click('Ocultar contraseña'); await responsive('registro'); await click('Crear cuenta como cliente'); await verTexto('Tu cuenta fue creada.')
   check(!await evaluar(`sessionStorage.getItem('servimap-jwt')`), 'registro no inicia sesión implícitamente')
-  const cliente = { email: 'registro@example.test', password: 'fixture-local-only' }
+  const cliente = { email: 'registro@example.test', password: claveRegistro }
   fase = 'cliente'
   await login(cliente); await ir('/cliente'); await verTexto('Panel del cliente'); await cdp('Page.reload'); await verTexto('Panel del cliente')
   check(await evaluar(`!!sessionStorage.getItem('servimap-jwt')`), 'JWT persiste al recargar')
@@ -199,7 +201,7 @@ try {
   await llenar('telefono', '+54 11 4567-8901'); await llenar('whatsapp', '+54 11 4567-8901'); await llenar('emailContacto', 'contacto@example.test')
   await llenar('latitud', '-34.601234'); await llenar('longitud', '-58.381234'); await llenar('precioMin', '100'); await llenar('precioMax', '200')
   await responsive('perfil'); await click('Guardar cambios'); await verTexto('Perfil actualizado en el servidor.')
-  check(api.perfil.latitud === -34.601234, 'perfil guarda ubicación privada solo en API simulada')
+  check(Math.abs(api.perfil.latitud - (-34.601234)) < 1e-8, 'perfil guarda ubicación privada solo en API simulada')
   await ir('/prestador/oficios'); await llenar('nuevo-oficio', idQA(202)); await click('Agregar oficio'); await click('Guardar oficios'); await verTexto('Oficios guardados en el servidor.')
   check(api.perfil.oficioIds.includes(idQA(202)), 'oficios guardados por ID')
   await ir('/prestador/solicitudes'); await click('Aceptar solicitud', finalizar); await click('Confirmar aceptación', finalizar)
@@ -233,7 +235,7 @@ try {
   await click('Usar mi ubicación'); await verTexto('Ubicación obtenida correctamente.'); await click('Centrar en mi ubicación')
   check(await evaluar(`!!document.querySelector('.mapa-ubicacion')`), 'geolocalización simulada y recentrado, sin usar ubicación personal')
   const mapa = api.responder({ method: 'GET', url: `${API_SIMULADA_ORIGIN}/api/prestadores/mapa` }).body[0]
-  check(mapa.latitud === -34.6 && mapa.longitud === -58.38, 'coordenadas públicas redondeadas, distintas de las privadas')
+  check(Math.abs(mapa.latitud - (-34.6)) < 1e-8 && Math.abs(mapa.longitud - (-58.38)) < 1e-8, 'coordenadas públicas redondeadas, distintas de las privadas')
   await evaluar(`document.querySelector('.mapa-marcador').click()`); await verTexto('Cómo llegar en Google Maps')
   await evaluar(`document.querySelector('.mapa-info a').scrollIntoView({block:'center'})`)
   await hasta(`(()=>{const a=document.querySelector('.mapa-info a'),m=document.querySelector('.mapa-interactivo'),c=document.querySelector('.maplibregl-ctrl-attrib');if(!a||!m||!c)return false;const r=a.getBoundingClientRect(),b=m.getBoundingClientRect(),creditos=c.getBoundingClientRect();return r.top>=b.top&&r.bottom<=creditos.top&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===a})()`, 'indicaciones visibles sin recorte ni superposición')
@@ -252,7 +254,7 @@ try {
     const obtenido = await evaluar(`(async()=>{try{const {apiRequest}=await import('/src/services/apiClient.js');await apiRequest('/api/solicitudes');return 0}catch(e){return e.status}})()`)
     check(obtenido === status, `manejo HTTP ${status} con API simulada`)
   }
-  await ir('/login'); await llenar('email', 'nadie@example.test'); await llenar('contrasena', 'fixture-local-only'); await click('Iniciar sesión'); await verTexto('Email o contraseña incorrectos')
+  await ir('/login'); await llenar('email', 'nadie@example.test'); await llenar('contrasena', claveRegistro); await click('Iniciar sesión'); await verTexto('Email o contraseña incorrectos')
   await responsive('login')
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab' }); await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab' })
   check(await evaluar(`['A','BUTTON','INPUT','SELECT','TEXTAREA','SUMMARY'].includes(document.activeElement.tagName)`), 'navegación básica mediante teclado')

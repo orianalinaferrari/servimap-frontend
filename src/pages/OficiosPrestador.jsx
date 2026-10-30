@@ -19,7 +19,7 @@ export default function OficiosPrestador() {
       catch (fallo) { if (activo) setError(fallo.message) }
       finally { if (activo) setCargando(false) }
     }
-    cargar()
+    void cargar()
     return () => { activo = false }
   }, [revision])
   async function guardar() {

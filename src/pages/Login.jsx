@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import '../styles/Login.css'
 import CampoContrasena from '../components/CampoContrasena'
+import { esEmailValido } from '../utils/email'
 
 function Login() {
   const navigate = useNavigate()
@@ -39,7 +40,7 @@ function Login() {
 
     if (!formulario.email.trim()) {
       nuevosErrores.email = 'El email es obligatorio'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.email)) {
+    } else if (!esEmailValido(formulario.email)) {
       nuevosErrores.email = 'Ingresá un email válido'
     }
 

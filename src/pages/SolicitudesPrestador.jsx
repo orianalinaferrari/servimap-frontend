@@ -137,7 +137,7 @@ function SolicitudesPrestador() {
       }
     }
 
-    cargarInicial()
+    void cargarInicial()
 
     return () => {
       activo = false

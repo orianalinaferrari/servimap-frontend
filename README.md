@@ -1,5 +1,7 @@
 # ServiMap
 
+**Revisión de seguridad local (30/10/2026):** en `feature/sonarqube-seguridad-servimap`, sin commit/push todavía: 484 tests, lint/build correctos, audit npm con 0 vulnerabilidades y cobertura de líneas global 63,04% (93,07% en `src`). Se conservan los scripts QA en la medición global. Sonar requiere un nuevo análisis para certificar los ratings y el Gate de estas correcciones. Ver [diagnóstico, cambios y validación](docs/seguridad-sonarqube.md); los resultados de la entrega original que siguen son históricos respecto de esta revisión.
+
 Frontend de una plataforma de servicios del hogar, desarrollado con **React y Vite** para la materia **Construcción de Software**. Conecta clientes con prestadores mediante un directorio, un mapa y un circuito de solicitudes, calificaciones y administración.
 
 La interfaz web vive en este repositorio. La API Node.js/Express, Prisma y PostgreSQL se mantienen en un [repositorio independiente](https://github.com/valenbalda/servimap-backend).
@@ -96,7 +98,7 @@ Versiones resueltas comprobadas en `package-lock.json` y la instalación con `np
 | npm | `10.9.3` en la terminal inspeccionada | Dependencias; no se fija una versión de npm en el proyecto. |
 | React / React DOM | `19.3.0` | Componentes, estado y renderizado. |
 | React Router DOM | `7.18.4` | Navegación SPA y rutas protegidas. |
-| Vite | `8.3.2` | Desarrollo y compilación. |
+| Vite | `8.3.5` | Desarrollo y compilación; parche de seguridad validado localmente. |
 | Plugin React para Vite | `6.1.2` | Integración de React. |
 | MapLibre GL JS | `6.16.0` | Mapa vectorial y marcadores. |
 | Vitest | `5.0.3` | Pruebas automatizadas. |
@@ -131,7 +133,7 @@ Una modificación solo se confirma después de una respuesta exitosa. Las transi
 
 ```text
 servimap-frontend/
-├── .github/workflows/frontend-tests.yml  # CI de PR hacia develop
+├── .github/workflows/frontend-tests.yml  # CI de PR hacia main/develop, push y Sonar
 ├── public/
 │   ├── fonts/                           # Inter y licencia
 │   ├── illustrations/                   # SVG de la landing
@@ -430,6 +432,7 @@ Ejecutar uno por vez para reducir memoria:
 
 ```powershell
 npm.cmd test -- --maxWorkers=1
+npm.cmd run test:coverage
 npm.cmd run lint
 npm.cmd run build
 git diff --check
@@ -440,7 +443,7 @@ El último requiere `dist` recién compilado y puerto 4173 libre; inicia/detiene
 
 | Control ejecutado el 30/10/2026 | Resultado |
 | --- | --- |
-| Vitest, Node 24.22.2, un worker | **431 aprobadas, 54 archivos**, sin suites omitidas. |
+| Vitest, Node 24.22.2, un worker | **484 aprobadas, 56 archivos**, sin suites omitidas. |
 | ESLint | Correcto. |
 | Build Vite | Correcto; advertencia de chunks de más de 500 kB, especialmente MapLibre. |
 | Smoke del build | **13 rutas SPA y 11 archivos** correctos; worker emitido, sin privados/sourcemaps en `dist`. |
@@ -450,7 +453,7 @@ El último requiere `dist` recién compilado y puerto 4173 libre; inicia/detiene
 
 Vitest bloquea `fetch` no simulado. Los tests `Backend*.test` son contratos interceptados, no ejecución contra PostgreSQL real. jsdom carece de WebGL: algunos tests de fallback imprimen mensajes esperados de mapa aunque sus aserciones pasen.
 
-El workflow [frontend-tests.yml](.github/workflows/frontend-tests.yml) corre instalación, tests, lint y build en PR hacia `develop`, con Node 24. Usa `npm run test` sin límite explícito de workers; localmente se recomienda uno para evitar OOM.
+El workflow [frontend-tests.yml](.github/workflows/frontend-tests.yml) corre instalación sin lifecycle scripts, cobertura con un worker, lint, build, audit y Sonar en secuencia, con Node 24. Cubre PR hacia `main`/`develop`, push a esas ramas y a la rama de seguridad, y ejecución manual. Sonar requiere `SONAR_TOKEN`, análisis desde CI y acceso al proyecto; el scanner se omite para PR de forks. Ver [configuración y límites](docs/seguridad-sonarqube.md).
 
 ## 20. Estrategia de QA y alcance de evidencia
 
@@ -579,7 +582,7 @@ No transferir `node_modules`, `dist`, `.env.local`, perfiles Chrome ni credencia
 
 ## 25. Ramas, commits y Pull Requests
 
-Rama de entrega: **`feature/landing-final-servimap`**, implementación publicada en `396d4f2`, con autoría de `orianalinaferrari` y sin coautores. La integración prevista es un PR hacia `main`; todavía no se creó ese PR ni se hizo el merge. Estas correcciones documentales se publican en la misma rama, sin modificar `main`, `develop` o backend.
+Entrega visual: **`feature/landing-final-servimap`**, implementación publicada en `396d4f2` y documentación en `52f791a`, integradas a `main` mediante PR #30 (`595231f`). La revisión actual está en **`feature/sonarqube-seguridad-servimap`**, desde ese main actualizado, con cambios locales sin commit/push ni PR. No se modifica directamente `main`, `develop` o backend.
 
 Para el trabajo posterior del equipo:
 
@@ -587,11 +590,11 @@ Para el trabajo posterior del equipo:
 - Revisar status/diff antes de agregar archivos; separar documentación, diseño y correcciones cuando sea posible.
 - Incluir archivos nuevos necesarios y revisar secretos/fixtures antes de versionar.
 - Usar mensajes concretos con prefijos como `feat:`, `fix:`, `style:`, `docs:` o `test:`.
-- Para esta entrega, preparar el PR de `feature/landing-final-servimap` hacia `main`. El workflow existente solo se activa para PR hacia `develop`: no asumir que ejecutará validaciones para `main`; conservar la evidencia local y acordar la cobertura de CI antes de integrar.
+- La entrega visual ya se integró a `main` mediante el PR #30 (`595231f`). La revisión de seguridad parte de ese main en `feature/sonarqube-seguridad-servimap`; no tiene commit/push ni PR todavía. El workflow local actualizado cubre PR hacia `main` y `develop`.
 - Explicar problema, resultado final, validaciones y límites; solicitar revisión antes de integrar.
 - Acordar promoción a rama estable; no asumir políticas de protección o aprobación no verificadas.
 
-El respaldo en GitHub ya está publicado; la revisión por PR y la integración a `main` siguen pendientes.
+El respaldo de la entrega visual ya está publicado e integrado a `main`. La revisión de seguridad sigue local y requiere aprobación antes de commit, push o PR.
 
 ## 26. Problemas habituales
 
@@ -626,7 +629,7 @@ El DNI se usa en registro y no es público en directorio. Las coordenadas exacta
 
 La revisión por patrones no detectó claves privadas, credenciales de base ni tokens de proveedor en los archivos examinados o el artefacto. `.env.local` está ignorado y fuera del índice, sin publicar valores. No sustituye analizar todo el historial Git ni una auditoría de seguridad completa.
 
-**Pendiente importante:** tres alertas npm altas en Vite, undici de jsdom y zod de herramientas de lint. `npm audit --omit=dev` no reportó alertas de producción en esta consulta; no certifica ausencia de vulnerabilidades. No se aplicó `npm audit fix` ni se modificó el lockfile; las actualizaciones requieren una corrección separada con regresión.
+**Actualización de seguridad local:** las tres alertas npm altas de la entrega original se trataron actualizando Vite, undici y zod dentro de sus rangos compatibles. Instalación limpia sin lifecycle scripts, 484 tests, lint/build y audit final con **0 vulnerabilidades** verificados. Ver [informe de seguridad](docs/seguridad-sonarqube.md) para versiones, cobertura y límites. No certifica ausencia de vulnerabilidades desconocidas ni sustituye el nuevo análisis de Sonar.
 
 <a id="estado"></a>
 
@@ -635,15 +638,15 @@ La revisión por patrones no detectó claves privadas, credenciales de base ni t
 | Estado | Alcance |
 | --- | --- |
 | Implementado | Módulos públicos/por rol descritos, servicios API y estados reales. |
-| Verificado localmente | 431 tests, lint/build, smoke SPA, 84 controles Chrome simulados y contratos backend. |
+| Verificado localmente | 484 tests, lint/build, smoke SPA, 84 controles Chrome simulados y contratos backend; cobertura global 63,04%. |
 | Verificado contra API publicada | Lecturas públicas, rechazos protegidos y CORS/preflight; sin escrituras reales. |
-| Pendiente | E2E autenticado real, base autorizada, preview/CORS, alertas npm y aceptación de accesibilidad. |
+| Pendiente | E2E autenticado real, base autorizada, preview/CORS, cobertura global >=90%, nuevo análisis Sonar y aceptación de accesibilidad. |
 | Parcial | Búsqueda geográfica, filtros sobre conjuntos limitados y detalle de calificación tras recarga. |
 | Fuera del alcance implementado | Perfil editable de cliente, propuestas/presupuestos, pagos, chat, agenda/fecha preferida, carga de fotos, refresh token y finalización confirmada por cliente. |
 
 - **CRÍTICOS:** ninguno confirmado en el frontend revisado; no se requirieron correcciones funcionales.
-- **IMPORTANTES:** tres alertas altas de desarrollo; validación autenticada/deploy pendientes; alcance geográfico parcial y poslogin a landing en vez de panel/origen.
-- **MENORES:** documentos históricos, nombres administrativos de respaldo, estrellas de texto públicas, detalles de accesibilidad y CI sin workers limitados.
+- **IMPORTANTES:** cobertura global y ratings Sonar pendientes de confirmar tras las correcciones; validación autenticada/deploy pendientes; alcance geográfico parcial y poslogin a landing en vez de panel/origen.
+- **MENORES:** documentos históricos, nombres administrativos de respaldo, estrellas de texto públicas y detalles de accesibilidad. CI ahora usa un worker.
 - **LIMITACIONES CONOCIDAS:** las de la sección siguiente.
 
 Los hallazgos actuales se resumen en esta sección y las limitaciones en la siguiente. Las verificaciones históricas están en [QA de integración](docs/qa-integracion-backend.md) y [validación final](docs/validacion-final.md). Una advertencia documentada no se presenta como corregida.
@@ -658,7 +661,7 @@ Los hallazgos actuales se resumen en esta sección y las limitaciones en la sigu
 6. **Búsqueda limitada:** 50 por consulta, zona/precio locales y sin radio; geolocalizar/recentrar no filtra por cercanía.
 7. **Perfil:** algunos campos guardados no se borran enviando vacío. Sin carga de archivos ni edición de nombre/email de cuenta.
 8. **Dispositivos/accesibilidad:** Chrome a cuatro anchos no certifica todos los navegadores, lectores de pantalla o contenidos.
-9. **Herramientas:** siguen alertas npm y tamaño MapLibre; no se cambiaron dependencias para ocultarlas.
+9. **Herramientas:** persiste el aviso de tamaño MapLibre; las alertas npm conocidas se corrigieron y el audit local final devuelve cero. Sigue pendiente confirmar las métricas Sonar de la nueva rama.
 
 ## 30. Documentación complementaria
 
@@ -666,6 +669,7 @@ Este README describe el estado de la entrega. Los documentos anteriores conserva
 
 | Documento | Contenido |
 | --- | --- |
+| [Seguridad y SonarQube](docs/seguridad-sonarqube.md) | Diagnóstico remoto, correcciones locales, cobertura real y validaciones pendientes. |
 | [Integración backend](docs/integracion-backend.md) | Contratos, adaptaciones y decisiones. |
 | [QA de integración](docs/qa-integracion-backend.md) | Verificaciones previas y checklist real. |
 | [Mapa de prestadores](docs/mapa-prestadores.md) | Proveedor y condiciones cartográficas. |
@@ -673,7 +677,7 @@ Este README describe el estado de la entrega. Los documentos anteriores conserva
 | [Despliegue](docs/despliegue-servimap.md) | Preparación Vercel y coordinación CORS. |
 | [Entrega final](docs/entrega-final.md) | Trazabilidad y aceptación académica anterior. |
 | [Casos de prueba](docs/casos-de-prueba.md) | Casos manuales históricos del prototipo. |
-| [Registro de defectos](docs/registro-de-defectos.md) | Defectos previos; DEF-06 continúa abierto. |
+| [Registro de defectos](docs/registro-de-defectos.md) | Defectos previos y corrección local de DEF-06. |
 | [Release](docs/release-servimap.md) | Historial de validación y ramas anteriores. |
 
 Las demos tienen guías de [cliente](scripts/qa/CLIENTE-DEMO.md) y [prestador](scripts/qa/PRESTADOR-DEMO.md). Capturas/reportes temporales no son assets públicos ni enlaces permanentes; los runners permiten reproducirlos.
@@ -706,4 +710,4 @@ Guion sugerido:
 
 Las demos separadas no intercambian cambios: cada proceso tiene su memoria y reiniciar restaura fixtures. Explicar la transición y usar la vista del siguiente rol sin afirmar que ambas comparten una base de datos.
 
-La implementación está respaldada en GitHub y queda preparada para revisión antes del PR hacia `main`; todavía no es una certificación de aceptación integral o producción.
+La implementación visual está respaldada en GitHub e integrada a `main`. Las correcciones de seguridad/cobertura siguen locales para revisión y aprobación antes de publicarlas; todavía no es una certificación de aceptación integral o producción.

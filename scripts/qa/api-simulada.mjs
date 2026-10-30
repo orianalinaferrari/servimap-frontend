@@ -1,4 +1,5 @@
-﻿// Datos exclusivamente sintéticos. Nunca se envían a una API real.
+import { randomBytes } from 'node:crypto'
+// Datos exclusivamente sintéticos. Nunca se envían a una API real.
 export const idQA = (numero) => `00000000-0000-4000-8000-${String(numero).padStart(12, '0')}`
 export const API_SIMULADA_ORIGIN = 'https://servimap-backend.vercel.app'
 export function politicaDeRed({ url, method }) {
@@ -6,9 +7,9 @@ export function politicaDeRed({ url, method }) {
   return ['GET', 'HEAD'].includes(method) ? 'lectura' : 'bloquear'
 }
 export const CUENTAS_QA = {
-  CLIENTE: { email: 'cliente@example.test', password: 'fixture-local-only' },
-  PRESTADOR: { email: 'prestador@example.test', password: 'fixture-local-only' },
-  ADMINISTRADOR: { email: 'admin@example.test', password: 'fixture-local-only' },
+  CLIENTE: { email: 'cliente@example.test', password: randomBytes(32).toString('hex') },
+  PRESTADOR: { email: 'prestador@example.test', password: randomBytes(32).toString('hex') },
+  ADMINISTRADOR: { email: 'admin@example.test', password: randomBytes(32).toString('hex') },
 }
 const respuesta = (status, body) => ({ status, body })
 const fallo = (status, error) => respuesta(status, { error })

@@ -25,9 +25,9 @@ for (const [ruta, method] of [
   })
   assert.equal(r.status, 204, ruta)
   assert.equal(r.headers.get('access-control-allow-origin'), local, ruta)
-  const permitidos = r.headers.get('access-control-allow-headers')?.toLowerCase().split(/\s*,\s*/)
+  const permitidos = r.headers.get('access-control-allow-headers')?.toLowerCase().split(',').map((valor) => valor.trim())
   assert.ok(permitidos?.includes('authorization') && permitidos.includes('content-type'), ruta)
-  assert.ok(r.headers.get('access-control-allow-methods')?.split(/\s*,\s*/).includes(method), ruta)
+  assert.ok(r.headers.get('access-control-allow-methods')?.split(',').map((valor) => valor.trim()).includes(method), ruta)
   assert.match(r.headers.get('vary') || '', /origin/i)
   resultados.push({ ruta, preflight: method, status: r.status })
 }
