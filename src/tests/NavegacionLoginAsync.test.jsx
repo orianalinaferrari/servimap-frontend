@@ -8,8 +8,8 @@ vi.mock('react-router-dom', async (original) => ({ ...await original(), useNavig
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ login }) }))
 afterEach(() => { cleanup(); vi.resetAllMocks() })
 
-function enviarLogin() {
-  render(<MemoryRouter><Login /></MemoryRouter>)
+function enviarLogin(entrada = '/login') {
+  render(<MemoryRouter initialEntries={[entrada]}><Login /></MemoryRouter>)
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'cliente@example.test' } })
   fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'clave-de-prueba' } })
   fireEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
@@ -21,10 +21,28 @@ describe('Finalización de la navegación tras login', () => {
     let resolver
     navegar.mockReturnValue(new Promise(resolve => { resolver = resolve }))
     enviarLogin()
-    await waitFor(() => expect(navegar).toHaveBeenCalledWith('/'))
+    await waitFor(() => expect(navegar).toHaveBeenCalledWith('/cliente', { replace: true }))
     expect(screen.getByRole('button', { name: 'Ingresando...' }).disabled).toBe(true)
     await act(async () => resolver())
     expect(screen.getByRole('button', { name: 'Iniciar sesión' }).disabled).toBe(false)
+  })
+  it.each([
+    ['PRESTADOR', '/prestador'],
+    ['ADMINISTRADOR', '/admin'],
+  ])('dirige la cuenta %s a su panel y no a la landing', async (rol, panel) => {
+    login.mockResolvedValue({ id: 'qa', rol })
+    navegar.mockResolvedValue()
+    enviarLogin()
+    await waitFor(() => expect(navegar).toHaveBeenCalledWith(panel, { replace: true }))
+  })
+  it('vuelve a la ruta protegida de origen solo si pertenece al rol', async () => {
+    login.mockResolvedValue({ id: 'qa', rol: 'PRESTADOR' })
+    navegar.mockResolvedValue()
+    enviarLogin({ pathname: '/login', state: { from: '/prestador/oficios' } })
+    await waitFor(() => expect(navegar).toHaveBeenCalledWith('/prestador/oficios', { replace: true }))
+    cleanup(); navegar.mockClear()
+    enviarLogin({ pathname: '/login', state: { from: '/admin' } })
+    await waitFor(() => expect(navegar).toHaveBeenCalledWith('/prestador', { replace: true }))
   })
   it('captura el rechazo de navegación sin dejar una promesa no manejada', async () => {
     login.mockResolvedValue({ id: 'qa', rol: 'CLIENTE' })

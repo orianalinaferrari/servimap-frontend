@@ -1,13 +1,15 @@
 
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import '../styles/Login.css'
 import CampoContrasena from '../components/CampoContrasena'
 import { esEmailValido } from '../utils/email'
+import { obtenerDestinoPostLogin } from '../utils/roles'
 
 function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
 
   const [formulario, setFormulario] = useState({
@@ -64,12 +66,15 @@ function Login() {
     setEnviando(true)
 
     try {
-      await login(
+      const usuario = await login(
         formulario.email.trim(),
         formulario.contrasena
       )
 
-      await navigate('/')
+      await navigate(
+        obtenerDestinoPostLogin(usuario?.rol, location.state?.from),
+        { replace: true }
+      )
     } catch (error) {
       setErrorServidor(
         error instanceof Error

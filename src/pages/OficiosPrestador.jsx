@@ -22,6 +22,7 @@ export default function OficiosPrestador() {
     void cargar()
     return () => { activo = false }
   }, [revision])
+  const disponibles = catalogo.filter((item) => !oficios.some((oficio) => oficio.id === item.id))
   async function guardar() {
     if (enviando || cargando) return
     setEnviando(true); setError(''); setMensaje('')
@@ -38,7 +39,7 @@ export default function OficiosPrestador() {
     </section><section className="prestador-bloque-suave"><header className="prestador-seccion-titulo"><span className="prestador-circulo"><IconoPrestador tipo="agregar" /></span><div><h2>Agregar un nuevo oficio</h2><p>Seleccioná un oficio de la lista para agregarlo a tu perfil.</p></div></header>
     <label htmlFor="nuevo-oficio">Seleccionar oficio</label>
     <select id="nuevo-oficio" value={seleccion} onChange={(evento) => setSeleccion(evento.target.value)} disabled={cargando || enviando}>
-      <option value="">Elegí un oficio</option>{catalogo.map((oficio) => <option value={oficio.id} key={oficio.id}>{oficio.nombre}</option>)}
+      <option value="">Elegí un oficio</option>{disponibles.map((oficio) => <option value={oficio.id} key={oficio.id}>{oficio.nombre}</option>)}
     </select>
     <div className="prestador-acciones"><button disabled={cargando || enviando || !seleccion} onClick={() => { if (!oficios.some((oficio) => oficio.id === seleccion)) setOficios((lista) => [...lista, catalogo.find((oficio) => oficio.id === seleccion)]); setSeleccion(''); setMensaje('') }}>Agregar oficio</button>
     <button disabled={cargando || enviando || Boolean(error)} onClick={guardar}>{enviando ? 'Guardando...' : 'Guardar oficios'}</button>

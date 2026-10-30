@@ -1,6 +1,6 @@
 # ServiMap
 
-**Revisión del PR #31 (30/10/2026):** en `feature/sonarqube-seguridad-servimap`: 508 tests, lint/build correctos, audit npm con 0 vulnerabilidades y cobertura fusionada de 77,20% global (93,07% en `src`). La ejecución pull_request #37 del commit `064978e` aprobó CI y el Gate con cobertura nueva 94,1%, ratings A/A/A y hotspots 100%. La estabilización posterior del evento push debe volver a comprobarse en CI. Ver [causas, cambios y evidencia](docs/seguridad-sonarqube.md); las cifras de la entrega original que siguen son históricas respecto de esta revisión.
+**Revisión del PR #31 (30/10/2026):** en `feature/sonarqube-seguridad-servimap`: 508 tests, lint/build correctos, audit npm con 0 vulnerabilidades y cobertura fusionada de 77,20% global (93,07% en `src`). La ejecución pull_request #37 del commit `064978e` aprobó CI y el Gate con cobertura nueva 94,1%, ratings A/A/A y hotspots 100%. Tras la estabilización (`9b61e2f`), las ejecuciones push #38 y pull_request #39 terminaron en éxito. Ver [causas, cambios y evidencia](docs/seguridad-sonarqube.md); las cifras de la entrega original que siguen son históricas respecto de esta revisión.
 
 Frontend de una plataforma de servicios del hogar, desarrollado con **React y Vite** para la materia **Construcción de Software**. Conecta clientes con prestadores mediante un directorio, un mapa y un circuito de solicitudes, calificaciones y administración.
 
@@ -582,7 +582,7 @@ No transferir `node_modules`, `dist`, `.env.local`, perfiles Chrome ni credencia
 
 ## 25. Ramas, commits y Pull Requests
 
-Entrega visual: **`feature/landing-final-servimap`**, implementación publicada en `396d4f2` y documentación en `52f791a`, integradas a `main` mediante PR #30 (`595231f`). La revisión actual está en **`feature/sonarqube-seguridad-servimap`**, desde ese main actualizado, con cambios locales sin commit/push ni PR. No se modifica directamente `main`, `develop` o backend.
+Entrega visual: **`feature/landing-final-servimap`**, implementación publicada en `396d4f2` y documentación en `52f791a`, integradas a `main` mediante PR #30 (`595231f`). La revisión actual está en **`feature/sonarqube-seguridad-servimap`**, desde ese main actualizado, publicada y en revisión mediante el PR #31 hacia `main`. No se modifica directamente `main`, `develop` o backend.
 
 Para el trabajo posterior del equipo:
 
@@ -590,7 +590,7 @@ Para el trabajo posterior del equipo:
 - Revisar status/diff antes de agregar archivos; separar documentación, diseño y correcciones cuando sea posible.
 - Incluir archivos nuevos necesarios y revisar secretos/fixtures antes de versionar.
 - Usar mensajes concretos con prefijos como `feat:`, `fix:`, `style:`, `docs:` o `test:`.
-- La entrega visual ya se integró a `main` mediante el PR #30 (`595231f`). La revisión de seguridad parte de ese main en `feature/sonarqube-seguridad-servimap`; no tiene commit/push ni PR todavía. El workflow local actualizado cubre PR hacia `main` y `develop`.
+- La entrega visual ya se integró a `main` mediante el PR #30 (`595231f`). La revisión de seguridad parte de ese main en `feature/sonarqube-seguridad-servimap`, publicada en el PR #31 (sin merge). El workflow local actualizado cubre PR hacia `main` y `develop`.
 - Explicar problema, resultado final, validaciones y límites; solicitar revisión antes de integrar.
 - Acordar promoción a rama estable; no asumir políticas de protección o aprobación no verificadas.
 
@@ -645,7 +645,7 @@ La revisión por patrones no detectó claves privadas, credenciales de base ni t
 | Fuera del alcance implementado | Perfil editable de cliente, propuestas/presupuestos, pagos, chat, agenda/fecha preferida, carga de fotos, refresh token y finalización confirmada por cliente. |
 
 - **CRÍTICOS:** ninguno confirmado en el frontend revisado; no se requirieron correcciones funcionales.
-- **IMPORTANTES:** cobertura global y ratings Sonar pendientes de confirmar tras las correcciones; validación autenticada/deploy pendientes; alcance geográfico parcial y poslogin a landing en vez de panel/origen.
+- **IMPORTANTES:** cobertura global y ratings Sonar pendientes de confirmar tras las correcciones; validación autenticada/deploy pendientes; alcance geográfico parcial. Corregido: el login ya no vuelve a la landing; cada rol entra a su panel (`/cliente`, `/prestador`, `/admin`) o a la ruta protegida de origen solo si pertenece a ese rol.
 - **MENORES:** documentos históricos, nombres administrativos de respaldo, estrellas de texto públicas y detalles de accesibilidad. CI ahora usa un worker.
 - **LIMITACIONES CONOCIDAS:** las de la sección siguiente.
 
@@ -710,4 +710,4 @@ Guion sugerido:
 
 Las demos separadas no intercambian cambios: cada proceso tiene su memoria y reiniciar restaura fixtures. Explicar la transición y usar la vista del siguiente rol sin afirmar que ambas comparten una base de datos.
 
-La implementación visual está respaldada en GitHub e integrada a `main`. Las correcciones de seguridad/cobertura siguen locales para revisión y aprobación antes de publicarlas; todavía no es una certificación de aceptación integral o producción.
+La implementación visual está respaldada en GitHub e integrada a `main`. Las correcciones de seguridad/cobertura están publicadas en el PR #31 para revisión y aprobación antes del merge; «Mis oficios» ya no ofrece oficios asociados al perfil. Todavía no es una certificación de aceptación integral o producción.

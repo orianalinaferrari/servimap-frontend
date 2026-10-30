@@ -15,6 +15,23 @@ export function normalizarRol(rol) {
     : null
 }
 
+const PANELES_POR_ROL = Object.freeze({
+  [ROLES.CLIENTE]: '/cliente',
+  [ROLES.PRESTADOR]: '/prestador',
+  [ROLES.ADMINISTRADOR]: '/admin',
+})
+
+export function obtenerPanelPorRol(rol) {
+  return PANELES_POR_ROL[normalizarRol(rol)] ?? '/'
+}
+
+// Solo se respeta el origen si pertenece al panel del propio rol.
+export function obtenerDestinoPostLogin(rol, origen) {
+  const panel = obtenerPanelPorRol(rol)
+  if (panel === '/' || typeof origen !== 'string') return panel
+  return origen === panel || origen.startsWith(`${panel}/`) ? origen : panel
+}
+
 export function tieneRol(usuario, rolesPermitidos) {
   if (!usuario || !Array.isArray(rolesPermitidos)) {
     return false
