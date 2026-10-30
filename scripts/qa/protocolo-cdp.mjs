@@ -14,7 +14,7 @@ export function argumentosGraficosQa(software) {
   return software ? ['--use-gl=angle', '--use-angle=swiftshader'] : []
 }
 
-export async function esperarPuertoChrome(leer, { timeoutMs = 10000, intervaloMs = 50 } = {}) {
+export async function esperarPuertoChrome(leer, { timeoutMs = 10000, intervaloMs = 50, diagnostico = () => '' } = {}) {
   const limite = Date.now() + timeoutMs
   let ultimoError
   do {
@@ -28,5 +28,22 @@ export async function esperarPuertoChrome(leer, { timeoutMs = 10000, intervaloMs
     }
     await new Promise(resolve => setTimeout(resolve, intervaloMs))
   } while (Date.now() < limite)
-  throw new Error('Chrome no expuso un puerto CDP utilizable.', { cause: ultimoError })
+  const detalle = diagnostico().trim()
+  throw new Error(`Chrome no expuso un puerto CDP utilizable.${detalle ? ` Stderr de Chrome: ${detalle}` : ''}`, { cause: ultimoError })
+}
+
+// /json/list puede responder antes de registrar la pestaña inicial en hosts lentos.
+export async function esperarPaginaCdp(listar, { timeoutMs = 10000, intervaloMs = 100 } = {}) {
+  const limite = Date.now() + timeoutMs
+  let ultimoError
+  do {
+    try {
+      const pagina = (await listar()).find((t) => t.type === 'page' && t.url === 'about:blank' && t.webSocketDebuggerUrl)
+      if (pagina) return pagina
+    } catch (error) {
+      ultimoError = error
+    }
+    await new Promise(resolve => setTimeout(resolve, intervaloMs))
+  } while (Date.now() < limite)
+  throw new Error('Chrome no expuso una pestaña CDP inicial.', { cause: ultimoError })
 }

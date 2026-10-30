@@ -7,7 +7,10 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { crearApiSimulada, CUENTAS_QA, idQA, politicaDeRed, API_SIMULADA_ORIGIN } from './api-simulada.mjs'
-import { esIntercepcionCancelada, esperarPuertoChrome, campoQaListo, argumentosGraficosQa } from './protocolo-cdp.mjs'
+import { esIntercepcionCancelada, esperarPuertoChrome, esperarPaginaCdp, campoQaListo, argumentosGraficosQa } from './protocolo-cdp.mjs'
+
+// El primer arranque de Chrome con SwANGLE en runners Linux compartidos puede superar 10 s.
+const TIMEOUT_ARRANQUE_CDP_MS = 30000
 
 const base = process.env.SERVIMAP_QA_BASE_URL || 'http://localhost:5173'
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Solo se permite un frontend local')
@@ -103,9 +106,8 @@ try {
       throw new Error(`Chrome terminó antes de exponer CDP (exit ${proceso.exitCode}, signal ${proceso.signalCode}): ${diagnosticoChrome}`)
     }
     return readFileSync(activo, 'utf8')
-  })
-  const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
-  const tab = tabs.find((t) => t.type === 'page' && t.url === 'about:blank')
+  }, { timeoutMs: TIMEOUT_ARRANQUE_CDP_MS, diagnostico: () => diagnosticoChrome })
+  const tab = await esperarPaginaCdp(async () => (await fetch(`http://127.0.0.1:${port}/json/list`)).json(), { timeoutMs: TIMEOUT_ARRANQUE_CDP_MS })
   ws = new WebSocket(tab.webSocketDebuggerUrl); await new Promise((r, j) => { ws.onopen = r; ws.onerror = j })
   ws.onmessage = ({ data }) => {
     const m = JSON.parse(data)

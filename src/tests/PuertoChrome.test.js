@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { esperarPuertoChrome } from '../../scripts/qa/protocolo-cdp.mjs'
+import { esperarPaginaCdp, esperarPuertoChrome } from '../../scripts/qa/protocolo-cdp.mjs'
 
 const completo = '43210\n/devtools/browser/qa-local\n'
 describe('Handshake CDP sin carrera entre existencia y lectura', () => {
@@ -26,5 +26,22 @@ describe('Handshake CDP sin carrera entre existencia y lectura', () => {
   it('termina con diagnóstico y causa si el bloqueo no se resuelve', async () => {
     const error = Object.assign(new Error('Bloqueado'), { code: 'EBUSY' })
     await expect(esperarPuertoChrome(() => { throw error }, { timeoutMs: 0, intervaloMs: 0 })).rejects.toMatchObject({ message: 'Chrome no expuso un puerto CDP utilizable.', cause: error })
+  })
+  it('incluye el stderr de Chrome en el fallo por tiempo agotado', async () => {
+    await expect(esperarPuertoChrome(() => '', { timeoutMs: 0, intervaloMs: 0, diagnostico: () => ' Missing X server \n' }))
+      .rejects.toThrow('Chrome no expuso un puerto CDP utilizable. Stderr de Chrome: Missing X server')
+  })
+})
+
+describe('Pestaña CDP inicial', () => {
+  const pagina = { type: 'page', url: 'about:blank', webSocketDebuggerUrl: 'ws://127.0.0.1:1/devtools/page/qa' }
+  it('reintenta hasta que /json/list registra la pestaña y tolera respuestas transitorias', async () => {
+    const respuestas = [() => { throw new Error('ECONNRESET') }, () => [], () => [{ ...pagina, webSocketDebuggerUrl: undefined }], () => [{ type: 'service_worker', url: 'about:blank' }, pagina]]
+    await expect(esperarPaginaCdp(async () => respuestas.shift()(), { intervaloMs: 0 })).resolves.toBe(pagina)
+    expect(respuestas).toHaveLength(0)
+  })
+  it('falla con causa si la pestaña nunca aparece', async () => {
+    const error = new Error('ECONNREFUSED')
+    await expect(esperarPaginaCdp(async () => { throw error }, { timeoutMs: 0, intervaloMs: 0 })).rejects.toMatchObject({ message: 'Chrome no expuso una pestaña CDP inicial.', cause: error })
   })
 })
