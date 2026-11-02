@@ -15,12 +15,14 @@ import OficiosPrestador from '../pages/OficiosPrestador'
 import PerfilCliente from '../pages/PerfilCliente'
 import CompletarPerfilPrestador from '../pages/CompletarPerfilPrestador'
 import DirectorioPrestadores from '../components/DirectorioPrestadores'
+import PreguntasFrecuentes from '../pages/PreguntasFrecuentes'
 import '../styles/DirectorioPrestadores.css'
 
 function AppRoutes({ panelAdministracion }) {
   return (
     <Routes>
       <Route path="/" element={null} />
+      <Route path="/ayuda" element={<PreguntasFrecuentes />} />
       <Route path="/prestadores" element={<main className="inicio directorio-pagina"><div className="inicio-presentacion"><h1>Encontrá prestadores de servicios</h1><p>Buscá profesionales disponibles en ServiMap.</p></div><DirectorioPrestadores /></main>} />
       <Route path="/registro" element={<Registro />} />
       <Route path="/login" element={<Login />} />

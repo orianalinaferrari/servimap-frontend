@@ -33,6 +33,7 @@ export default function LandingEntrada() {
       <nav aria-label="Navegación principal">
         <button ref={abrirExplicacion} type="button" onClick={() => setExplicando(true)}>Cómo funciona</button>
         <Link to="/prestadores">Explorar servicios</Link>
+        <Link to="/ayuda">Ayuda</Link>
       </nav>
     </header>
     <div className="landing-presentacion">
