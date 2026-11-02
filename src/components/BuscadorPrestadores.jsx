@@ -26,6 +26,7 @@ function IconoDirectorio({ tipo }) {
 export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogoOficios, marcadoresPublicos }) {
   const [termino, setTermino] = useState('')
   const [filtros, setFiltros] = useState({ ...FILTROS_INICIALES })
+  const [ubicacionReferencia, setUbicacionReferencia] = useState(null)
   const [prestadorSeleccionadoId, setPrestadorSeleccionadoId] = useState(null)
   const [remotos, setRemotos] = useState(null)
   const [errorRemoto, setErrorRemoto] = useState('')
@@ -193,6 +194,8 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
       <MapaPrestadores
         prestadores={marcadoresVisibles}
         onSeleccionar={setPrestadorSeleccionadoId}
+        ubicacionReferencia={ubicacionReferencia}
+        onCambiarUbicacionReferencia={setUbicacionReferencia}
       />
 
       <section className="directorio-resultados" ref={resultadosRef} aria-labelledby="directorio-resultados-titulo">
