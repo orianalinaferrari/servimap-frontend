@@ -13,7 +13,7 @@ export function filtrarPrestadores(prestadores, termino) {
   }
   return prestadores.filter((prestador) =>
     normalizar(prestador.nombre).includes(terminoLimpio) ||
-    normalizar(prestador.zonaCobertura).includes(terminoLimpio) ||
+    normalizar(prestador.zonaCobertura ?? '').includes(terminoLimpio) ||
     prestador.oficios.some((oficio) => normalizar(oficio).includes(terminoLimpio))
   )
 }

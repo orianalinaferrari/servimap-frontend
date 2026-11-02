@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { IconoPrestador } from './IconoPrestador'
 import { obtenerIniciales } from '../../utils/perfilUsuario'
+import { FotoPrestador } from './FotoPrestador'
 
 export function VistaPerfilPrestador({ perfil, onEditar }) {
   const iniciales = obtenerIniciales(perfil.nombre)
@@ -9,7 +10,7 @@ export function VistaPerfilPrestador({ perfil, onEditar }) {
   return <>
     <header className="prestador-titulo"><div><h1>Mi perfil</h1><p>Gestioná tu información personal y profesional. Mantené tus datos actualizados para que los clientes puedan contactarte.</p></div><Link to="/prestador">← Volver al panel</Link></header>
     <section className="prestador-identidad">
-      <span className="prestador-avatar" aria-hidden="true">{iniciales || <IconoPrestador tipo="usuario" />}</span>
+      <span className="prestador-avatar" aria-hidden="true"><FotoPrestador key={`${perfil.id}:${perfil.fotoPerfil}`} prestador={perfil} respaldo={iniciales || <IconoPrestador tipo="usuario" />} /></span>
       <div><p className="prestador-etiqueta">PRESTADOR</p><h2>{perfil.nombre}</h2><p className="prestador-email"><IconoPrestador tipo="email" />{perfil.email}</p><p>{perfil.descripcionProfesional || 'Sin descripción profesional'}</p></div>
       <button onClick={onEditar}><IconoPrestador tipo="editar" />Editar perfil</button>
     </section>

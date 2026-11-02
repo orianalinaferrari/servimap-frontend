@@ -1,6 +1,9 @@
 ﻿import { useState } from 'react'
 import { ReputacionPrestador } from './ReputacionPrestador'
 import { FormularioSolicitud } from './FormularioSolicitud'
+import { FotoPrestador } from './prestador/FotoPrestador'
+import { obtenerIniciales } from '../utils/perfilUsuario'
+import { IconoPrestador } from './prestador/IconoPrestador'
 
 export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
   const [mostrandoSolicitud, setMostrandoSolicitud] = useState(false)
@@ -20,7 +23,7 @@ export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
         Volver
       </button>
 
-      <h2>{prestador.nombre}</h2>
+      <h2><span className="detalle-avatar" aria-hidden="true"><FotoPrestador key={`${prestador.id}:${prestador.fotoPerfil}`} prestador={prestador} respaldo={obtenerIniciales(prestador.nombre) || <IconoPrestador tipo="usuario" />} /></span>{prestador.nombre}</h2>
       <p>{prestador.descripcionProfesional}</p>
 
       <div className="detalle-datos">

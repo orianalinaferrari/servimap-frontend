@@ -3,6 +3,7 @@ import { listarPrestadores } from '../services/prestadoresService'
 import FichaPrestadorRemota from './FichaPrestadorRemota'
 import { MapaPrestadores } from './mapa/MapaPrestadores'
 import { DetallePrestador } from './DetallePrestador'
+import { FotoPrestador } from './prestador/FotoPrestador'
 import {
   FILTROS_INICIALES,
   aplicarFiltrosPrestadores,
@@ -202,7 +203,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
         <ul className="lista-prestadores">
           {resultados.map((prestador) => (
             <li key={prestador.id} className="tarjeta-prestador">
-              <span className="directorio-avatar" aria-hidden="true"><IconoDirectorio tipo="oficio" /></span>
+              <span className="directorio-avatar" aria-hidden="true"><FotoPrestador key={`${prestador.id}:${prestador.fotoPerfil}`} prestador={prestador} respaldo={<IconoDirectorio tipo="oficio" />} /></span>
               <div className="directorio-datos">
               <h3>
                 <button
