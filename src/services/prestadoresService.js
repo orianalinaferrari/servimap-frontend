@@ -1,5 +1,9 @@
 ﻿import { apiRequest } from './apiClient'
 
+import { obtenerToken } from './sesionToken'
+
+export const EVENTO_PERFIL_PRESTADOR_ACTUALIZADO = 'servimap:perfil-prestador-actualizado'
+
 export const listarOficios = () => apiRequest('/api/oficios', { autenticar: false })
 export const listarTodosLosOficios = () => apiRequest('/api/oficios/todos')
 export const crearOficioRemoto = (datos) => apiRequest('/api/oficios', { method: 'POST', json: datos })
@@ -22,7 +26,14 @@ export const listarPrestadores = async (parametros = {}) => (await apiRequest('/
 export const obtenerPrestador = async (id) => adaptarPrestador(await apiRequest(`/api/prestadores/${encodeURIComponent(id)}`, { autenticar: false }))
 export const listarMarcadores = async (parametros = {}) => (await apiRequest('/api/prestadores/mapa', { autenticar: false, parametros })).map((dato) => ({ ...dato, oficios: dato.oficioPrincipal ? [dato.oficioPrincipal] : [] }))
 export const obtenerMiPerfil = () => apiRequest('/api/prestadores/me', { cache: 'no-store' })
-export const actualizarMiPerfil = (datos) => apiRequest('/api/prestadores/me', { method: 'PUT', json: datos })
+export async function actualizarMiPerfil(datos) {
+  const token = obtenerToken()
+  const perfil = await apiRequest('/api/prestadores/me', { method: 'PUT', json: datos })
+  if (token && obtenerToken() === token && perfil?.id) {
+    window.dispatchEvent(new CustomEvent(EVENTO_PERFIL_PRESTADOR_ACTUALIZADO, { detail: perfil }))
+  }
+  return perfil
+}
 export async function actualizarMisOficios(oficioIds) {
   const ids = new Set(oficioIds)
   const coincide = (perfil) => Array.isArray(perfil?.oficios) &&

@@ -1,21 +1,18 @@
 import { useState } from 'react'
-import { SelectorFotoPrestador } from './SelectorFotoPrestador'
 
 export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titulo = 'Editar mi perfil', textoCancelar = 'Cancelar' }) {
   const [datos, setDatos] = useState({ ...perfil })
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
-  const [archivoFoto, setArchivoFoto] = useState(null)
   const campos = [
     ['zonaCobertura', 'Zona de cobertura', 'text'], ['descripcionProfesional', 'Descripción profesional', 'textarea'],
-    ['telefono', 'Teléfono', 'tel'], ['whatsapp', 'WhatsApp', 'tel'], ['emailContacto', 'Email de contacto', 'email'],
+    ['telefono', 'Teléfono', 'tel'], ['whatsapp', 'WhatsApp', 'tel'], ['emailContacto', 'Email de contacto', 'email'], ['fotoPerfil', 'URL de foto de perfil', 'text'],
     ['precioMin', 'Precio mínimo', 'number'], ['precioMax', 'Precio máximo', 'number'],
     ['latitud', 'Latitud privada', 'number'], ['longitud', 'Longitud privada', 'number'],
   ]
   async function enviar(evento) {
     evento.preventDefault()
     if (enviando) return
-    if (archivoFoto) { setError('La API todavía no permite subir fotos. Quitá la selección para guardar los demás datos.'); return }
     setError('')
     const payload = {}
     for (const [name, label, type] of campos) {
@@ -29,6 +26,13 @@ export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titul
         payload[name] = numero
       } else {
         const texto = String(valor).trim()
+        if (name === 'fotoPerfil' && texto) {
+          let url
+          try { url = new URL(texto) } catch { /* Se informa el formato inválido debajo. */ }
+          if (!/^https?:\/\//i.test(texto) || !url || !['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
+            setError('La foto de perfil debe ser una URL pública HTTP o HTTPS, sin credenciales.'); return
+          }
+        }
         // Estos campos son opcionales, pero el backend rechaza su valor vacío
         // si aparecen en el PUT. No convertir un null inicial en una escritura inválida.
         if (['descripcionProfesional', 'telefono', 'whatsapp', 'emailContacto'].includes(name) && !texto) {
@@ -54,13 +58,13 @@ export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titul
     {titulo && <h1>{titulo}</h1>}
     <p>Nombre y email de la cuenta: {perfil.nombre} · {perfil.email}</p>
     <p>Las coordenadas exactas son privadas. En el mapa público se muestran redondeadas. Los campos numéricos vacíos conservan su valor anterior.</p>
-    {[['Datos profesionales',campos.slice(0,2)],['Información de contacto',campos.slice(2,5)],['Precios y ubicación',campos.slice(5)]].map(([titulo,grupo]) => <fieldset className="prestador-tarjeta" key={titulo}><legend>{titulo}</legend><div className="prestador-campos">{grupo.map(([name, label, type]) => {
+    {[['Datos profesionales',campos.slice(0,2)],['Información de contacto',campos.slice(2,6)],['Precios y ubicación',campos.slice(6)]].map(([titulo,grupo]) => <fieldset className="prestador-tarjeta" key={titulo}><legend>{titulo}</legend><div className="prestador-campos">{grupo.map(([name, label, type]) => {
       const Campo = type === 'textarea' ? 'textarea' : 'input'
-      return <div key={name}><label htmlFor={name}>{label}</label><Campo id={name} type={type === 'textarea' ? undefined : type} step={type === 'number' ? 'any' : undefined} value={datos[name] ?? ''} onChange={(evento) => setDatos((previos) => ({ ...previos, [name]: evento.target.value }))} disabled={enviando} /></div>
-    })}{titulo === 'Información de contacto' && <SelectorFotoPrestador perfil={perfil} archivo={archivoFoto} onSeleccionar={setArchivoFoto} disabled={enviando} />}</div></fieldset>)}
+      return <div key={name}><label htmlFor={name}>{label}</label><Campo id={name} type={type === 'textarea' ? undefined : type} step={type === 'number' ? 'any' : undefined} value={datos[name] ?? ''} onChange={(evento) => setDatos((previos) => ({ ...previos, [name]: evento.target.value }))} disabled={enviando} aria-describedby={name === 'fotoPerfil' ? 'foto-perfil-ayuda' : undefined} />{name === 'fotoPerfil' && <p id="foto-perfil-ayuda">Pegá el enlace público de una imagen para usarla como foto de perfil</p>}</div>
+    })}</div></fieldset>)}
     <label><input type="checkbox" checked={Boolean(datos.disponible)} onChange={(evento) => setDatos((previos) => ({ ...previos, disponible: evento.target.checked }))} disabled={enviando} /> Disponible para recibir solicitudes</label>
     {error && <p role="alert">{error}</p>}
-    <div className="prestador-acciones"><button type="submit" disabled={enviando || Boolean(archivoFoto)}>{enviando ? 'Guardando...' : 'Guardar cambios'}</button>
+    <div className="prestador-acciones"><button type="submit" disabled={enviando}>{enviando ? 'Guardando...' : 'Guardar cambios'}</button>
     <button type="button" onClick={onCancelar} disabled={enviando}>{textoCancelar}</button></div>
   </form>
 }

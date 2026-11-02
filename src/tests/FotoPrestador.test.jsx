@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import '@testing-library/jest-dom/vitest'
 import FichaPrestadorRemota from '../components/FichaPrestadorRemota'
@@ -68,10 +68,76 @@ it('conserva fotoPerfil al adaptar listado y usa el ícono de respaldo en sus ta
 it('conserva la foto persistida al guardar otros datos sin enviar URLs temporales', async () => {
   const { container } = render(<MemoryRouter><PerfilPrestador /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: 'Editar perfil' }))
-  expect(screen.queryByLabelText('URL de foto de perfil')).toBeNull()
+  expect(screen.getByLabelText('URL de foto de perfil')).toHaveValue(foto)
+  expect(screen.getByText('Pegá el enlace público de una imagen para usarla como foto de perfil')).toBeInTheDocument()
+  expect(container.querySelector('input[type="file"]')).toBeNull()
   fireEvent.change(screen.getByLabelText('Descripción profesional'), { target: { value: 'Descripción actualizada' } })
   fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
   await screen.findByText('Perfil actualizado en el servidor.')
   expect(container.querySelector('img')).toHaveAttribute('src', foto)
-  expect(JSON.parse(http.mock.calls.find(([, config]) => config.method === 'PUT')[1].body)).not.toHaveProperty('fotoPerfil')
+  expect(JSON.parse(http.mock.calls.find(([, config]) => config.method === 'PUT')[1].body).fotoPerfil).toBe(foto)
+})
+
+it.each(['https://imagenes.example.test/nueva.webp', 'http://imagenes.example.test/nueva.png', ''])('guarda la URL %j y la recupera al volver a abrir el perfil', async (url) => {
+  const vista = render(<MemoryRouter><PerfilPrestador /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: 'Editar perfil' }))
+  fireEvent.change(screen.getByLabelText('URL de foto de perfil'), { target: { value: url ? `  ${url}  ` : '' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+  await screen.findByText('Perfil actualizado en el servidor.')
+  expect(JSON.parse(http.mock.calls.find(([, config]) => config.method === 'PUT')[1].body).fotoPerfil).toBe(url)
+  vista.unmount()
+  const nuevaVista = render(<MemoryRouter><PerfilPrestador /></MemoryRouter>)
+  await screen.findByRole('heading', { name: perfil.nombre })
+  if (url) expect(nuevaVista.container.querySelector('img')).toHaveAttribute('src', url)
+  else {
+    expect(nuevaVista.container.querySelector('img')).toBeNull()
+    expect(nuevaVista.container.querySelector('.prestador-avatar')).toHaveTextContent('NP')
+  }
+  nuevaVista.unmount()
+  const lista = await listarPrestadores()
+  expect(lista[0].fotoPerfil).toBe(url)
+  const tarjetas = render(<BuscadorPrestadores prestadores={lista} />)
+  if (url) expect(tarjetas.container.querySelector('img')).toHaveAttribute('src', url)
+  else expect(tarjetas.container.querySelector('.directorio-avatar svg')).not.toBeNull()
+  tarjetas.unmount()
+  const ficha = render(<MemoryRouter><FichaPrestadorRemota id="p1" onVolver={() => {}} /></MemoryRouter>)
+  await screen.findByRole('heading', { name: perfil.nombre })
+  if (url) expect(ficha.container.querySelector('img')).toHaveAttribute('src', url)
+  else expect(ficha.container.querySelector('.detalle-avatar')).toHaveTextContent('NP')
+})
+
+it('espera la confirmación del PUT antes de anunciar éxito y bloquea el formulario mientras guarda', async () => {
+  render(<MemoryRouter><PerfilPrestador /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: 'Editar perfil' }))
+  const nueva = 'https://imagenes.example.test/nueva.jpg'
+  fireEvent.change(screen.getByLabelText('URL de foto de perfil'), { target: { value: nueva } })
+  let confirmar
+  http.mockImplementationOnce(() => new Promise((resolve) => { confirmar = resolve }))
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+  expect(screen.getByRole('button', { name: 'Guardando...' })).toBeDisabled()
+  expect(screen.getByLabelText('URL de foto de perfil')).toBeDisabled()
+  expect(screen.queryByText('Perfil actualizado en el servidor.')).toBeNull()
+  await act(async () => { confirmar(respuesta({ ...perfil, fotoPerfil: nueva })) })
+  expect(screen.getByText('Perfil actualizado en el servidor.')).toBeInTheDocument()
+})
+
+it.each(['foto.jpg', '/uploads/foto.jpg', '//imagenes.example.test/foto.jpg', 'https://', 'https:foto.jpg', 'ftp://imagenes.example.test/foto.jpg', 'data:image/png;base64,AAAA', 'blob:https://example.test/id', 'javascript:alert(1)', 'https://usuario:clave@imagenes.example.test/foto.jpg'])('rechaza %j sin enviar el perfil', async (url) => {
+  render(<MemoryRouter><PerfilPrestador /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: 'Editar perfil' }))
+  fireEvent.change(screen.getByLabelText('URL de foto de perfil'), { target: { value: url } })
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('URL pública HTTP o HTTPS')
+  expect(http.mock.calls.some(([, config]) => config.method === 'PUT')).toBe(false)
+  expect(screen.queryByText('Perfil actualizado en el servidor.')).toBeNull()
+})
+
+it.each([400, 401, 500])('conserva el formulario y no confirma una URL rechazada con HTTP %s', async (status) => {
+  render(<MemoryRouter><PerfilPrestador /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: 'Editar perfil' }))
+  fireEvent.change(screen.getByLabelText('URL de foto de perfil'), { target: { value: 'https://imagenes.example.test/otra.jpg' } })
+  http.mockResolvedValueOnce(respuesta({ error: 'Foto rechazada' }, status))
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Foto rechazada')
+  expect(screen.queryByText('Perfil actualizado en el servidor.')).toBeNull()
+  expect(screen.getByLabelText('URL de foto de perfil')).toHaveValue('https://imagenes.example.test/otra.jpg')
 })
