@@ -7,6 +7,10 @@ import AyudaBreve from '../components/AyudaBreve'
 import { useAuth } from '../context/useAuth'
 
 vi.mock('../context/useAuth', () => ({ useAuth: vi.fn() }))
+vi.mock('../services/solicitudesPrestadorService', async (importOriginal) => ({
+  ...await importOriginal(),
+  obtenerSolicitudesPrestador: vi.fn(async () => []),
+}))
 afterEach(cleanup)
 
 function abrir(ruta = '/ayuda', rol = null) {
@@ -34,6 +38,21 @@ describe('Preguntas frecuentes', () => {
     expect(screen.getByRole('heading', { name: /Lo que necesitás/ })).toBeInTheDocument()
   })
 
+  it.each([
+    ['/cliente', 'CLIENTE', 'Panel del cliente', 'Mi panel de cliente'],
+    ['/prestador', 'PRESTADOR', 'Panel del prestador', 'Mi panel de prestador'],
+  ])('permite consultar la ayuda desde %s y regresar al panel conservando la sesión', async (ruta, rol, titulo, enlacePanel) => {
+    await act(async () => abrir(ruta, rol))
+    expect(screen.getByRole('heading', { name: titulo })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('link', { name: 'Ayuda' }))
+    expect(screen.getByRole('main')).toHaveAccessibleName('Preguntas frecuentes')
+    expect(screen.getByRole('link', { name: enlacePanel })).toHaveAttribute('href', ruta)
+    await act(async () => fireEvent.click(screen.getByRole('link', { name: enlacePanel })))
+    expect(screen.getByRole('heading', { name: titulo })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('despliega y cierra cada una de las diez preguntas sin abrir las demás', () => {
     const { container } = abrir()
     const preguntas = [...container.querySelectorAll('details')]
@@ -59,6 +78,28 @@ describe('Preguntas frecuentes', () => {
       const destino = document.querySelector(enlace.getAttribute('href'))
       expect(destino).toHaveAccessibleName(enlace.textContent)
     }
+  })
+
+  it.each([
+    ['pagos', /no cobra ni procesa pagos/],
+    ['inicio-sesion', /no ofrece recuperación de contraseña/],
+    ['buscar', /El filtro de precio compara tu máximo con el precio mínimo/],
+    ['cancelar', /Solo podés cancelar solicitudes propias en estado Pendiente o Aceptada/],
+    ['calificar', /Solo se permite una calificación por solicitud/],
+    ['finalizado-sin-realizar', /no tiene un sistema de reclamos o disputas/],
+    ['responder', /Solo podés responder solicitudes dirigidas a vos/],
+    ['finalizar', /Finalizar un trabajo no registra ni confirma un pago/],
+    ['perfil', /El nombre y el email de la cuenta/],
+    ['oficios', /agregar o quitar en pantalla no guarda los cambios por sí solo/],
+  ])('presenta la respuesta de %s solo al abrir su pregunta', (id, texto) => {
+    abrir()
+    const pregunta = document.getElementById(`faq-${id}`)
+    const respuesta = within(pregunta).getByText(texto)
+    expect(respuesta).not.toBeVisible()
+    fireEvent.click(pregunta.querySelector('summary'))
+    expect(respuesta).toBeVisible()
+    fireEvent.click(pregunta.querySelector('summary'))
+    expect(respuesta).not.toBeVisible()
   })
 
   it('mantiene visibles las limitaciones reales y enlaza los recorridos existentes', () => {
@@ -125,5 +166,43 @@ describe('Ayuda breve accesible', () => {
     act(() => boton.focus())
     fireEvent.mouseLeave(boton.parentElement)
     expect(screen.getByRole('tooltip')).toBeVisible()
+  })
+
+  it('no oculta la explicación con otras teclas y permite reabrirla después de Escape', () => {
+    const boton = montar()
+    act(() => boton.focus())
+    for (const key of ['Enter', ' ', 'ArrowDown']) {
+      fireEvent.keyDown(boton, { key })
+      expect(screen.getByRole('tooltip')).toBeVisible()
+    }
+    fireEvent.keyDown(boton, { key: 'Escape' })
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    fireEvent.click(boton)
+    expect(screen.getByRole('tooltip')).toBeVisible()
+    expect(boton).toHaveAccessibleDescription('No es un presupuesto confirmado.')
+  })
+
+  it('retira la descripción cuando el foco sale de la página', () => {
+    const boton = montar()
+    act(() => boton.focus())
+    act(() => boton.blur())
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    expect(boton).not.toHaveAttribute('aria-describedby')
+  })
+
+  it('asocia cada tooltip con su propio control y oculta el anterior al cambiar el foco', () => {
+    render(<>
+      <AyudaBreve etiqueta="Precio de referencia">El precio se acuerda entre las partes.</AyudaBreve>
+      <AyudaBreve etiqueta="Ubicación aproximada">No es el domicilio exacto.</AyudaBreve>
+    </>)
+    const precio = screen.getByRole('button', { name: 'Ayuda sobre precio de referencia' })
+    const ubicacion = screen.getByRole('button', { name: 'Ayuda sobre ubicación aproximada' })
+    act(() => precio.focus())
+    const idPrecio = precio.getAttribute('aria-describedby')
+    act(() => ubicacion.focus())
+    expect(precio).not.toHaveAttribute('aria-describedby')
+    expect(ubicacion).toHaveAccessibleDescription('No es el domicilio exacto.')
+    expect(ubicacion.getAttribute('aria-describedby')).not.toBe(idPrecio)
+    expect(screen.getAllByRole('tooltip')).toHaveLength(1)
   })
 })

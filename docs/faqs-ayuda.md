@@ -51,3 +51,39 @@ No se encontró Node 24 en PATH ni en las ubicaciones habituales de nvm, fnm, Vo
 - `git diff --check`.
 
 El runner de navegador bloquea peticiones externas y escrituras. Las capturas y el reporte se guardan en una carpeta temporal `servimap-qa-ayuda-*`, fuera del repositorio. No se publica ningún despliegue.
+
+## Corrección de cobertura del PR #34
+
+El análisis remoto del commit `c4a96cf` reportó 13,5 % de cobertura nueva (mínimo 80 %). Las métricas públicas de SonarCloud permiten identificar la causa:
+
+| Fuente nueva | Líneas nuevas a cubrir / sin cubrir | Condiciones nuevas / sin cubrir | Cobertura Sonar del archivo |
+| --- | --- | --- | --- |
+| `src/pages/PreguntasFrecuentes.jsx` | 5 / 0 | 0 / 0 | 100 % |
+| `src/components/AyudaBreve.jsx` | 11 / 0 | 10 / 2 | 90,5 % |
+| `scripts/qa/faqs-ayuda.mjs` | 111 / 111 | 41 / 41 | 0 % |
+
+Las dos condiciones pendientes del componente estaban en las líneas 15 (blur hacia un elemento del propio conjunto) y 18 (tecla distinta de Escape). Todo el código ejecutable nuevo del runner, entre las líneas 9 y 150, estaba sin cubrir. Los componentes **sí** estaban incluidos en el LCOV analizado; no era un fallo de descubrimiento de sus tests ni de importación general del reporte.
+
+El runner se había ejecutado de forma independiente, pero `npm run test:coverage:qa` no lo invocaba. Por eso su ejecución real no llegaba a la fusión V8 ni al LCOV de CI. Se agrega esa invocación con el mismo `NODE_V8_COVERAGE` que el resto del QA y una comprobación que impide generar el reporte final si faltan líneas y ramas ejecutadas de este runner. Se conservan el inventario de fuentes, los denominadores y la configuración de Sonar/Vitest; no se agregan exclusiones ni se baja el umbral.
+
+Se incorporan 15 pruebas de Testing Library: respuesta visible/oculta para cada una de las diez preguntas, navegación desde ambos paneles y regreso manteniendo la sesión, otras teclas y reapertura del tooltip, pérdida de foco hacia fuera de la página y asociación independiente de descripciones entre dos tooltips. El archivo de ayuda pasa de 14 a 29 pruebas. Enter/Espacio sobre los desplegables nativos se verifican en Chrome; no se simula artificialmente su comportamiento nativo en jsdom.
+
+La cobertura unitaria por sí sola conserva el runner en 0 %; el reporte que debe consumir Sonar es el **LCOV final fusionado**, después de `npm run test:coverage:qa`. CI ya ejecuta ambos comandos antes del análisis y declara `sonar.javascript.lcov.reportPaths=coverage/lcov.info`. Su paso de integridad verifica rutas relativas, inventario completo, ausencia de duplicados y concordancia entre DA/LF/LH y el resumen.
+
+Referencias de diagnóstico, solo lectura: [Quality Gate del PR](https://sonarcloud.io/dashboard?id=orianalinaferrari_servimap-frontend&pullRequest=34), [métricas por archivo](https://sonarcloud.io/component_measures?id=orianalinaferrari_servimap-frontend&pullRequest=34&metric=new_coverage&view=list). La métrica remota de código nuevo requiere publicar los cambios y volver a analizar el PR; no se debe presentar la cobertura local como un Quality Gate remoto aprobado.
+
+### Resultado local de la corrección
+
+Con Node `v26.13.0`, `npm run test:coverage` ejecutó los 699 tests de los 74 archivos. `npm run test:coverage:qa` completó los recorridos existentes y las 40 comprobaciones de ayuda, fusionando siete reportes V8. El control de LCOV extraído del workflow también pasó: 94 fuentes, sin duplicados, con el inventario y los contadores íntegros.
+
+| Archivo nuevo | Líneas locales | Ramas locales |
+| --- | --- | --- |
+| `PreguntasFrecuentes.jsx` | 100 % (5/5) | Sin ramas instrumentadas |
+| `AyudaBreve.jsx` | 100 % (9/9) | 90 % (9/10) |
+| `faqs-ayuda.mjs` | 93,63 % (103/110) | 78,04 % (32/41) |
+
+Para estos tres archivos, el agregado local es 94,35 % de líneas (117/124), 80,39 % de ramas (41/51) y 90,29 % al combinar ambos contadores (158/175). Esto **no** es el porcentaje remoto de código nuevo: Sonar establece sus propias líneas ejecutables, condiciones y alcance del diff. El reporte completo del proyecto tiene 95,42 % de líneas y 88,83 % de ramas; tampoco equivale a la métrica nueva del PR.
+
+Quedan sin ejecutar las líneas 23, 41, 76, 143–145 y 149 del runner, asociadas al rechazo/timeout de CDP, bloqueo de tráfico indebido y manejo/limpieza de fallos. Sus ramas pendientes están en las líneas 69, 74, 77–79, 145 y 148. En `AyudaBreve.jsx` queda la rama defensiva de blur hacia un descendiente (línea 15); sus tooltips actuales contienen texto sin controles internos. No se añaden interacciones irreales ni se provocan fallos de infraestructura solo para colorear esas ramas.
+
+Lint, build y `git diff --check` aprobados. Se conserva el aviso de chunks grandes. No se modifican archivos funcionales ni las respuestas de las FAQs. Los cambios quedan pendientes de commit, push y nueva ejecución de SonarCloud en el PR #34.

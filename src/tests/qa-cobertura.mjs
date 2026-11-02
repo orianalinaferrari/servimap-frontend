@@ -59,6 +59,8 @@ delete env.SERVIMAP_QA_SCOPE
 try {
   await ejecutar('scripts/qa/navegador.mjs', [], env)
   await ejecutar('scripts/qa/build-estatico.mjs', [], env)
+  // Capturar también el runner de ayuda: sus comprobaciones deben llegar al LCOV de CI.
+  await ejecutar('scripts/qa/faqs-ayuda.mjs', [], env)
 } finally {
   await server.close()
 }
@@ -92,5 +94,8 @@ try {
 const runs = readdirSync(raw).filter(file => file.endsWith('.json')).map(file => JSON.parse(readFileSync(path.join(raw, file), 'utf8')))
 assert.ok(runs.length, 'No native V8 execution reports collected')
 const map = await fusionarCobertura(unit, runs)
+// Evitar que una omisión del runner vuelva a publicar un LCOV con toda la ayuda QA en cero.
+const ayudaQa = map.fileCoverageFor(path.join(root, 'scripts/qa/faqs-ayuda.mjs')).toSummary()
+assert.ok(ayudaQa.lines.covered > 0 && ayudaQa.branches.covered > 0, 'El LCOV debe incluir ejecución real del runner de ayuda')
 guardarCobertura(map, directory)
 console.log(JSON.stringify({ coberturaFusionada: true, ejecuciones: runs.length, fuentes: map.files().length }))
