@@ -26,6 +26,13 @@ export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titul
         payload[name] = numero
       } else {
         const texto = String(valor).trim()
+        if (name === 'fotoPerfil' && texto) {
+          let url
+          try { url = new URL(texto) } catch { /* Se informa el formato inválido debajo. */ }
+          if (!/^https?:\/\//i.test(texto) || !url || !['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
+            setError('La foto de perfil debe ser una URL pública HTTP o HTTPS, sin credenciales.'); return
+          }
+        }
         // Estos campos son opcionales, pero el backend rechaza su valor vacío
         // si aparecen en el PUT. No convertir un null inicial en una escritura inválida.
         if (['descripcionProfesional', 'telefono', 'whatsapp', 'emailContacto'].includes(name) && !texto) {
@@ -53,7 +60,7 @@ export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titul
     <p>Las coordenadas exactas son privadas. En el mapa público se muestran redondeadas. Los campos numéricos vacíos conservan su valor anterior.</p>
     {[['Datos profesionales',campos.slice(0,2)],['Información de contacto',campos.slice(2,6)],['Precios y ubicación',campos.slice(6)]].map(([titulo,grupo]) => <fieldset className="prestador-tarjeta" key={titulo}><legend>{titulo}</legend><div className="prestador-campos">{grupo.map(([name, label, type]) => {
       const Campo = type === 'textarea' ? 'textarea' : 'input'
-      return <div key={name}><label htmlFor={name}>{label}</label><Campo id={name} type={type === 'textarea' ? undefined : type} step={type === 'number' ? 'any' : undefined} value={datos[name] ?? ''} onChange={(evento) => setDatos((previos) => ({ ...previos, [name]: evento.target.value }))} disabled={enviando} /></div>
+      return <div key={name}><label htmlFor={name}>{label}</label><Campo id={name} type={type === 'textarea' ? undefined : type} step={type === 'number' ? 'any' : undefined} value={datos[name] ?? ''} onChange={(evento) => setDatos((previos) => ({ ...previos, [name]: evento.target.value }))} disabled={enviando} aria-describedby={name === 'fotoPerfil' ? 'foto-perfil-ayuda' : undefined} />{name === 'fotoPerfil' && <p id="foto-perfil-ayuda">Pegá el enlace público de una imagen para usarla como foto de perfil</p>}</div>
     })}</div></fieldset>)}
     <label><input type="checkbox" checked={Boolean(datos.disponible)} onChange={(evento) => setDatos((previos) => ({ ...previos, disponible: evento.target.checked }))} disabled={enviando} /> Disponible para recibir solicitudes</label>
     {error && <p role="alert">{error}</p>}

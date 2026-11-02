@@ -1,5 +1,9 @@
 ﻿import { apiRequest } from './apiClient'
 
+import { obtenerToken } from './sesionToken'
+
+export const EVENTO_PERFIL_PRESTADOR_ACTUALIZADO = 'servimap:perfil-prestador-actualizado'
+
 export const listarOficios = () => apiRequest('/api/oficios', { autenticar: false })
 export const listarTodosLosOficios = () => apiRequest('/api/oficios/todos')
 export const crearOficioRemoto = (datos) => apiRequest('/api/oficios', { method: 'POST', json: datos })
@@ -21,7 +25,25 @@ export function adaptarPrestador(datos) {
 export const listarPrestadores = async (parametros = {}) => (await apiRequest('/api/prestadores', { autenticar: false, parametros: { limit: 50, ...parametros } })).map(adaptarPrestador)
 export const obtenerPrestador = async (id) => adaptarPrestador(await apiRequest(`/api/prestadores/${encodeURIComponent(id)}`, { autenticar: false }))
 export const listarMarcadores = async (parametros = {}) => (await apiRequest('/api/prestadores/mapa', { autenticar: false, parametros })).map((dato) => ({ ...dato, oficios: dato.oficioPrincipal ? [dato.oficioPrincipal] : [] }))
-export const obtenerMiPerfil = () => apiRequest('/api/prestadores/me')
-export const actualizarMiPerfil = (datos) => apiRequest('/api/prestadores/me', { method: 'PUT', json: datos })
-export const actualizarMisOficios = (oficioIds) => apiRequest('/api/prestadores/me/oficios', { method: 'PUT', json: { oficioIds } })
+export const obtenerMiPerfil = () => apiRequest('/api/prestadores/me', { cache: 'no-store' })
+export async function actualizarMiPerfil(datos) {
+  const token = obtenerToken()
+  const perfil = await apiRequest('/api/prestadores/me', { method: 'PUT', json: datos })
+  if (token && obtenerToken() === token && perfil?.id) {
+    window.dispatchEvent(new CustomEvent(EVENTO_PERFIL_PRESTADOR_ACTUALIZADO, { detail: perfil }))
+  }
+  return perfil
+}
+export async function actualizarMisOficios(oficioIds) {
+  const ids = new Set(oficioIds)
+  const coincide = (perfil) => Array.isArray(perfil?.oficios) &&
+    perfil.oficios.length === ids.size && perfil.oficios.every((oficio) =>
+      oficio && typeof oficio.nombre === 'string' && ids.has(oficio.id)) &&
+    new Set(perfil.oficios.map((oficio) => oficio.id)).size === ids.size
+  const actualizado = await apiRequest('/api/prestadores/me/oficios', { method: 'PUT', json: { oficioIds } })
+  if (!actualizado?.id || !coincide(actualizado)) throw new Error('El servidor no confirmó los oficios enviados. Se conserva tu selección sin confirmar.')
+  const verificado = await obtenerMiPerfil()
+  if (verificado?.id !== actualizado.id || !coincide(verificado)) throw new Error('El servidor respondió al guardado, pero al consultar el perfil los oficios no coinciden. No se pudo confirmar la persistencia; se conserva tu selección.')
+  return verificado
+}
 export const obtenerMisCalificaciones = () => apiRequest('/api/prestadores/me/calificaciones')
