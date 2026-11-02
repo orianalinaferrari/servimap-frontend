@@ -1,0 +1,38 @@
+#root > .ayuda-pagina { max-width: 960px; margin-inline: auto; }
+.ayuda-cabecera { max-width: 660px; margin-bottom: 24px; }
+.ayuda-antetitulo { color: var(--accent); font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.ayuda-temas { display: flex; flex-wrap: wrap; gap: 10px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+.ayuda-temas a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 999px; background: var(--page-bg); text-decoration: none; font-weight: 600; font-size: .9rem; }
+.ayuda-temas a:hover { background: var(--accent-bg); }
+.ayuda-grupos { display: grid; gap: 36px; margin-top: 32px; }
+.ayuda-grupos section { min-width: 0; scroll-margin-top: 24px; }
+.ayuda-grupos h2 { margin-bottom: 6px; }
+.ayuda-preguntas { display: grid; gap: 12px; margin-top: 20px; }
+.ayuda-pregunta { min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); scroll-margin-top: 24px; }
+.ayuda-pregunta[open] { border-color: var(--accent-border); }
+.ayuda-pregunta summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 18px 20px; border-radius: 11px; color: var(--accent); cursor: pointer; list-style: none; }
+.ayuda-pregunta summary::-webkit-details-marker { display: none; }
+.ayuda-pregunta summary:hover { background: var(--page-bg); }
+.ayuda-pregunta summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.ayuda-pregunta h3 { margin: 0; font: 600 1rem/1.5 var(--sans); letter-spacing: normal; overflow-wrap: anywhere; }
+.ayuda-indicador { flex: 0 0 20px; width: 20px; height: 20px; position: relative; }
+.ayuda-indicador::before, .ayuda-indicador::after { content: ''; position: absolute; background: currentColor; border-radius: 2px; }
+.ayuda-indicador::before { width: 14px; height: 2px; left: 3px; top: 9px; }
+.ayuda-indicador::after { width: 2px; height: 14px; left: 9px; top: 3px; }
+.ayuda-pregunta[open] .ayuda-indicador::after { display: none; }
+.ayuda-respuesta { padding: 0 20px 20px; overflow-wrap: anywhere; }
+.ayuda-respuesta > :last-child { margin-bottom: 0; }
+.ayuda-respuesta a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+.ayuda-cierre { margin: 32px 0 0; padding: 20px; border-radius: 12px; background: var(--page-bg); font-size: .9rem; }
+.ayuda-breve { display: inline-flex; position: relative; max-width: 100%; }
+.ayuda-breve > button { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; min-height: 44px; background: var(--page-bg); font-size: .85rem; text-align: left; }
+.ayuda-breve > button span { display: inline-grid; place-items: center; flex: 0 0 20px; height: 20px; border: 1px solid currentColor; border-radius: 50%; font-weight: 700; }
+.ayuda-breve-texto { position: absolute; z-index: 2; top: 100%; left: 0; width: min(260px, 65vw); padding: 12px; border-radius: 10px; background: var(--accent); color: var(--page-bg); font-size: .85rem; line-height: 1.5; box-shadow: var(--shadow); }
+.servimap-acceso-enlaces { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 600px) {
+  .ayuda-temas { gap: 8px; }
+  .ayuda-temas a { padding-inline: 12px; }
+  .ayuda-pregunta summary { padding: 16px; gap: 12px; }
+  .ayuda-respuesta { padding: 0 16px 16px; }
+  .ayuda-grupos { gap: 28px; }
+}

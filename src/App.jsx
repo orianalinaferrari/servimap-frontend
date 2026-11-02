@@ -55,7 +55,10 @@ function App() {
         <Link className="servimap-logo" to="/" aria-label="ServiMap, inicio">ServiMap<span>Servicios cerca tuyo</span></Link>
 
         {esAccesoPublico ? (
-          <Link className="servimap-volver" to="/">← Volver al inicio</Link>
+          <nav className="servimap-acceso-enlaces" aria-label="Navegación de acceso">
+            <Link className="servimap-volver" to="/ayuda">Ayuda</Link>
+            <Link className="servimap-volver" to="/">← Volver al inicio</Link>
+          </nav>
         ) : <NavegacionRoles />}
 
         {!esAccesoPublico && (cargando ? (

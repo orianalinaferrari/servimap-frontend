@@ -16,6 +16,7 @@ function NavegacionRoles() {
     <nav aria-label="Navegación según rol">
       <NavLink to="/">Inicio</NavLink>
       <NavLink to="/prestadores">Explorar servicios</NavLink>
+      <NavLink to="/ayuda">Ayuda</NavLink>
 
       {!usuario && (
         <>
