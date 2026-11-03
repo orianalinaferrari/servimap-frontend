@@ -18,6 +18,35 @@ beforeEach(()=>{
 })
 afterEach(()=>{cleanup();vi.unstubAllEnvs()})
 describe('Directorio, ficha y mapa reales',()=>{
+  it.each([
+    { promedio: null, totalCalificaciones: 0 },
+    { promedio: 4.5, totalCalificaciones: 2 },
+    { promedio: 3.5, totalCalificaciones: 6 },
+  ])('conserva promedio y cantidad de API en tarjeta y ficha: $promedio / $totalCalificaciones', async (reputacion) => {
+    const original = http.getMockImplementation()
+    http.mockImplementation((url, config) => {
+      const path = new URL(url).pathname
+      const dato = { ...publico, reputacion: { ...publico.reputacion, ...reputacion } }
+      if (path === '/api/prestadores') return respuesta([dato])
+      if (path === '/api/prestadores/p1') return respuesta({ ...dato, comentarios: reputacion.promedio === null ? [] : [{ id: 'c1', puntaje: 5, comentario: 'Comentario público sin estado de moderación', fechaPublicacion: '2026-11-01' }] })
+      return original(url, config)
+    })
+    const lista = await listarPrestadores()
+    expect(lista[0].calificacionPromedio).toBe(reputacion.promedio)
+    expect(lista[0].reputacion.totalCalificaciones).toBe(reputacion.totalCalificaciones)
+    render(<DirectorioPrestadores />)
+    await screen.findByRole('button', { name: publico.nombre })
+    if (reputacion.promedio !== null) expect(screen.getByText(`${reputacion.promedio.toFixed(1)} (${reputacion.totalCalificaciones})`)).toBeInTheDocument()
+    else expect(screen.queryByText(/^0\.0/)).toBeNull()
+    fireEvent.click(screen.getByText('Ver perfil'))
+    if (reputacion.promedio === null) expect(await screen.findByText('Sin calificaciones')).toBeInTheDocument()
+    else {
+      expect(await screen.findByText(`Calificación: ${reputacion.promedio.toFixed(1)} / 5`)).toBeInTheDocument()
+      expect(screen.getByText('Comentario público sin estado de moderación')).toBeInTheDocument()
+    }
+    expect(http.mock.calls.some(([url]) => new URL(url).pathname === '/api/calificaciones')).toBe(false)
+  })
+
   it('adapta oficios por ID y reputación sin inventar precios',async()=>{
     const lista=await listarPrestadores();expect(lista[0]).toMatchObject({oficios:['Plomero'],oficiosCatalogo:[{id:'o1',nombre:'Plomero'}],calificacionPromedio:4.5,trabajosFinalizados:2,precioMin:null})
     expect(new URL(http.mock.calls[0][0]).searchParams.get('limit')).toBe('50')
