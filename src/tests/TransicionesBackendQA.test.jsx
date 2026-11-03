@@ -7,10 +7,13 @@ import SolicitudesCliente from '../pages/SolicitudesCliente'
 import { guardarToken } from '../services/sesionToken'
 import { BASE, instalarHttp, respuesta, jwtPrueba } from './helpers/contratos'
 let solicitud, http, token
+const solicitudId = '4db83729-75bc-48fe-88f3-a957aa7a181d'
+const clienteId = '995af8a7-7986-4f21-bdda-c65b67144d67'
+const prestadorId = 'b33a32c0-a409-4243-9cf7-b3c7d07e4a97'
 beforeEach(() => {
   vi.stubEnv('VITE_API_URL', BASE)
   token = jwtPrueba(); guardarToken(token)
-  solicitud = { id: 's1', descripcion: 'Trabajo de prueba', estado: 'PENDIENTE', fechaCreacion: '2026-10-29', oficio: { id: 'o1', nombre: 'Plomero' }, prestador: { id: 'p1', nombre: 'Prestador' }, cliente: { id: 'u1', nombre: 'Cliente' }, calificada: false }
+  solicitud = { id: solicitudId, clienteId, prestadorId, oficioId: 'o1', descripcion: 'Trabajo de prueba', estado: 'PENDIENTE', fechaCreacion: '2026-10-29', oficio: { id: 'o1', nombre: 'Plomero' }, prestador: { id: prestadorId, nombre: 'Prestador' }, cliente: { id: clienteId, nombre: 'Cliente' }, calificada: false }
   http = instalarHttp((url, config) => {
     expect(config.headers.Authorization).toBe(`Bearer ${token}`)
     expect(config.credentials).toBe('omit')
@@ -26,6 +29,18 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllEnvs() })
 
 describe('Transiciones desde componentes con HTTP simulado', () => {
+  it.each([['cliente', SolicitudesCliente], ['prestador', SolicitudesPrestador]])('muestra el UUID completo como ID y abre/cierra su detalle para %s', async (_, Pagina) => {
+    render(<MemoryRouter><Pagina /></MemoryRouter>)
+    const etiqueta = await screen.findByText('ID de solicitud:')
+    expect(etiqueta.parentElement).toHaveTextContent(`ID de solicitud: ${solicitudId}`)
+    fireEvent.click(screen.getByRole('button', { name: 'Ver detalle' }))
+    expect(screen.getByRole('heading', { name: `Detalle de solicitud · ID: ${solicitudId}` })).toBeInTheDocument()
+    expect(screen.getByText('Trabajo de prueba')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar detalle' }))
+    expect(screen.queryByRole('heading', { name: `Detalle de solicitud · ID: ${solicitudId}` })).toBeNull()
+    expect(solicitud).toMatchObject({ id: solicitudId, clienteId, cliente: { id: clienteId }, prestadorId, prestador: { id: prestadorId }, oficioId: 'o1' })
+    expect(http.mock.calls.every(([, config]) => config.method !== 'PATCH')).toBe(true)
+  })
   it('confirma PENDIENTE → ACEPTADA → FINALIZADA recargando el estado real', async () => {
     render(<MemoryRouter><SolicitudesPrestador /></MemoryRouter>)
     fireEvent.click(await screen.findByRole('button', { name: 'Aceptar solicitud' }))
@@ -33,7 +48,8 @@ describe('Transiciones desde componentes con HTTP simulado', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Marcar trabajo como terminado' }))
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar trabajo terminado' }))
     await waitFor(() => expect(screen.getByText('Finalizada')).toBeInTheDocument())
-    expect(http.mock.calls.filter(([, config]) => config.method === 'PATCH').map(([url]) => new URL(url).pathname)).toEqual(['/api/solicitudes/s1/aceptar','/api/solicitudes/s1/finalizar'])
+    expect(http.mock.calls.filter(([, config]) => config.method === 'PATCH').map(([url]) => new URL(url).pathname)).toEqual([`/api/solicitudes/${solicitudId}/aceptar`, `/api/solicitudes/${solicitudId}/finalizar`])
+    expect(solicitud).toMatchObject({ id: solicitudId, clienteId, prestadorId, oficioId: 'o1' })
     expect(screen.queryByRole('button', { name: 'Aceptar solicitud' })).toBeNull()
     expect(screen.queryByText(/pendiente de confirmación/i)).toBeNull()
   })
@@ -42,6 +58,7 @@ describe('Transiciones desde componentes con HTTP simulado', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Rechazar solicitud' }))
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar rechazo' }))
     await waitFor(() => expect(screen.getByText('Rechazada')).toBeInTheDocument())
+    expect(http.mock.calls.filter(([, config]) => config.method === 'PATCH').map(([url]) => new URL(url).pathname)).toEqual([`/api/solicitudes/${solicitudId}/rechazar`])
     expect(screen.queryByRole('button', { name: 'Marcar trabajo como terminado' })).toBeNull()
   })
   it('permite al cliente cancelar una ACEPTADA solo tras confirmar', async () => {
@@ -51,6 +68,8 @@ describe('Transiciones desde componentes con HTTP simulado', () => {
     expect(http.mock.calls.filter(([, config]) => config.method === 'PATCH')).toHaveLength(0)
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar cancelación' }))
     await waitFor(() => expect(screen.getByText('Cancelada')).toBeInTheDocument())
+    expect(http.mock.calls.filter(([, config]) => config.method === 'PATCH').map(([url]) => new URL(url).pathname)).toEqual([`/api/solicitudes/${solicitudId}/cancelar`])
+    expect(solicitud).toMatchObject({ id: solicitudId, clienteId, prestadorId, oficioId: 'o1' })
     expect(screen.queryByRole('button', { name: 'Preparar cancelación' })).toBeNull()
   })
   it.each([403, 409])('rechazo HTTP %s conserva el estado previo y muestra el error', async (status) => {
