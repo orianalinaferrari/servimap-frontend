@@ -45,7 +45,9 @@ await ejecutarRecorridoDemo({ nombre: 'prestador', apiOrigin: 'http://127.0.0.1:
   await screens('solicitudes');
   if(escenario.includes('completo')&&!escenario.includes('incompleto')){
    const card='[...document.querySelectorAll(".solicitudes-prestador-tarjeta")].find(e=>e.textContent.includes("00000000-0000-4000-8000-000000000601"))';
-   await click('Ver detalle',card);await screens('solicitud-detalle');await click('Cerrar detalle');
+   await click('Ver detalle',card);
+   check(await ev(String.raw`(() => { const etiqueta = [...document.querySelectorAll('.solicitudes-prestador-detalle dt')].find(e => e.textContent === 'Fecha de creación'); return /^\d{2}\/\d{2}\/\d{4}$/.test(etiqueta.nextElementSibling.textContent) })()`),'Fecha de creación argentina en prestador');
+   await screens('solicitud-detalle');await click('Cerrar detalle');
    await click('Aceptar solicitud',card);await capture('solicitud-confirmacion');
    await click('Volver',card);check(await ev('!document.querySelector(".solicitudes-prestador-confirmacion")'),'Cancelar confirmacion');
    await click('Aceptar solicitud',card);await click('Confirmar aceptación',card);

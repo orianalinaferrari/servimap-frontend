@@ -5,9 +5,11 @@ import { FotoPrestador } from './prestador/FotoPrestador'
 import { obtenerIniciales } from '../utils/perfilUsuario'
 import { IconoPrestador } from './prestador/IconoPrestador'
 import { DistanciaPrestador } from './DistanciaPrestador'
+import { obtenerEnlaceWhatsApp } from '../utils/whatsapp'
 
 export function DetallePrestador({ prestador, calificaciones = [], onVolver, referencia }) {
   const [mostrandoSolicitud, setMostrandoSolicitud] = useState(false)
+  const enlaceWhatsApp = obtenerEnlaceWhatsApp(prestador.whatsapp)
 
   if (mostrandoSolicitud) {
     return (
@@ -56,9 +58,12 @@ export function DetallePrestador({ prestador, calificaciones = [], onVolver, ref
         <li hidden={!prestador.telefono}>
           <a href={`tel:${prestador.telefono}`}>{prestador.telefono}</a>
         </li>
-        <li hidden={!prestador.whatsapp}>
-          <a href={`https://wa.me/${prestador.whatsapp}`}>WhatsApp</a>
-        </li>
+        {prestador.whatsapp && <li>
+          {enlaceWhatsApp ? <a href={enlaceWhatsApp}>WhatsApp</a> : <>
+            <span>WhatsApp: {prestador.whatsapp}</span>
+            <p>Enlace no disponible. El número debe tener formato internacional con + y código de país.</p>
+          </>}
+        </li>}
         <li hidden={!prestador.emailContacto}>
           <a href={`mailto:${prestador.emailContacto}`}>{prestador.emailContacto}</a>
         </li>

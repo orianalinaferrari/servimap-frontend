@@ -292,6 +292,7 @@ try {
   check(true, 'popup móvil: indicaciones visibles fuera de los créditos')
   check(await evaluar(`document.querySelector('.mapa-info a').rel.includes('noopener')&&document.querySelector('.mapa-info a').target==='_blank'`), 'indicaciones externas seguras')
   await captura('mapa-marcador'); await click('Ver perfil'); await verTexto('QA PRESTADOR')
+  check(await evaluar(`document.querySelector('a[href="https://wa.me/541145678901"]')?.textContent === 'WhatsApp'`), 'Contacto WhatsApp internacional normalizado sin separadores')
   check(await evaluar(`document.querySelector('.detalle .distancia-prestador')?.textContent===${texto(distanciaGps)}`), 'ficha pública conserva referencia y distancia del directorio')
   await responsive('ficha-distancia')
   check(!await evaluar(`document.body.innerText.includes('Comentario QA simulado')`), 'comentario moderado no aparece en ficha pública')

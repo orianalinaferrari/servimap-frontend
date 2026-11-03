@@ -124,6 +124,31 @@ describe('Preguntas frecuentes', () => {
 })
 
 describe('Ayuda breve accesible', () => {
+  it('el contenedor no actúa como control de teclado; Escape pertenece al botón nativo', () => {
+    render(<AyudaBreve etiqueta="Ubicación">Ubicación aproximada.</AyudaBreve>)
+    const boton = screen.getByRole('button', { name: 'Ayuda sobre ubicación' })
+    act(() => boton.focus())
+    expect(boton.parentElement).not.toHaveAttribute('tabindex')
+    expect(boton.parentElement).not.toHaveAttribute('role', 'button')
+    fireEvent.keyDown(boton.parentElement, { key: 'Escape' })
+    expect(screen.getByRole('tooltip')).toBeVisible()
+    fireEvent.keyDown(boton, { key: 'Escape' })
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    expect(boton).toHaveFocus()
+  })
+
+  it('mantiene el hover al pasar al texto de ayuda y cierra al salir con el foco fuera', () => {
+    render(<AyudaBreve etiqueta="Precio">Referencia de precio.</AyudaBreve>)
+    const boton = screen.getByRole('button')
+    fireEvent.mouseEnter(boton)
+    const tooltip = screen.getByRole('tooltip')
+    fireEvent.blur(boton, { relatedTarget: tooltip })
+    fireEvent.mouseLeave(boton, { relatedTarget: tooltip })
+    expect(tooltip).toBeVisible()
+    fireEvent.mouseLeave(boton.parentElement)
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+  })
+
   function montar() {
     render(<><AyudaBreve etiqueta="Precio de referencia">No es un presupuesto confirmado.</AyudaBreve><button>Otro control</button></>)
     return screen.getByRole('button', { name: 'Ayuda sobre precio de referencia' })

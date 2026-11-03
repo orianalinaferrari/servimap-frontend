@@ -11,12 +11,6 @@ export default function AyudaBreve({ etiqueta, children }) {
       onMouseLeave={(evento) => {
         if (!evento.currentTarget.contains(document.activeElement)) setVisible(false)
       }}
-      onBlur={(evento) => {
-        if (!evento.currentTarget.contains(evento.relatedTarget)) setVisible(false)
-      }}
-      onKeyDown={(evento) => {
-        if (evento.key === 'Escape') setVisible(false)
-      }}
     >
       <button
         type="button"
@@ -24,6 +18,12 @@ export default function AyudaBreve({ etiqueta, children }) {
         aria-describedby={visible ? id : undefined}
         onFocus={() => setVisible(true)}
         onClick={() => setVisible(true)}
+        onBlur={(evento) => {
+          if (!evento.currentTarget.parentElement.contains(evento.relatedTarget)) setVisible(false)
+        }}
+        onKeyDown={(evento) => {
+          if (evento.key === 'Escape') setVisible(false)
+        }}
       >
         {etiqueta} <span aria-hidden="true">?</span>
       </button>

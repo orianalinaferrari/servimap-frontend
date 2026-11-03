@@ -1,4 +1,6 @@
-// Campos comunes del detalle; cada vista conserva su propio formato de valores.
+import { formatearFechaArgentina } from '../utils/fechas'
+
+// Campos comunes del detalle; las fechas usan el mismo formato en ambos roles.
 function CamposDetalleSolicitud({ solicitud, formatear }) {
   return (
     <>
@@ -15,7 +17,7 @@ function CamposDetalleSolicitud({ solicitud, formatear }) {
       <dd>{formatear(solicitud.contactoPreferido)}</dd>
 
       <dt>Fecha de creación</dt>
-      <dd>{formatear(solicitud.fechaCreacion)}</dd>
+      <dd>{formatearFechaArgentina(solicitud.fechaCreacion)}</dd>
     </>
   )
 }
