@@ -28,7 +28,8 @@ describe('Panel del prestador con datos incompletos', () => {
     expect(await screen.findByText('Gasista')).toBeInTheDocument()
     expect(screen.getByText(/Hola, Prestador\./)).toBeInTheDocument()
     expect(screen.getAllByText('Servicio sin especificar')).toHaveLength(2)
-    expect(screen.getByText('Solicitud #Sin número')).toBeInTheDocument()
+    expect(screen.getByText('ID de solicitud: No disponible')).toBeInTheDocument()
+    expect(screen.getByText('ID de solicitud: 1')).toBeInTheDocument()
   })
   it('informa el fallo al actualizar y no conserva actividad desactualizada', async () => {
     auth.usuario = { rol: 'PRESTADOR', nombre: 'María' }

@@ -50,7 +50,7 @@ function DetalleSolicitudPrestador({ solicitud, onCerrar }) {
   return (
     <section className="solicitudes-prestador-detalle">
       <div className="solicitudes-prestador-encabezado">
-        <h3>Detalle de solicitud #{solicitud.id}</h3>
+        <h3>Detalle de solicitud · ID: {solicitud.id}</h3>
         <button type="button" onClick={onCerrar}>
           Cerrar detalle
         </button>
@@ -289,7 +289,7 @@ function SolicitudesPrestador() {
                   </p>
 
                   <p>
-                    <strong>Solicitud:</strong> #{solicitud.id}
+                    <strong>ID de solicitud:</strong> {solicitud.id}
                   </p>
 
                   <div className="solicitudes-prestador-acciones">

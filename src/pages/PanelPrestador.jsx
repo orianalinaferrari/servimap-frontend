@@ -206,7 +206,7 @@ function PanelPrestador() {
                           {obtenerNombreServicio(solicitud)}
                         </strong>
                         <p>
-                          Solicitud #{solicitud.id ?? 'Sin número'}
+                          ID de solicitud: {solicitud.id ?? 'No disponible'}
                         </p>
                       </div>
 
