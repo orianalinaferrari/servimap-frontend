@@ -1,6 +1,6 @@
 ﻿import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { MapaPrestadores } from '../components/mapa/MapaPrestadores'
 import { cargarMapLibre } from '../components/mapa/cargarMapLibre'
@@ -74,6 +74,98 @@ describe('MapLibre y OpenFreeMap', () => {
   function elegir(lng = 2.35, lat = 48.86, target = mapas[0].opciones.container) {
     act(() => mapas[0].emit('click', { lngLat: { lng, lat }, originalEvent: { target } }))
   }
+
+  const ecuador = { ...prestador, latitud: 0, longitud: 1, zonaCobertura: 'Centro', precioMin: 10, precioMax: 20, disponible: true, calificacionPromedio: null, trabajosFinalizados: 0 }
+
+  it('actualiza tarjetas con referencia manual y GPS, mantiene el orden y avisa si falta ubicación', async () => {
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: vi.fn(ok => ok({ coords: { latitude: 0, longitude: 0 } })) } })
+    render(<BuscadorPrestadores prestadores={[ecuador, { ...ecuador, id: 8, nombre: 'Sin coordenadas', latitud: null, longitud: null }]} />)
+    await waitFor(() => expect(api.Map).toHaveBeenCalledTimes(1))
+    act(() => mapas[0].emit('load'))
+    const lista = screen.getByRole('list')
+    expect(within(lista).queryByText(/Distancia/)).not.toBeInTheDocument()
+    elegir(0, 0)
+    expect(within(lista).getByText(/111,2 km en línea recta \(no por calles\)/)).toBeVisible()
+    expect(within(lista).getByText('Distancia no disponible')).toBeVisible()
+    const nombres = within(lista).getAllByRole('button').map(b => b.getAttribute('aria-label'))
+    elegir(1, 0)
+    expect(within(lista).getByText(/0,0 km/)).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
+    expect(within(lista).getByText(/111,2 km/)).toBeVisible()
+    expect(within(lista).getAllByRole('button').map(b => b.getAttribute('aria-label'))).toEqual(nombres)
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar ubicación de referencia' }))
+    expect(within(lista).queryByText(/Distancia/)).not.toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('mantiene abierto el popup y actualiza solo su texto al cambiar o quitar la referencia', async () => {
+    await mostrar({ prestadores: [ecuador] })
+    const marcador = marcadores[0], ventana = ventanas[0]
+    fireEvent.click(marcador.element)
+    expect(within(ventana.contenido).queryByText(/Distancia/)).not.toBeInTheDocument()
+    elegir(0, 0)
+    expect(within(ventana.contenido).getByText(/111,2 km/)).toBeVisible()
+    elegir(1, 0)
+    expect(within(ventana.contenido).getByText(/0,0 km/)).toBeVisible()
+    expect(marcador.remove).not.toHaveBeenCalled()
+    expect(ventana.remove).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar ubicación de referencia' }))
+    expect(within(ventana.contenido).queryByText(/Distancia/)).not.toBeInTheDocument()
+    expect(within(ventana.contenido).getByRole('link', { name: /Cómo llegar/ })).toBeVisible()
+  })
+
+  it('conserva distancias al filtrar, abrir ficha y volver sin cambiar precios o disponibilidad', async () => {
+    render(<BuscadorPrestadores prestadores={[ecuador]} />)
+    await waitFor(() => expect(api.Map).toHaveBeenCalledTimes(1))
+    act(() => mapas[0].emit('load'))
+    elegir(0, 0)
+    fireEvent.change(screen.getByLabelText('Buscar prestador'), { target: { value: 'no existe' } })
+    expect(screen.queryByText(/111,2 km/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+    expect(screen.getByText(/111,2 km/)).toBeVisible()
+    fireEvent.change(screen.getByLabelText('Precio máximo'), { target: { value: '5' } })
+    expect(screen.getByText(/No se encontraron prestadores/)).toBeVisible()
+    fireEvent.change(screen.getByLabelText('Precio máximo'), { target: { value: '20' } })
+    fireEvent.click(screen.getByLabelText('Solo prestadores disponibles'))
+    expect(screen.getByText(/111,2 km/)).toBeVisible()
+    fireEvent.click(screen.getAllByRole('button', { name: ecuador.nombre }).at(-1))
+    expect(within(screen.getByRole('article')).getByText(/111,2 km/)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Solicitar servicio' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Volver' }))
+    expect(screen.getByText(/111,2 km/)).toBeVisible()
+    expect(screen.getByLabelText('Precio máximo')).toHaveValue(20)
+    expect(screen.getByLabelText('Solo prestadores disponibles')).toBeChecked()
+  })
+
+  it('recalcula resultados remotos y ficha con coordenadas públicas, conserva referencia ante un error API', async () => {
+    vi.stubEnv('VITE_API_URL', BASE)
+    const catalogo = [{ id: 'o1', nombre: 'Plomería' }]
+    const remoto = { ...ecuador, longitud: 2, oficios: catalogo, reputacion: { promedio: null, serviciosFinalizados: 0 }, comentarios: [] }
+    const http = vi.fn(async url => new URL(url).searchParams.get('q') === 'fallo'
+      ? respuesta({ error: 'Error de búsqueda de prueba' }, 500)
+      : respuesta(new URL(url).pathname === '/api/prestadores' ? [remoto] : remoto))
+    vi.stubGlobal('fetch', http)
+    render(<BuscadorPrestadores prestadores={[ecuador]} catalogoOficios={catalogo} marcadoresPublicos={[ecuador]} />)
+    await waitFor(() => expect(api.Map).toHaveBeenCalledTimes(1))
+    act(() => mapas[0].emit('load'))
+    elegir(0, 0)
+    expect(await screen.findByText(/222,4 km/)).toBeVisible()
+    fireEvent.click(screen.getAllByRole('button', { name: ecuador.nombre }).at(-1))
+    expect(await screen.findByText(/222,4 km/)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Solicitar servicio' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Volver' }))
+    fireEvent.change(screen.getByLabelText('Buscar prestador'), { target: { value: 'fallo' } })
+    expect(await screen.findByRole('alert')).toHaveTextContent('Error de búsqueda de prueba')
+    expect(screen.getByText(/Latitud 0.00000, longitud 0.00000/)).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+    expect(await screen.findByText(/222,4 km/)).toBeVisible()
+    for (const [url, opciones] of http.mock.calls) {
+      expect(new URL(url).pathname).not.toContain('/me')
+      expect(new URL(url).searchParams.has('lat')).toBe(false)
+      expect(new URL(url).searchParams.has('lng')).toBe(false)
+      expect(opciones.method ?? 'GET').toBe('GET')
+    }
+  })
 
   it('elige una referencia fuera de Argentina sin solicitar GPS ni enviar datos', async () => {
     const gps = vi.fn()

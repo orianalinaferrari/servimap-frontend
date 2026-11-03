@@ -3,6 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/MapaPrestadores.css'
 import { obtenerCoordenadas, prestadoresConUbicacion } from '../../utils/coordenadasPrestadores'
 import { cargarMapLibre } from './cargarMapLibre'
+import { textoDistancia } from '../../utils/distancias'
 
 const CENTRO_INICIAL = [-58.3816, -34.6037]
 
@@ -17,6 +18,10 @@ function crearContenido(prestador, onSeleccionar) {
   const titulo = document.createElement('strong')
   titulo.textContent = prestador.nombre || 'Prestador'
   contenido.append(titulo)
+  const distancia = document.createElement('p')
+  distancia.className = 'distancia-prestador'
+  distancia.hidden = true
+  contenido.append(distancia)
   const oficios = Array.isArray(prestador.oficios) ? prestador.oficios.join(', ') : prestador.oficios
   for (const texto of [oficios || prestador.servicio, prestador.zonaCobertura]) {
     if (typeof texto === 'string' && texto) {
@@ -46,6 +51,7 @@ function crearContenido(prestador, onSeleccionar) {
 function MapaInteractivo({ disponibles, onSeleccionar, referencia, onElegirReferencia, instruccionesId, botonCentro }) {
   const contenedor = useRef(null)
   const referenciaInicial = useRef(referencia)
+  const popupsActuales = useRef([])
   const [recursos, setRecursos] = useState(null)
   const [estado, setEstado] = useState('cargando')
   const [detalleError, setDetalleError] = useState('')
@@ -135,9 +141,11 @@ function MapaInteractivo({ disponibles, onSeleccionar, referencia, onElegirRefer
       ventana.on('open', mostrarVentanaCompleta)
       const marcador = new api.Marker({ element: elemento, anchor: 'bottom' })
         .setLngLat(posicion).setPopup(ventana).addTo(mapa)
-      return { marcador, ventana, contenido, mostrarVentanaCompleta }
+      return { prestador, marcador, ventana, contenido, mostrarVentanaCompleta }
     })
+    popupsActuales.current = marcadores
     return () => {
+      popupsActuales.current = []
       marcadores.forEach(({ marcador, ventana, contenido, mostrarVentanaCompleta }) => {
         const boton = contenido.querySelector('button')
         if (boton) boton.onclick = null
@@ -147,6 +155,15 @@ function MapaInteractivo({ disponibles, onSeleccionar, referencia, onElegirRefer
       })
     }
   }, [recursos, disponibles, onSeleccionar])
+
+  useEffect(() => {
+    for (const { prestador, contenido } of popupsActuales.current) {
+      const texto = textoDistancia(referencia, prestador)
+      const elemento = contenido.querySelector('.distancia-prestador')
+      elemento.textContent = texto ?? ''
+      elemento.hidden = texto === null
+    }
+  }, [recursos, disponibles, onSeleccionar, referencia])
 
   useEffect(() => {
     if (!recursos || ubicacion) return
