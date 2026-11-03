@@ -29,7 +29,9 @@ export async function esperarPuertoChrome(leer, { timeoutMs = 10000, intervaloMs
     await new Promise(resolve => setTimeout(resolve, intervaloMs))
   } while (Date.now() < limite)
   const detalle = diagnostico().trim()
-  throw new Error(`Chrome no expuso un puerto CDP utilizable.${detalle ? ` Stderr de Chrome: ${detalle}` : ''}`, { cause: ultimoError })
+  const error = new Error(`Chrome no expuso un puerto CDP utilizable.${detalle ? ` Stderr de Chrome: ${detalle}` : ''}`, { cause: ultimoError })
+  error.code = 'QA_CDP_PUERTO_TIMEOUT'
+  throw error
 }
 
 // /json/list puede responder antes de registrar la pestaña inicial en hosts lentos.
