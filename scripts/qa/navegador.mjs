@@ -192,7 +192,7 @@ try {
   check(!await evaluar(`sessionStorage.getItem('servimap-jwt')`), 'registro no inicia sesión implícitamente')
   const cliente = { email: 'registro@example.test', password: claveRegistro }
   fase = 'cliente'
-  await login(cliente); await ir('/cliente'); await verTexto('Panel del cliente'); await cdp('Page.reload'); await verTexto('Panel del cliente')
+  await login(cliente); await ir('/cliente'); await verTexto('Mi espacio'); await cdp('Page.reload'); await verTexto('Mi espacio')
   check(await evaluar(`!!sessionStorage.getItem('servimap-jwt')`), 'JWT persiste al recargar')
   await responsive('cliente'); await ir('/admin'); await verTexto('Acceso denegado'); check(true, 'cliente sin acceso administrativo')
   const cancelada = await crearSolicitud('QA solicitud a cancelar')

@@ -1,6 +1,6 @@
 
-import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import '@testing-library/jest-dom/vitest'
 import NavegacionRoles from '../components/auth/NavegacionRoles'
@@ -11,6 +11,7 @@ import { ROLES } from '../utils/roles'
 vi.mock('../context/useAuth', () => ({
   useAuth: vi.fn(),
 }))
+afterEach(cleanup)
 
 function configurarUsuario(usuario, cargando = false) {
   vi.mocked(useAuth).mockReturnValue({
@@ -48,10 +49,10 @@ describe('F-04 - Navegación según rol', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText('Mi panel de cliente')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Mis solicitudes' })).toHaveAttribute('href', '/cliente/solicitudes')
-    expect(screen.getByRole('link', { name: 'Mis solicitudes' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByText('Mi panel de cliente')).not.toHaveAttribute('aria-current')
+    expect(screen.getByText('Mi espacio')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Mis solicitudes' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Mi espacio' })).toHaveAttribute('href', '/cliente')
+    expect(screen.getByText('Mi espacio')).not.toHaveAttribute('aria-current')
     expect(
       screen.queryByText('Panel de administración')
     ).not.toBeInTheDocument()
@@ -66,7 +67,7 @@ describe('F-04 - Navegación según rol', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText('Mi panel de prestador')).toBeInTheDocument()
+    expect(screen.getByText('Mi espacio')).toBeInTheDocument()
   })
 
   it('muestra navegación de administrador', () => {

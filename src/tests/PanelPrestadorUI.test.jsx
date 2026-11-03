@@ -65,14 +65,14 @@ afterEach(() => {
   vi.resetAllMocks()
 })
 
-describe('F-19 - Panel del prestador', () => {
+describe('F-19 - Mi espacio', () => {
   test('muestra el título y el saludo personalizado', async () => {
     vi.mocked(obtenerSolicitudesPrestador).mockResolvedValue([])
 
     mostrarPanel()
 
     expect(
-      screen.getByRole('heading', { name: 'Panel del prestador' })
+      screen.getByRole('heading', { name: 'Mi espacio' })
     ).toBeTruthy()
 
     expect(screen.getByText(/Hola, María/)).toBeTruthy()

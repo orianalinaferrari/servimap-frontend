@@ -1,7 +1,7 @@
 // Recorrido QA contra prestador-demo.mjs en localhost; nunca usa el backend publicado.
 import { ejecutarRecorridoDemo } from './runner-demo.mjs'
 
-await ejecutarRecorridoDemo({ nombre: 'prestador', apiOrigin: 'http://127.0.0.1:4193', url: 'http://127.0.0.1:4192/prestador', recorrido: async ({ ev, until, check, go, click, fill, capture, screens, wait }) => {
+await ejecutarRecorridoDemo({ nombre: 'prestador', apiOrigin: 'http://127.0.0.1:4193', url: 'http://127.0.0.1:4192/prestador', recorrido: async ({ cdp, ev, until, check, go, click, fill, capture, screens, wait }) => {
   await until('!!document.querySelector(".panel-prestador-indicadores")','Panel listo');
   check(await ev('!!document.getElementById("qa-prestador-aviso")'),'Aviso QA');
   check(await ev('!!document.querySelector("meta[http-equiv=Content-Security-Policy]")'),'CSP exclusiva QA');
@@ -11,7 +11,14 @@ await ejecutarRecorridoDemo({ nombre: 'prestador', apiOrigin: 'http://127.0.0.1:
   await click('Ir a mi perfil');
   await until('!!document.querySelector("main dl")','Mi perfil');
   await screens('perfil');
+  check(await ev('document.querySelector("main h1").textContent==="Mi perfil" && !document.querySelector(".prestador-identidad button")'),'Editar fuera de la identidad; título conservado');
   await click('Editar perfil');await until('!!document.getElementById("precioMin")','Edicion');
+  check(await ev('document.getElementById("telefono").closest("section").textContent.includes("Información de contacto") && document.getElementById("zonaCobertura").closest("section").textContent.includes("Información del servicio")'),'Edición en las tarjetas originales');
+  check(await ev('!!document.querySelector(".prestador-calificaciones") && !document.querySelector("main input[type=file]")'),'Calificaciones conservadas; subida sin contrato no publicada');
+  await ev('document.getElementById("descripcionProfesional").focus()');
+  await cdp('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
+  await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
+  check(await ev('document.activeElement.id==="fotoPerfil"'),'Recorrido de teclado entre campos de identidad');
   await screens('edicion');
   if(escenario.includes('completo')&&!escenario.includes('incompleto')){
    await fill('zonaCobertura','QA cambio cancelado');await click('Cancelar');
@@ -23,10 +30,10 @@ await ejecutarRecorridoDemo({ nombre: 'prestador', apiOrigin: 'http://127.0.0.1:
    await click('Guardar cambios');await until('document.querySelector("main").textContent.includes("Perfil actualizado en el servidor.")','Perfil guardado');check(true,'Perfil, precios y ubicacion guardados en memoria');
    await capture('perfil-guardado');
    await click('Editar perfil');await ev('document.querySelector("form input[type=checkbox]").click()');await click('Guardar cambios');
-   await until('!!document.querySelector("main dl")','Disponibilidad guardada');check(await ev('document.querySelector("main").textContent.includes("No disponible")'),'Disponibilidad modificada');
-   await click('Editar perfil');await ev('document.querySelector("form input[type=checkbox]").click()');await click('Guardar cambios');await until('!!document.querySelector("main dl")','Disponible');
+   await until('!!document.querySelector("main dl") && !document.querySelector("main form")','Disponibilidad guardada');check(await ev('document.querySelector("main").textContent.includes("No disponible")'),'Disponibilidad modificada');
+   await click('Editar perfil');await ev('document.querySelector("form input[type=checkbox]").click()');await click('Guardar cambios');await until('!!document.querySelector("main dl") && !document.querySelector("main form")','Disponible');
   }
-  await click('Mis oficios');await until('document.getElementById("nuevo-oficio")?.disabled===false','Oficios');
+  await click('Administrar mis oficios');await until('document.getElementById("nuevo-oficio")?.disabled===false','Oficios');
   await screens('oficios');
   if(escenario.includes('completo')&&!escenario.includes('incompleto')){
    await fill('nuevo-oficio','00000000-0000-4000-8000-000000000203');await click('Agregar oficio');await click('Guardar oficios');

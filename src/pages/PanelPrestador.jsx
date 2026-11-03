@@ -98,7 +98,7 @@ function PanelPrestador() {
           <p className="panel-prestador-etiqueta">
             ESPACIO DEL PRESTADOR
           </p>
-          <h1>Panel del prestador</h1>
+          <h1>Mi espacio</h1>
           <p>
             Hola, {obtenerNombreUsuario(usuario)}.
             Gestioná tus servicios y consultá tu actividad en ServiMap.

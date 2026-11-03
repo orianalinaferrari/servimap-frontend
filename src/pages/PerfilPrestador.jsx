@@ -20,13 +20,14 @@ export default function PerfilPrestador() {
   }, [revision])
   async function guardar(datos) {
     const actualizado = await actualizarMiPerfil(datos)
+    if (actualizado?.id !== perfil.id || !Array.isArray(actualizado.oficios)) throw new Error('El servidor no confirmó un perfil válido. Se conserva tu edición sin guardar.')
     setPerfil(actualizado); setEditando(false); setMensaje('Perfil actualizado en el servidor.')
   }
   return <main className="prestador-pagina prestador-perfil">
     {mensaje && <p role="status">{mensaje}</p>}
     {error && <div role="alert"><p>{error}</p><button onClick={() => setRevision((n) => n + 1)}>Reintentar perfil</button></div>}
     {!perfil && !error && <p role="status">Cargando perfil...</p>}
-    {perfil && (editando ? <FormularioPerfilPrestador perfil={perfil} onGuardar={guardar} onCancelar={() => setEditando(false)} /> : <VistaPerfilPrestador perfil={perfil} onEditar={() => { setEditando(true); setMensaje('') }} />)}
+    {perfil && (editando ? <FormularioPerfilPrestador perfil={perfil} enSitio onGuardar={guardar} onCancelar={() => setEditando(false)} /> : <VistaPerfilPrestador perfil={perfil} onEditar={() => { setEditando(true); setMensaje('') }} />)}
     <section className="prestador-tarjeta prestador-calificaciones"><h2><IconoPrestador tipo="estrella" />Calificaciones recibidas</h2>
       {errorComentarios && <p role="alert">{errorComentarios}</p>}
       {calificaciones.length === 0 && !errorComentarios && <p>Todavía no hay comentarios</p>}
