@@ -22,11 +22,13 @@ beforeEach(() => {
       this.opciones = opciones
       this.eventos = {}
       this.on = vi.fn((nombre, callback) => { this.eventos[nombre] = callback })
+      this.off = vi.fn((nombre, callback) => { if (this.eventos[nombre] === callback) delete this.eventos[nombre] })
       this.emit = (nombre, evento) => this.eventos[nombre]?.(evento)
       this.addControl = vi.fn(); this.fitBounds = vi.fn(); this.jumpTo = vi.fn()
       this.getContainer = () => opciones.container
       this.easeTo = vi.fn()
       this.getZoom = () => 11; this.areTilesLoaded = () => true
+      this.getCenter = vi.fn(() => ({ lng: 2.35, lat: 48.86 }))
       this.resize = vi.fn(); this.remove = vi.fn()
       mapas.push(this)
     }),
@@ -69,6 +71,171 @@ async function mostrar(props = {}) {
 }
 
 describe('MapLibre y OpenFreeMap', () => {
+  function elegir(lng = 2.35, lat = 48.86, target = mapas[0].opciones.container) {
+    act(() => mapas[0].emit('click', { lngLat: { lng, lat }, originalEvent: { target } }))
+  }
+
+  it('elige una referencia fuera de Argentina sin solicitar GPS ni enviar datos', async () => {
+    const gps = vi.fn()
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: gps } })
+    const cambio = vi.fn()
+    await mostrar({ onCambiarUbicacionReferencia: cambio })
+    elegir()
+    expect(gps).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+    expect(cambio).toHaveBeenLastCalledWith({ latitud: 48.86, longitud: expect.closeTo(2.35), origen: 'manual' })
+    expect(screen.getByRole('img', { name: 'Ubicación de referencia elegida en el mapa' })).toHaveClass('mapa-referencia-manual')
+    expect(screen.getByText(/Latitud 48.86000, longitud 2.35000/)).toBeVisible()
+    expect(api.Map).toHaveBeenCalledTimes(1)
+    expect(prestador.latitud).toBe(-34.6)
+    expect(prestador.longitud).toBe(-58.4)
+  })
+
+  it('reemplaza y limpia solo el marcador de referencia sin recrear prestadores ni popups', async () => {
+    const cambio = vi.fn()
+    await mostrar({ onCambiarUbicacionReferencia: cambio })
+    const publico = marcadores[0]
+    fireEvent.click(publico.element)
+    elegir()
+    const referencia = marcadores.at(-1)
+    elegir(139.69, 35.68)
+    expect(referencia.remove).toHaveBeenCalledTimes(1)
+    expect(publico.remove).not.toHaveBeenCalled()
+    expect(screen.getByRole('link', { name: /Cómo llegar/ })).toBeInTheDocument()
+    expect(marcadores.filter(m => m.mapa)).toHaveLength(2)
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar ubicación de referencia' }))
+    expect(cambio).toHaveBeenLastCalledWith(null)
+    expect(screen.queryByRole('img', { name: /Ubicación de referencia elegida/ })).not.toBeInTheDocument()
+    expect(screen.getByText('Ubicación de referencia eliminada.')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Usar centro del mapa como referencia' })).toHaveFocus()
+    expect(marcadores.filter(m => m.mapa)).toEqual([publico])
+    expect(publico.remove).not.toHaveBeenCalled()
+  })
+
+  it('permite elegir el centro con un control accesible y recentrar conservando el zoom', async () => {
+    await mostrar()
+    const boton = screen.getByRole('button', { name: 'Usar centro del mapa como referencia' })
+    expect(boton).toHaveAccessibleDescription(/Con teclado/)
+    act(() => boton.focus())
+    fireEvent.click(boton)
+    expect(mapas[0].getCenter).toHaveBeenCalled()
+    expect(boton).toHaveFocus()
+    fireEvent.click(screen.getByRole('button', { name: 'Centrar en la referencia' }))
+    expect(mapas[0].jumpTo).toHaveBeenLastCalledWith({ center: [expect.closeTo(2.35), 48.86], zoom: 11 })
+  })
+
+  it('no cambia la cámara al seleccionar ni al actualizar los prestadores con una referencia elegida', async () => {
+    const vista = await mostrar()
+    mapas[0].jumpTo.mockClear()
+    elegir()
+    vista.rerender(<MapaPrestadores prestadores={[{ ...prestador, id: 9, latitud: 40 }]} />)
+    expect(mapas[0].jumpTo).not.toHaveBeenCalled()
+    expect(mapas[0].fitBounds).not.toHaveBeenCalled()
+    expect(screen.getByText(/Latitud 48.86000/)).toBeVisible()
+  })
+
+  it.each(['mapa-marcador', 'maplibregl-marker', 'maplibregl-popup', 'maplibregl-control-container'])('no selecciona una referencia al interactuar con %s', async (clase) => {
+    const cambio = vi.fn()
+    await mostrar({ onCambiarUbicacionReferencia: cambio })
+    const elemento = document.createElement('div')
+    elemento.className = clase
+    const hijo = document.createElement('button')
+    elemento.append(hijo)
+    elegir(2, 48, hijo)
+    expect(cambio).not.toHaveBeenCalled()
+  })
+
+  it.each([[NaN, 40], [2, NaN], [Infinity, 0], [0, 91], [0, -91]])('ignora puntos inválidos (%s, %s)', async (lng, lat) => {
+    const cambio = vi.fn()
+    await mostrar({ onCambiarUbicacionReferencia: cambio })
+    elegir(lng, lat)
+    expect(cambio).not.toHaveBeenCalled()
+  })
+
+  it('normaliza copias del mundo y acepta el ecuador y meridiano cero', async () => {
+    const cambio = vi.fn()
+    await mostrar({ onCambiarUbicacionReferencia: cambio })
+    elegir(370, 0)
+    expect(cambio).toHaveBeenLastCalledWith({ latitud: 0, longitud: 10, origen: 'manual' })
+    elegir(0, 0)
+    expect(cambio).toHaveBeenLastCalledWith({ latitud: 0, longitud: 0, origen: 'manual' })
+  })
+
+  it('mantiene la selección manual si llega tarde la respuesta o el error del GPS', async () => {
+    let ok, fallo
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: vi.fn((resolver, rechazar) => { ok = resolver; fallo = rechazar }) } })
+    await mostrar()
+    fireEvent.click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
+    elegir()
+    act(() => { ok({ coords: { latitude: -34.5, longitude: -58.3 } }); fallo() })
+    expect(screen.getByText(/Latitud 48.86000/)).toBeVisible()
+    expect(screen.getByText(/Ubicación de referencia seleccionada/)).toBeVisible()
+  })
+
+  it('limpiar la referencia invalida una solicitud de GPS pendiente', async () => {
+    let ok
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: vi.fn(resolver => { ok = resolver }) } })
+    await mostrar()
+    elegir()
+    fireEvent.click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar ubicación de referencia' }))
+    act(() => ok({ coords: { latitude: 40, longitude: 2 } }))
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expect(screen.getByText('Ubicación de referencia eliminada.')).toBeVisible()
+  })
+
+  it('continúa con selección manual sin geolocalización disponible o con permiso denegado', async () => {
+    vi.stubGlobal('navigator', {})
+    await mostrar()
+    fireEvent.click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
+    expect(screen.getByText(/Tu navegador no permite/)).toBeVisible()
+    elegir()
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: vi.fn((ok, fallo) => fallo()) } })
+    fireEvent.click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
+    expect(screen.getByText(/No se pudo obtener tu ubicación/)).toBeVisible()
+    expect(screen.getByText(/Latitud 48.86000/)).toBeVisible()
+    elegir(0, 0)
+    expect(screen.getByText(/Latitud 0.00000/)).toBeVisible()
+  })
+
+  it('rechaza coordenadas inválidas del GPS y no cambia la referencia anterior', async () => {
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: vi.fn(ok => ok({ coords: { latitude: 100, longitude: 2 } })) } })
+    await mostrar()
+    elegir()
+    fireEvent.click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
+    expect(screen.getByText(/no devolvió una ubicación válida/)).toBeVisible()
+    expect(screen.getByText(/Latitud 48.86000/)).toBeVisible()
+  })
+
+  it('limpia el listener de selección al desmontar e ignora un GPS tardío', async () => {
+    let ok
+    const cambio = vi.fn()
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: vi.fn(resolver => { ok = resolver }) } })
+    const vista = await mostrar({ onCambiarUbicacionReferencia: cambio })
+    fireEvent.click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
+    vista.unmount()
+    act(() => ok({ coords: { latitude: 40, longitude: 2 } }))
+    expect(cambio).not.toHaveBeenCalled()
+    expect(mapas[0].off).toHaveBeenCalledWith('click', expect.any(Function))
+  })
+
+  it('conserva la referencia al filtrar y al abrir y cerrar una ficha del directorio', async () => {
+    render(<BuscadorPrestadores prestadores={[{ ...prestador, disponible: true, calificacionPromedio: null, trabajosFinalizados: 0, precioMin: null, precioMax: null }]} />)
+    await waitFor(() => expect(api.Map).toHaveBeenCalledTimes(1))
+    act(() => mapas[0].emit('load'))
+    elegir()
+    fireEvent.change(screen.getByLabelText('Buscar prestador'), { target: { value: 'No existe' } })
+    expect(screen.getByText(/Latitud 48.86000/)).toBeVisible()
+    expect(screen.getByText(/No se encontraron prestadores/)).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+    fireEvent.click(screen.getAllByRole('button', { name: prestador.nombre }).at(-1))
+    expect(screen.queryByText(/Latitud 48.86000/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Volver/ }))
+    expect(screen.getByText(/Latitud 48.86000/)).toBeVisible()
+    await waitFor(() => expect(api.Map).toHaveBeenCalledTimes(2))
+    expect(mapas[1].opciones.center).toEqual([expect.closeTo(2.35), 48.86])
+  })
+
   it('reserva espacio al abrir la ventana para que indicaciones y créditos no se superpongan', async () => {
     const vista = await mostrar()
     Object.defineProperty(mapas[0].opciones.container, 'clientHeight', { value: 360 })

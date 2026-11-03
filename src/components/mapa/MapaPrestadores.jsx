@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../../styles/MapaPrestadores.css'
 import { obtenerCoordenadas, prestadoresConUbicacion } from '../../utils/coordenadasPrestadores'
@@ -43,11 +43,13 @@ function crearContenido(prestador, onSeleccionar) {
   return contenido
 }
 
-function MapaInteractivo({ disponibles, onSeleccionar, ubicacion }) {
+function MapaInteractivo({ disponibles, onSeleccionar, referencia, onElegirReferencia, instruccionesId, botonCentro }) {
   const contenedor = useRef(null)
+  const referenciaInicial = useRef(referencia)
   const [recursos, setRecursos] = useState(null)
   const [estado, setEstado] = useState('cargando')
   const [detalleError, setDetalleError] = useState('')
+  const ubicacion = useMemo(() => referencia ? [referencia.longitud, referencia.latitud] : null, [referencia])
 
   useEffect(() => {
     let activo = true
@@ -75,7 +77,8 @@ function MapaInteractivo({ disponibles, onSeleccionar, ubicacion }) {
       mapa = new api.Map({
         container: contenedor.current,
         style: 'https://tiles.openfreemap.org/styles/liberty',
-        center: CENTRO_INICIAL, zoom: 11, maxZoom: 18,
+        center: referenciaInicial.current ? [referenciaInicial.current.longitud, referenciaInicial.current.latitud] : CENTRO_INICIAL,
+        zoom: 11, maxZoom: 18,
         cooperativeGestures: true,
         attributionControl: { compact: false },
         locale: {
@@ -111,10 +114,8 @@ function MapaInteractivo({ disponibles, onSeleccionar, ubicacion }) {
   useEffect(() => {
     if (!recursos) return
     const { api, mapa } = recursos
-    const limites = new api.LngLatBounds()
     const marcadores = disponibles.map((prestador) => {
       const posicion = posicionPrestador(prestador)
-      limites.extend(posicion)
       // MapLibre gestiona Enter/Espacio al asociar el popup. Un botón nativo
       // también emitiría click y podría alternar el popup dos veces.
       const elemento = document.createElement('div')
@@ -136,8 +137,6 @@ function MapaInteractivo({ disponibles, onSeleccionar, ubicacion }) {
         .setLngLat(posicion).setPopup(ventana).addTo(mapa)
       return { marcador, ventana, contenido, mostrarVentanaCompleta }
     })
-    if (disponibles.length > 1) mapa.fitBounds(limites, { padding: 48, maxZoom: 14, duration: 0 })
-    else mapa.jumpTo({ center: disponibles.length ? posicionPrestador(disponibles[0]) : CENTRO_INICIAL, zoom: disponibles.length ? 13 : 11 })
     return () => {
       marcadores.forEach(({ marcador, ventana, contenido, mostrarVentanaCompleta }) => {
         const boton = contenido.querySelector('button')
@@ -150,16 +149,35 @@ function MapaInteractivo({ disponibles, onSeleccionar, ubicacion }) {
   }, [recursos, disponibles, onSeleccionar])
 
   useEffect(() => {
+    if (!recursos || ubicacion) return
+    const { api, mapa } = recursos
+    const limites = new api.LngLatBounds()
+    disponibles.forEach((prestador) => limites.extend(posicionPrestador(prestador)))
+    if (disponibles.length > 1) mapa.fitBounds(limites, { padding: 48, maxZoom: 14, duration: 0 })
+    else mapa.jumpTo({ center: disponibles.length ? posicionPrestador(disponibles[0]) : CENTRO_INICIAL, zoom: disponibles.length ? 13 : 11 })
+  }, [recursos, disponibles, ubicacion])
+
+  useEffect(() => {
+    if (!recursos) return
+    const elegir = (evento) => {
+      if (evento.originalEvent?.target?.closest?.('.maplibregl-marker, .mapa-marcador, .maplibregl-popup, .maplibregl-control-container')) return
+      onElegirReferencia(evento.lngLat)
+    }
+    recursos.mapa.on('click', elegir)
+    return () => recursos.mapa.off('click', elegir)
+  }, [recursos, onElegirReferencia])
+
+  useEffect(() => {
     if (!recursos || !ubicacion) return
     const { api, mapa } = recursos
     const elemento = document.createElement('span')
-    elemento.className = 'mapa-ubicacion'
+    elemento.className = `mapa-ubicacion${referencia.origen === 'manual' ? ' mapa-referencia-manual' : ''}`
     elemento.setAttribute('role', 'img')
-    elemento.setAttribute('aria-label', 'Tu ubicación aproximada')
+    elemento.setAttribute('aria-label', referencia.origen === 'manual' ? 'Ubicación de referencia elegida en el mapa' : 'Tu ubicación aproximada')
     const marcador = new api.Marker({ element: elemento }).setLngLat(ubicacion).addTo(mapa)
-    mapa.jumpTo({ center: ubicacion, zoom: Math.max(mapa.getZoom(), 13) })
+    if (referencia.origen === 'gps') mapa.jumpTo({ center: ubicacion, zoom: Math.max(mapa.getZoom(), 13) })
     return () => { marcador.remove() }
-  }, [recursos, ubicacion])
+  }, [recursos, ubicacion, referencia])
 
   return (
     <>
@@ -168,24 +186,45 @@ function MapaInteractivo({ disponibles, onSeleccionar, ubicacion }) {
       {estado === 'error' && <details className="mapa-error-detalle"><summary>Ver detalle del error</summary><p>{detalleError}</p></details>}
       {ubicacion && recursos && (
         <button type="button" className="mapa-centrar" onClick={() => {
-          recursos.mapa.jumpTo({ center: ubicacion, zoom: Math.max(recursos.mapa.getZoom(), 13) })
-        }}>Centrar en mi ubicación</button>
+          recursos.mapa.jumpTo({ center: ubicacion, zoom: referencia.origen === 'gps' ? Math.max(recursos.mapa.getZoom(), 13) : recursos.mapa.getZoom() })
+        }}>{referencia.origen === 'gps' ? 'Centrar en mi ubicación' : 'Centrar en la referencia'}</button>
       )}
+      <button ref={botonCentro} className="mapa-elegir-centro" type="button" disabled={!recursos || estado !== 'listo'} onClick={() => onElegirReferencia(recursos.mapa.getCenter())} aria-describedby={instruccionesId}>Usar centro del mapa como referencia</button>
       <div className="mapa-contenedor">
-        <div ref={contenedor} className="mapa-interactivo" role="region" aria-label="Mapa interactivo de prestadores" aria-busy={estado === 'cargando'} />
+        <div ref={contenedor} className="mapa-interactivo" role="region" aria-label="Mapa interactivo de prestadores" aria-describedby={instruccionesId} aria-busy={estado === 'cargando'} />
       </div>
     </>
   )
 }
 
-export function MapaPrestadores({ prestadores = [], onSeleccionar }) {
-  const [ubicacion, setUbicacion] = useState(null)
+export function MapaPrestadores({ prestadores = [], onSeleccionar, ubicacionReferencia, onCambiarUbicacionReferencia }) {
+  const [referenciaLocal, setReferenciaLocal] = useState(null)
+  const referencia = ubicacionReferencia === undefined ? referenciaLocal : ubicacionReferencia
   const [estadoUbicacion, setEstadoUbicacion] = useState('')
+  const instruccionesId = useId()
+  const botonCentro = useRef(null)
   const activo = useRef(true)
-  useEffect(() => { activo.current = true; return () => { activo.current = false } }, [])
+  const versionUbicacion = useRef(0)
+  useEffect(() => { activo.current = true; return () => { activo.current = false; versionUbicacion.current += 1 } }, [])
   const disponibles = useMemo(() => prestadoresConUbicacion(prestadores), [prestadores])
 
+  const actualizarReferencia = useCallback((nueva) => {
+    versionUbicacion.current += 1
+    if (ubicacionReferencia === undefined) setReferenciaLocal(nueva)
+    onCambiarUbicacionReferencia?.(nueva)
+  }, [ubicacionReferencia, onCambiarUbicacionReferencia])
+
+  const elegirReferencia = useCallback((punto) => {
+    if (!Number.isFinite(punto?.lng) || !Number.isFinite(punto?.lat)) return
+    // Envolver la longitud mantiene el punto real al recorrer copias del mundo.
+    const longitud = ((punto.lng + 180) % 360 + 360) % 360 - 180
+    if (!obtenerCoordenadas({ latitud: punto.lat, longitud })) return
+    actualizarReferencia({ latitud: punto.lat, longitud, origen: 'manual' })
+    setEstadoUbicacion('Ubicación de referencia seleccionada. Podés cambiarla tocando otro punto del mapa.')
+  }, [actualizarReferencia])
+
   function solicitarUbicacion() {
+    const version = ++versionUbicacion.current
     if (!navigator.geolocation) {
       setEstadoUbicacion('Tu navegador no permite obtener la ubicación.')
       return
@@ -193,11 +232,15 @@ export function MapaPrestadores({ prestadores = [], onSeleccionar }) {
     setEstadoUbicacion('Obteniendo ubicación...')
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        if (!activo.current) return
-        setUbicacion([coords.longitude, coords.latitude])
+        if (!activo.current || version !== versionUbicacion.current) return
+        if (!obtenerCoordenadas({ latitud: coords.latitude, longitud: coords.longitude })) {
+          setEstadoUbicacion('El navegador no devolvió una ubicación válida. Podés elegir un punto en el mapa.')
+          return
+        }
+        actualizarReferencia({ latitud: coords.latitude, longitud: coords.longitude, origen: 'gps' })
         setEstadoUbicacion('Ubicación obtenida correctamente.')
       },
-      () => { if (activo.current) setEstadoUbicacion('No se pudo obtener tu ubicación. Podés seguir usando el mapa.') },
+      () => { if (activo.current && version === versionUbicacion.current) setEstadoUbicacion('No se pudo obtener tu ubicación. Podés seguir usando el mapa y elegir un punto manualmente.') },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     )
   }
@@ -207,8 +250,14 @@ export function MapaPrestadores({ prestadores = [], onSeleccionar }) {
       <h3>Prestadores en el mapa</h3>
       <p>Cartografía de OpenStreetMap provista por OpenFreeMap. Las ubicaciones se muestran cuando el prestador tiene coordenadas registradas.</p>
       <button type="button" onClick={solicitarUbicacion}>Usar mi ubicación</button>
+      <p id={instruccionesId}>Hacé clic o tocá cualquier punto del mapa para elegir tu referencia. Podés alejar el mapa y moverlo a otro lugar. Con teclado, enfocá el mapa, movelo con las flechas y usá el botón «Usar centro del mapa como referencia».</p>
+      <p>Esta referencia se usa solo en esta búsqueda. No cambia el perfil de ningún prestador ni se guarda en el servidor.</p>
       {estadoUbicacion && <p role="status">{estadoUbicacion}</p>}
-      <MapaInteractivo disponibles={disponibles} onSeleccionar={onSeleccionar} ubicacion={ubicacion} />
+      {referencia && <div className="mapa-referencia-datos">
+        <p><strong>{referencia.origen === 'manual' ? 'Referencia elegida en el mapa' : 'Referencia obtenida por GPS'}:</strong> Latitud {referencia.latitud.toFixed(5)}, longitud {referencia.longitud.toFixed(5)}</p>
+        <button type="button" onClick={() => { actualizarReferencia(null); setEstadoUbicacion('Ubicación de referencia eliminada.'); botonCentro.current?.focus() }}>Limpiar ubicación de referencia</button>
+      </div>}
+      <MapaInteractivo disponibles={disponibles} onSeleccionar={onSeleccionar} referencia={referencia} onElegirReferencia={elegirReferencia} instruccionesId={instruccionesId} botonCentro={botonCentro} />
       {disponibles.length === 0 && (
         <p className="mapa-sin-coordenadas" role="status"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 23S3 14 3 9a9 9 0 0 1 18 0c0 5-9 14-9 14ZM12 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" /></svg>Todavía no hay prestadores con coordenadas registradas. Podés encontrarlos en el listado.</p>
       )}

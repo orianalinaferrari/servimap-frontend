@@ -66,6 +66,10 @@ async function responsive(nombre) {
     await esperar(180)
     check(await evaluar('document.documentElement.scrollWidth <= document.documentElement.clientWidth'), `${nombre}: sin overflow ${width}px`)
     check(await evaluar(`[...document.querySelectorAll('input:not([type=hidden]),select,textarea')].every(e=>e.labels?.length||e.getAttribute('aria-label'))`), `${nombre}: campos etiquetados ${width}px`)
+    if (nombre === 'referencia-manual') {
+      await evaluar(`document.querySelector('.mapa-prestadores').scrollIntoView({block:'start'})`)
+      check(await evaluar(`[...document.querySelectorAll('.mapa-prestadores > button')].every(e=>{const r=e.getBoundingClientRect();return r.height>=44&&r.top>=0&&r.bottom<=innerHeight&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e})`), `controles de referencia visibles, táctiles y sin superposición ${width}px`)
+    }
     if (nombre === 'inicio') {
       if (width === 1365) check(await evaluar('document.documentElement.scrollHeight<=innerHeight'), 'landing 1365x768: sin scroll vertical')
       check(await evaluar(`[...document.querySelectorAll('.landing-boton')].length===2&&[...document.querySelectorAll('.landing-boton')].every(e=>{const r=e.getBoundingClientRect();return r.height>=44&&r.left>=0&&r.right<=document.documentElement.clientWidth&&e.scrollWidth<=e.clientWidth})`), `landing: dos acciones legibles y táctiles ${width}px`)
@@ -89,6 +93,12 @@ async function crearSolicitud(descripcion) {
   await llenar('solicitud-direccion', 'Dirección sintética de test'); await llenar('solicitud-contacto', 'Email')
   await click('Enviar solicitud'); await verTexto('Tu solicitud fue enviada correctamente.')
   return api.solicitudes.at(-1).id
+}
+async function clickMarcadorMapa() {
+  await evaluar(`document.querySelector('.mapa-marcador').scrollIntoView({block:'center'})`)
+  const punto = await evaluar(`(()=>{const r=document.querySelector('.mapa-marcador').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`)
+  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...punto })
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...punto })
 }
 try {
   const chrome = await abrirChromeCdp(carpeta)
@@ -225,13 +235,50 @@ try {
   fase = 'mapa con marcador y privacidad'
   await ir('/prestadores'); await verTexto('QA PRESTADOR'); await hasta(`!!document.querySelector('.mapa-marcador')`, 'marcador público')
   await hasta(`document.querySelector('.mapa-interactivo')?.getAttribute('aria-busy')==='false'`, 'mapa con marcador cargado', 25000)
+  await cdp('Browser.setPermission', { permission: { name: 'geolocation' }, setting: 'denied', origin: new URL(base).origin })
+  await click('Usar mi ubicación'); await verTexto('No se pudo obtener tu ubicación.')
+  await evaluar(`document.querySelector('.maplibregl-canvas').scrollIntoView({block:'center'})`)
+  const puntoManual = await evaluar(`(()=>{const r=document.querySelector('.maplibregl-canvas').getBoundingClientRect();return {x:r.x+r.width*.75,y:r.y+r.height*.6}})()`)
+  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', button: 'left', clickCount: 1, ...puntoManual })
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', button: 'left', clickCount: 1, ...puntoManual })
+  await hasta(`!!document.querySelector('.mapa-referencia-manual')`, 'selección manual sin permisos GPS')
+  const primeraReferencia = await evaluar(`document.querySelector('.mapa-referencia-datos p').textContent`)
+  check(true, 'clic real selecciona una referencia sin permiso de geolocalización')
+  await clickMarcadorMapa(); await verTexto('Cómo llegar en Google Maps')
+  check(await evaluar(`document.querySelector('.mapa-referencia-datos p').textContent===${texto(primeraReferencia)}`), 'abrir popup de prestador no cambia la referencia')
+  await evaluar(`document.querySelector('.maplibregl-popup-close-button').click()`)
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+  await evaluar(`document.querySelector('.maplibregl-canvas').scrollIntoView({block:'center'})`)
+  const puntoTactil = await evaluar(`(()=>{const r=document.querySelector('.maplibregl-canvas').getBoundingClientRect();return {x:r.x+r.width*.3,y:r.y+r.height*.7}})()`)
+  await cdp('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [puntoTactil] })
+  await cdp('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await hasta(`document.querySelector('.mapa-referencia-datos p').textContent!==${texto(primeraReferencia)}`, 'toque cambia la referencia')
+  check(await evaluar(`document.querySelectorAll('.mapa-referencia-manual').length===1 && !!document.querySelector('.mapa-marcador')`), 'móvil: un marcador de referencia convive con el prestador')
+  await click('Limpiar ubicación de referencia')
+  check(await evaluar(`!document.querySelector('.mapa-ubicacion') && !!document.querySelector('.mapa-marcador')`), 'limpiar ubicación conserva marcadores públicos')
+  await evaluar(`document.querySelector('.maplibregl-canvas').focus()`)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 })
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 })
+  await esperar(400)
+  await evaluar(`[...document.querySelectorAll('button')].find(e=>e.textContent==='Usar centro del mapa como referencia').focus()`)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' })
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
+  await hasta(`!!document.querySelector('.mapa-referencia-manual')`, 'selección con teclado')
+  check(true, 'selección del centro mediante teclado y Enter')
+  await responsive('referencia-manual')
+  await click('Limpiar ubicación de referencia')
   await cdp('Browser.grantPermissions', { origin: new URL(base).origin, permissions: ['geolocation'] })
   await cdp('Emulation.setGeolocationOverride', { latitude: -34.62, longitude: -58.4, accuracy: 25 })
   await click('Usar mi ubicación'); await verTexto('Ubicación obtenida correctamente.'); await click('Centrar en mi ubicación')
   check(await evaluar(`!!document.querySelector('.mapa-ubicacion')`), 'geolocalización simulada y recentrado, sin usar ubicación personal')
   const mapa = api.responder({ method: 'GET', url: `${API_SIMULADA_ORIGIN}/api/prestadores/mapa` }).body[0]
   check(Math.abs(mapa.latitud - (-34.6)) < 1e-8 && Math.abs(mapa.longitud - (-58.38)) < 1e-8, 'coordenadas públicas redondeadas, distintas de las privadas')
-  await evaluar(`document.querySelector('.mapa-marcador').click()`); await verTexto('Cómo llegar en Google Maps')
+  // El GPS centra su punto; alejar permite volver a ver al prestador antes de hacer clic real.
+  for (let paso = 0; paso < 2; paso++) {
+    await evaluar(`document.querySelector('.maplibregl-ctrl-zoom-out').click()`)
+    await esperar(400)
+  }
+  await clickMarcadorMapa(); await verTexto('Cómo llegar en Google Maps')
   await evaluar(`document.querySelector('.mapa-info a').scrollIntoView({block:'center'})`)
   await hasta(`(()=>{const a=document.querySelector('.mapa-info a'),m=document.querySelector('.mapa-interactivo'),c=document.querySelector('.maplibregl-ctrl-attrib');if(!a||!m||!c)return false;const r=a.getBoundingClientRect(),b=m.getBoundingClientRect(),creditos=c.getBoundingClientRect();return r.top>=b.top&&r.bottom<=creditos.top&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===a})()`, 'indicaciones visibles sin recorte ni superposición')
   check(true, 'popup móvil: indicaciones visibles fuera de los créditos')
