@@ -4,8 +4,9 @@ import { FormularioSolicitud } from './FormularioSolicitud'
 import { FotoPrestador } from './prestador/FotoPrestador'
 import { obtenerIniciales } from '../utils/perfilUsuario'
 import { IconoPrestador } from './prestador/IconoPrestador'
+import { DistanciaPrestador } from './DistanciaPrestador'
 
-export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
+export function DetallePrestador({ prestador, calificaciones = [], onVolver, referencia }) {
   const [mostrandoSolicitud, setMostrandoSolicitud] = useState(false)
 
   if (mostrandoSolicitud) {
@@ -29,6 +30,7 @@ export function DetallePrestador({ prestador, calificaciones = [], onVolver }) {
       <div className="detalle-datos">
         <p>Oficios: {prestador.oficios.join(', ')}</p>
         <p>Zona: {prestador.zonaCobertura}</p>
+        <DistanciaPrestador referencia={referencia} prestador={prestador} />
         <p>
           Precio: ${(prestador.precioMin?.toLocaleString('es-AR') ?? '—')} – $
           {(prestador.precioMax?.toLocaleString('es-AR') ?? '—')}

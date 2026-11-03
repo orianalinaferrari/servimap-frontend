@@ -4,6 +4,7 @@ import FichaPrestadorRemota from './FichaPrestadorRemota'
 import { MapaPrestadores } from './mapa/MapaPrestadores'
 import { DetallePrestador } from './DetallePrestador'
 import { FotoPrestador } from './prestador/FotoPrestador'
+import { DistanciaPrestador } from './DistanciaPrestador'
 import {
   FILTROS_INICIALES,
   aplicarFiltrosPrestadores,
@@ -75,13 +76,14 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
   }
 
   if (prestadorSeleccionadoId !== null && catalogoOficios) {
-    return <FichaPrestadorRemota key={prestadorSeleccionadoId} id={prestadorSeleccionadoId} onVolver={() => setPrestadorSeleccionadoId(null)} />
+    return <FichaPrestadorRemota key={prestadorSeleccionadoId} id={prestadorSeleccionadoId} referencia={ubicacionReferencia} onVolver={() => setPrestadorSeleccionadoId(null)} />
   }
   if (prestadorSeleccionado) {
     return (
       <DetallePrestador
         prestador={prestadorSeleccionado}
         calificaciones={calificaciones}
+        referencia={ubicacionReferencia}
         onVolver={() => setPrestadorSeleccionadoId(null)}
       />
     )
@@ -220,6 +222,7 @@ export function BuscadorPrestadores({ prestadores, calificaciones = [], catalogo
                 </button>
               </h3>
               <p>{prestador.oficios.join(', ')}</p>
+              <DistanciaPrestador referencia={ubicacionReferencia} prestador={prestador} />
               <div className="directorio-metadatos">
                 {prestador.zonaCobertura && <span><IconoDirectorio tipo="zona" />{prestador.zonaCobertura}</span>}
                 {Number.isFinite(prestador.calificacionPromedio) && <span className="directorio-calificacion"><IconoDirectorio tipo="estrella" />{prestador.calificacionPromedio.toFixed(1)}{Number.isFinite(prestador.reputacion?.totalCalificaciones) && ` (${prestador.reputacion.totalCalificaciones})`}</span>}
