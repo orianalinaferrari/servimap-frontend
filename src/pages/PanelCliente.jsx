@@ -6,7 +6,7 @@ function PanelCliente() {
     <main className="cliente-pagina cliente-panel">
       <header className="cliente-titulo">
         <p className="cliente-etiqueta">ESPACIO DEL CLIENTE</p>
-        <h1>Panel del cliente</h1>
+        <h1>Mi espacio</h1>
         <p>Bienvenido al espacio de clientes de ServiMap.</p>
       </header>
 

@@ -53,7 +53,7 @@ const DEMOS = [
 ]
 
 const { server, url } = await iniciarServidorQa({ root, apiOrigin: API_SIMULADA_ORIGIN })
-const env = { ...process.env, NODE_V8_COVERAGE: raw, SERVIMAP_QA_BASE_URL: url }
+const env = { ...process.env, NODE_V8_COVERAGE: raw, SERVIMAP_QA_BASE_URL: url, SERVIMAP_QA_DIAGNOSTICOS: directory }
 // Fix the full scenario: never inherit a developer's shortened landing scope.
 delete env.SERVIMAP_QA_SCOPE
 try {

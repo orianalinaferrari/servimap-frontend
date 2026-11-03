@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { VistaPerfilPrestador } from './VistaPerfilPrestador'
 
-export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titulo = 'Editar mi perfil', textoCancelar = 'Cancelar' }) {
+export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titulo = 'Editar mi perfil', textoCancelar = 'Cancelar', enSitio = false }) {
   const [datos, setDatos] = useState({ ...perfil })
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -54,6 +55,17 @@ export function FormularioPerfilPrestador({ perfil, onGuardar, onCancelar, titul
     setEnviando(true)
     try { await onGuardar(payload) } catch (fallo) { setError(fallo.message) } finally { setEnviando(false) }
   }
+  const renderCampo = (nombre, ocultarEtiqueta = false) => {
+    if (nombre === 'disponible') return <label><input type="checkbox" checked={Boolean(datos.disponible)} onChange={(evento) => setDatos((previos) => ({ ...previos, disponible: evento.target.checked }))} disabled={enviando} /> Disponible para recibir solicitudes</label>
+    const [name, label, type] = campos.find(([campo]) => campo === nombre)
+    const Campo = type === 'textarea' ? 'textarea' : 'input'
+    return <div className="perfil-campo"><label className={ocultarEtiqueta ? 'perfil-etiqueta-oculta' : undefined} htmlFor={name}>{label}</label><Campo id={name} type={type === 'textarea' ? undefined : type} step={type === 'number' ? 'any' : undefined} value={datos[name] ?? ''} onChange={(evento) => setDatos((previos) => ({ ...previos, [name]: evento.target.value }))} disabled={enviando} aria-describedby={name === 'fotoPerfil' ? 'foto-perfil-ayuda' : undefined} />{name === 'fotoPerfil' && <><p id="foto-perfil-ayuda">Pegá el enlace público de una imagen para usarla como foto de perfil</p>{datos.fotoPerfil && <button type="button" disabled={enviando} onClick={() => setDatos((previos) => ({ ...previos, fotoPerfil: '' }))}>Quitar foto</button>}</>}</div>
+  }
+  if (enSitio) return <form className="prestador-edicion prestador-edicion-en-sitio" onSubmit={enviar} aria-label="Editar perfil profesional" aria-busy={enviando}>
+    <VistaPerfilPrestador perfil={perfil} renderCampo={renderCampo} enviando={enviando} />
+    {error && <p role="alert">{error}</p>}
+    <div className="prestador-acciones"><button type="submit" disabled={enviando}>{enviando ? 'Guardando...' : 'Guardar cambios'}</button><button type="button" onClick={onCancelar} disabled={enviando}>{textoCancelar}</button></div>
+  </form>
   return <form className="prestador-edicion" onSubmit={enviar}>
     {titulo && <h1>{titulo}</h1>}
     <p>Nombre y email de la cuenta: {perfil.nombre} · {perfil.email}</p>

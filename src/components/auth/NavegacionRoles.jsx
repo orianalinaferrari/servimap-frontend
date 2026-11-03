@@ -27,16 +27,13 @@ function NavegacionRoles() {
 
       {rol === ROLES.CLIENTE && (
         <>
-          <NavLink to="/cliente" end>Mi panel de cliente</NavLink>
-          <NavLink to="/cliente/solicitudes">Mis solicitudes</NavLink>
+          <NavLink to="/cliente" end>Mi espacio</NavLink>
         </>
       )}
 
       {rol === ROLES.PRESTADOR && (
         <>
-          <NavLink to="/prestador" end>Mi panel de prestador</NavLink>
-
-          <NavLink to="/prestador/oficios">Mis oficios</NavLink>
+          <NavLink to="/prestador" end>Mi espacio</NavLink>
         </>
       )}
 

@@ -99,6 +99,7 @@ jobs:
           path: |
             coverage/lcov.info
             coverage/coverage-summary.json
+            coverage/chrome-cdp/
           retention-days: 14
           if-no-files-found: warn
 

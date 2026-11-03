@@ -13,7 +13,7 @@ await ejecutarRecorridoDemo({ nombre: 'cliente', apiOrigin: 'http://127.0.0.1:41
   check(await ev('[...document.querySelectorAll(".cliente-header nav a")].every(a=>getComputedStyle(a).textDecorationLine==="none")'),'Header sin subrayados');
   await click('Mis solicitudes');
   await until('!!document.querySelector(".solicitudes-cliente") && !document.body.textContent.includes("Cargando solicitudes...")','Solicitudes listas');
-  check(await ev('document.querySelector(".cliente-header nav a.active").getAttribute("href")==="/cliente/solicitudes"'),'Solo solicitudes activa');
+  check(await ev('![...document.querySelectorAll(".cliente-header nav a")].some(a=>a.getAttribute("href")==="/cliente/solicitudes") && !document.querySelector(".cliente-header nav a.active")'),'Solicitudes accesibles desde el panel sin enlace duplicado en header');
   await screens('solicitudes');
   const card=id=>'[...document.querySelectorAll(".solicitudes-cliente-tarjeta")].find(e=>e.textContent.includes("00000000-0000-4000-8000-000000000'+id+'"))';
   if(vacio){

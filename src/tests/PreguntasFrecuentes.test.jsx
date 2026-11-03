@@ -39,8 +39,8 @@ describe('Preguntas frecuentes', () => {
   })
 
   it.each([
-    ['/cliente', 'CLIENTE', 'Panel del cliente', 'Mi panel de cliente'],
-    ['/prestador', 'PRESTADOR', 'Panel del prestador', 'Mi panel de prestador'],
+    ['/cliente', 'CLIENTE', 'Mi espacio', 'Mi espacio'],
+    ['/prestador', 'PRESTADOR', 'Mi espacio', 'Mi espacio'],
   ])('permite consultar la ayuda desde %s y regresar al panel conservando la sesión', async (ruta, rol, titulo, enlacePanel) => {
     await act(async () => abrir(ruta, rol))
     expect(screen.getByRole('heading', { name: titulo })).toBeInTheDocument()
