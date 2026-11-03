@@ -20,7 +20,9 @@ await ejecutarRecorridoDemo({ nombre: 'cliente', apiOrigin: 'http://127.0.0.1:41
     check(await ev('!!document.querySelector(".solicitudes-cliente-vacio")'),'Estado vacio conservado');
   }else{
     check(await ev('new Set([...document.querySelectorAll(".solicitudes-cliente-estado [data-estado]")].map(e=>e.dataset.estado)).size===5'),'Cinco estados reales');
-    await click('Ver detalle',card(601));await screens('detalle');await click('Cerrar detalle',card(601));
+    await click('Ver detalle',card(601));
+    check(await ev(String.raw`(() => { const etiqueta = [...document.querySelectorAll('.solicitudes-cliente-detalle dt')].find(e => e.textContent === 'Fecha de creación'); return /^\d{2}\/\d{2}\/\d{4}$/.test(etiqueta.nextElementSibling.textContent) })()`),'Fecha de creación argentina en cliente');
+    await screens('detalle');await click('Cerrar detalle',card(601));
     await click('Preparar cancelación',card(601));await screens('cancelacion');
     await click('Volver',card(601));check(await ev('!document.querySelector(".solicitudes-cliente-confirmacion")'),'Volver conserva la solicitud');
     await click('Preparar cancelación',card(601));await click('Confirmar cancelación',card(601));

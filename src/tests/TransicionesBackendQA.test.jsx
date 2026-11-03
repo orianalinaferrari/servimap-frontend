@@ -29,6 +29,21 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllEnvs() })
 
 describe('Transiciones desde componentes con HTTP simulado', () => {
+  it.each([
+    ['cliente', SolicitudesCliente, '2026-11-03T01:30:00.000Z', '02/11/2026'],
+    ['prestador', SolicitudesPrestador, '2026-11-03T01:30:00.000Z', '02/11/2026'],
+    ['cliente', SolicitudesCliente, null, 'No disponible'],
+    ['prestador', SolicitudesPrestador, 'fecha inválida', 'No disponible'],
+  ])('presenta la fecha de creación real para %s: %s', async (_, Pagina, fechaCreacion, esperado) => {
+    solicitud.fechaCreacion = fechaCreacion
+    render(<MemoryRouter><Pagina /></MemoryRouter>)
+    fireEvent.click(await screen.findByRole('button', { name: 'Ver detalle' }))
+    expect(screen.getByText(esperado)).toBeInTheDocument()
+    expect(screen.queryByText('Fecha de aceptación')).not.toBeInTheDocument()
+    expect(screen.queryByText('Fecha de finalización')).not.toBeInTheDocument()
+    expect(http.mock.calls.every(([, config]) => config.method !== 'PATCH')).toBe(true)
+  })
+
   it.each([['cliente', SolicitudesCliente], ['prestador', SolicitudesPrestador]])('muestra el UUID completo como ID y abre/cierra su detalle para %s', async (_, Pagina) => {
     render(<MemoryRouter><Pagina /></MemoryRouter>)
     const etiqueta = await screen.findByText('ID de solicitud:')

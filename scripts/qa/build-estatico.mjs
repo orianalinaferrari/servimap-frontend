@@ -5,6 +5,9 @@ import path from 'node:path'
 import { preview } from 'vite'
 
 const index = readFileSync('dist/index.html', 'utf8')
+assert.match(index, /<html lang="es-AR">/, 'Idioma argentino en el artefacto')
+assert.match(index, /<title>ServiMap<\/title>/, 'Título de producto en el artefacto')
+assert.ok(index.includes('href="/favicon.svg?v=servimap"'), 'Favicon ServiMap conservado')
 const rutas = [...readFileSync('src/routes/AppRoutes.jsx', 'utf8').matchAll(/path="([^"]+)"/g)].map((r) => r[1] === '*' ? '/qa-ruta-inexistente' : r[1])
 const archivos = readdirSync('dist', { recursive: true, withFileTypes: true }).filter((f) => f.isFile()).map((f) => path.relative('dist', path.join(f.parentPath, f.name)).replaceAll('\\', '/'))
 assert.ok(archivos.some((f) => /^assets\/maplibre-gl-worker-.*\.js$/.test(f)), 'Worker MapLibre emitido')
