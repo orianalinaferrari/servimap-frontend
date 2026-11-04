@@ -4,6 +4,7 @@ import { AdministracionOficios } from './AdministracionOficios'
 import { IconoAdministracion } from './IconoAdministracion'
 import '../styles/PanelAdministracion.css'
 import { listarCalificaciones, moderarComentario } from '../services/calificacionesService'
+import CentroConsultas from './consultas/CentroConsultas'
 
 export function PanelAdministracion({ prestadores = [], calificaciones, onModerar }) {
   const [seccionActiva, setSeccionActiva] = useState('comentarios')
@@ -26,6 +27,7 @@ export function PanelAdministracion({ prestadores = [], calificaciones, onModera
     <nav className="panel-nav" aria-label="Secciones de administración">
       <button aria-pressed={seccionActiva === 'comentarios'} onClick={() => setSeccionActiva('comentarios')}><IconoAdministracion />Moderación de comentarios</button>
       <button aria-pressed={seccionActiva === 'oficios'} onClick={() => setSeccionActiva('oficios')}><IconoAdministracion tipo="configuracion" />Administración de oficios</button>
+      <button aria-pressed={seccionActiva === 'consultas'} onClick={() => setSeccionActiva('consultas')}><IconoAdministracion tipo="configuracion" />Consultas</button>
     </nav>
     {seccionActiva === 'comentarios' && <>
       {cargando && <p role="status">Cargando calificaciones...</p>}
@@ -33,5 +35,6 @@ export function PanelAdministracion({ prestadores = [], calificaciones, onModera
       {!cargando && !error && <ModeracionComentarios prestadores={prestadores} calificaciones={calificaciones ?? remotas} onModerar={moderar} />}
     </>}
     {seccionActiva === 'oficios' && <AdministracionOficios />}
+    {seccionActiva === 'consultas' && <CentroConsultas administracion />}
   </section>
 }

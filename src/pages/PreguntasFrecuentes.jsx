@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import AyudaBreve from '../components/AyudaBreve'
+import CentroConsultas from '../components/consultas/CentroConsultas'
 import '../styles/PreguntasFrecuentes.css'
 
 const grupos = [
@@ -131,6 +132,7 @@ export default function PreguntasFrecuentes() {
           </section>
         ))}
       </div>
+      <CentroConsultas />
       <p className="ayuda-cierre">Esta sección explica las funciones disponibles. No recibe reclamos ni realiza cambios en tus solicitudes o tu cuenta.</p>
     </main>
   )

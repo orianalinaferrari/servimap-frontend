@@ -90,6 +90,8 @@ try {
   await evaluar(`document.querySelector('a[href="/ayuda"]').click()`)
   await hasta(`!!document.querySelector('.ayuda-pagina')`)
   check(await evaluar(`location.pathname === '/ayuda'`), 'Navegación desde login a la ayuda pública')
+  check(await evaluar(`document.querySelector('[aria-label="Consultas al administrador"]').textContent.includes('aún no están disponibles')`), 'Consultas directas informan falta de backend')
+  check(await evaluar(`!document.querySelector('.centro-consultas form')`), 'Sin formulario ni envío ficticio en producción')
 
   await evaluar(`document.querySelector('summary').focus()`)
   check(await evaluar(`document.activeElement === document.querySelector('summary')`), 'La pregunta recibe foco')
