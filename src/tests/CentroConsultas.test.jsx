@@ -1,0 +1,202 @@
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
+import '@testing-library/jest-dom/vitest'
+import { AuthContext } from '../context/authContextInstance'
+import CentroConsultas from '../components/consultas/CentroConsultas'
+import FormularioConsulta from '../components/consultas/FormularioConsulta'
+import { PanelAdministracion } from '../components/PanelAdministracion'
+import { adminConsulta, clienteConsulta, consultaFixture, prestadorConsulta, servicioConsultasFixture } from './helpers/consultasFixtures'
+
+afterEach(cleanup)
+function montar(servicio, usuario = clienteConsulta, administracion = false, cargando = false) {
+  return render(<MemoryRouter><AuthContext.Provider value={{ usuario, cargando }}><CentroConsultas servicio={servicio} administracion={administracion} /></AuthContext.Provider></MemoryRouter>)
+}
+function completar() {
+  fireEvent.change(screen.getByLabelText('Categoría'), { target: { value: 'CUENTA' } })
+  fireEvent.change(screen.getByLabelText('Asunto'), { target: { value: ' Nueva consulta QA ' } })
+  fireEvent.change(screen.getByLabelText('Mensaje'), { target: { value: ' Mensaje ficticio de prueba. ' } })
+}
+async function abrir() { fireEvent.click(await screen.findByRole('button', { name: 'Ver consulta: Consulta ficticia de acceso' })); return screen.findByRole('region', { name: 'Detalle de consulta' }) }
+const diferida = () => { let resolve; const promise = new Promise(r => { resolve = r }); return { promise, resolve } }
+
+describe('Preparación del centro de consultas sin backend', () => {
+  it('no ofrece envíos ni realiza HTTP cuando falta el servicio', () => {
+    montar()
+    expect(screen.getByRole('note')).toHaveTextContent('aún no están disponibles')
+    expect(screen.queryByRole('form')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Enviar consulta' })).not.toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+  it('integra una sección administrativa informativa sin modificar moderación', () => {
+    render(<PanelAdministracion calificaciones={[]} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
+    expect(screen.getByRole('region', { name: 'Bandeja de consultas' })).toHaveTextContent('aún no están disponibles')
+    expect(screen.queryByRole('button', { name: 'Enviar respuesta' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Moderación de comentarios' }))
+    expect(screen.getByText('No hay comentarios para moderar')).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+  it('espera la sesión y pide login sin llamar al adaptador', () => {
+    const servicio = servicioConsultasFixture(clienteConsulta)
+    servicio.listar = vi.fn()
+    const vista = montar(servicio, null, false, true)
+    expect(screen.getByRole('status')).toHaveTextContent('Verificando sesión')
+    vista.unmount(); montar(servicio, null)
+    expect(screen.getByRole('link', { name: 'Ir a iniciar sesión' })).toHaveAttribute('href', '/login')
+    expect(servicio.listar).not.toHaveBeenCalled()
+  })
+  it.each([[clienteConsulta, true], [prestadorConsulta, true], [adminConsulta, false], [{ id: 'qa', rol: 'OTRO' }, false]])('rechaza el rol incorrecto antes de pedir datos', (usuario, administracion) => {
+    const servicio = servicioConsultasFixture(usuario)
+    servicio.listar = vi.fn(); montar(servicio, usuario, administracion)
+    expect(screen.getByRole('alert')).toHaveTextContent('Tu rol no tiene acceso')
+    expect(servicio.listar).not.toHaveBeenCalled()
+  })
+  it('el formulario aislado queda deshabilitado hasta ser autorizado', () => {
+    const enviar = vi.fn()
+    render(<FormularioConsulta onEnviar={enviar} />)
+    expect(screen.getByRole('button', { name: 'Enviar consulta' })).toBeDisabled()
+    fireEvent.submit(screen.getByRole('form'))
+    expect(enviar).not.toHaveBeenCalled()
+  })
+  it.each([clienteConsulta, prestadorConsulta])('crea una consulta propia solo con confirmación para $rol', async usuario => {
+    const servicio = servicioConsultasFixture(usuario, [])
+    servicio.crear = vi.fn(servicio.crear)
+    montar(servicio, usuario)
+    await screen.findByText('No hay consultas para mostrar.')
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar consulta' }))
+    expect(screen.getAllByRole('alert')).toHaveLength(3)
+    expect(screen.getByLabelText('Asunto')).toHaveAttribute('aria-invalid', 'true')
+    expect(servicio.crear).not.toHaveBeenCalled()
+    completar(); fireEvent.click(screen.getByRole('button', { name: 'Enviar consulta' }))
+    expect(await screen.findByText('La consulta fue registrada por el servidor.')).toBeInTheDocument()
+    expect(servicio.crear).toHaveBeenCalledWith({ categoria: 'CUENTA', asunto: 'Nueva consulta QA', mensaje: 'Mensaje ficticio de prueba.' })
+    expect(await screen.findByRole('button', { name: 'Ver consulta: Nueva consulta QA' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Mensaje')).toHaveValue('')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+  it('espera el resultado del envío y evita dobles envíos', async () => {
+    const pendiente = diferida(), servicio = servicioConsultasFixture(clienteConsulta, [])
+    servicio.crear = vi.fn(() => pendiente.promise)
+    montar(servicio); await screen.findByText('No hay consultas para mostrar.')
+    completar(); fireEvent.click(screen.getByRole('button', { name: 'Enviar consulta' }))
+    expect(screen.getByRole('button', { name: 'Enviando consulta...' })).toBeDisabled()
+    expect(screen.queryByText('La consulta fue registrada por el servidor.')).not.toBeInTheDocument()
+    await act(async () => pendiente.resolve(null))
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo confirmar')
+    expect(screen.getByLabelText('Mensaje')).toHaveValue(' Mensaje ficticio de prueba. ')
+    expect(servicio.crear).toHaveBeenCalledTimes(1)
+  })
+  it.each([401, 403, 404, 409, 500])('conserva borrador y no muestra éxito ante HTTP %s', async status => {
+    const servicio = servicioConsultasFixture(clienteConsulta, [])
+    servicio.crear = vi.fn().mockRejectedValue({ status, message: 'detalle privado del servidor' })
+    montar(servicio); await screen.findByText('No hay consultas para mostrar.')
+    completar(); fireEvent.click(screen.getByRole('button', { name: 'Enviar consulta' }))
+    expect(await screen.findByRole('alert')).not.toHaveTextContent('detalle privado')
+    expect(screen.getByLabelText('Asunto')).toHaveValue(' Nueva consulta QA ')
+    expect(screen.queryByText('La consulta fue registrada por el servidor.')).not.toBeInTheDocument()
+  })
+  it.each([clienteConsulta, prestadorConsulta])('no revela consultas ajenas ni siquiera si el adaptador las devuelve a $rol', async usuario => {
+    const ajena = consultaFixture({ autorId: 'otro-usuario', mensaje: 'TEXTO PRIVADO AJENO' })
+    const servicio = servicioConsultasFixture(usuario)
+    servicio.listar = vi.fn().mockResolvedValue({ datos: [ajena], pagina: 1, total: 1, totalPaginas: 1 })
+    montar(servicio, usuario)
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo confirmar')
+    expect(screen.queryByText(ajena.asunto)).not.toBeInTheDocument()
+    expect(screen.queryByText(ajena.mensaje)).not.toBeInTheDocument()
+  })
+  it('rechaza detalle ajeno y permite reintentar un error de listado', async () => {
+    const servicio = servicioConsultasFixture(clienteConsulta)
+    const listar = servicio.listar.bind(servicio)
+    servicio.listar = vi.fn().mockRejectedValueOnce({ status: 500 }).mockImplementation(listar)
+    servicio.obtener = vi.fn().mockResolvedValue(consultaFixture({ autorId: 'otro', mensaje: 'PRIVADO' }))
+    montar(servicio)
+    fireEvent.click(await screen.findByRole('button', { name: 'Reintentar consultas' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Ver consulta: Consulta ficticia de acceso' }))
+    await screen.findByRole('alert')
+    expect(screen.queryByRole('region', { name: 'Detalle de consulta' })).not.toBeInTheDocument()
+    expect(screen.queryByText('PRIVADO')).not.toBeInTheDocument()
+  })
+  it('pagina usando totales del adaptador y reinicia al filtrar', async () => {
+    const datos = Array.from({ length: 21 }, (_, i) => consultaFixture({ id: `qa-${i}`, asunto: `Asunto ${i}` }))
+    const servicio = servicioConsultasFixture(clienteConsulta, datos)
+    servicio.listar = vi.fn(servicio.listar)
+    montar(servicio); await screen.findByText('Página 1 de 2 · 21 consultas')
+    fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
+    await screen.findByText('Página 2 de 2 · 21 consultas')
+    expect(screen.getAllByRole('button', { name: /Ver consulta:/ })).toHaveLength(1)
+    fireEvent.change(screen.getByLabelText('Filtrar consultas por estado'), { target: { value: 'RESPONDIDA' } })
+    await screen.findByText('Página 1 de 1 · 0 consultas')
+    expect(servicio.listar).toHaveBeenLastCalledWith({ pagina: 1, limite: 20, estado: 'RESPONDIDA' })
+  })
+  it('muestra respuesta confirmada al usuario sin controles administrativos ni HTML ejecutable', async () => {
+    const respuesta = { mensaje: '<img src=x onerror=alert(1)> Texto ficticio.', fechaCreacion: '2026-11-03T16:00:00Z' }
+    const servicio = servicioConsultasFixture(clienteConsulta, [consultaFixture({ estado: 'RESPONDIDA', respuesta })])
+    montar(servicio); const detalle = await abrir()
+    expect(within(detalle).getByText(respuesta.mensaje)).toBeInTheDocument()
+    expect(detalle.querySelector('img')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Enviar respuesta' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Preparar cierre' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Volver al historial' }))
+    expect(await screen.findByRole('region', { name: 'Historial de consultas' })).toBeInTheDocument()
+  })
+  it('permite responder y cerrar solamente tras confirmaciones del adaptador', async () => {
+    const servicio = servicioConsultasFixture(adminConsulta, [consultaFixture()], true)
+    servicio.responder = vi.fn(servicio.responder.bind(servicio)); servicio.cerrar = vi.fn(servicio.cerrar.bind(servicio))
+    montar(servicio, adminConsulta, true); await abrir()
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar respuesta' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('entre 1 y 2000')
+    fireEvent.change(screen.getByLabelText('Respuesta del administrador'), { target: { value: ' Orientación ficticia confirmada. ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar respuesta' }))
+    await screen.findByText('La respuesta fue guardada por el servidor.')
+    expect(servicio.responder).toHaveBeenCalledWith('consulta-qa-1', 'Orientación ficticia confirmada.')
+    fireEvent.click(screen.getByRole('button', { name: 'Preparar cierre' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Volver sin cerrar' }))
+    expect(servicio.cerrar).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Preparar cierre' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar cierre' }))
+    await screen.findByText('El cierre fue confirmado por el servidor.')
+    expect(screen.queryByRole('button', { name: 'Preparar cierre' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Enviar respuesta' })).not.toBeInTheDocument()
+  })
+  it.each(['responder', 'cerrar'])('no inventa éxito si %s falla y conserva el detalle/borrador', async accion => {
+    const servicio = servicioConsultasFixture(adminConsulta, [consultaFixture()], true)
+    servicio[accion] = vi.fn().mockRejectedValue({ status: 409 })
+    montar(servicio, adminConsulta, true); await abrir()
+    if (accion === 'responder') {
+      fireEvent.change(screen.getByLabelText('Respuesta del administrador'), { target: { value: 'Borrador de respuesta QA' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Enviar respuesta' }))
+    } else {
+      fireEvent.click(screen.getByRole('button', { name: 'Preparar cierre' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Confirmar cierre' }))
+    }
+    expect(await screen.findByRole('alert')).toHaveTextContent('La consulta cambió')
+    expect(screen.queryByText(/fue (guardada|confirmado) por el servidor/)).not.toBeInTheDocument()
+    if (accion === 'responder') expect(screen.getByLabelText('Respuesta del administrador')).toHaveValue('Borrador de respuesta QA')
+  })
+  it('rechaza una respuesta 200 sin el cambio confirmado', async () => {
+    const servicio = servicioConsultasFixture(adminConsulta, [consultaFixture()], true)
+    servicio.responder = vi.fn().mockResolvedValue(consultaFixture())
+    montar(servicio, adminConsulta, true); await abrir()
+    fireEvent.change(screen.getByLabelText('Respuesta del administrador'), { target: { value: 'Respuesta ficticia.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar respuesta' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo confirmar')
+    expect(screen.queryByText('La respuesta fue guardada por el servidor.')).not.toBeInTheDocument()
+  })
+  it('no aplica respuestas pendientes después de desmontar o cambiar de sesión', async () => {
+    const pendiente = diferida(), servicio = servicioConsultasFixture(clienteConsulta)
+    servicio.obtener = vi.fn(() => pendiente.promise)
+    const vista = montar(servicio); fireEvent.click(await screen.findByRole('button', { name: 'Ver consulta: Consulta ficticia de acceso' }))
+    vista.unmount(); montar(servicioConsultasFixture(prestadorConsulta, []), prestadorConsulta)
+    await act(async () => pendiente.resolve(consultaFixture()))
+    expect(screen.queryByText(consultaFixture().mensaje)).not.toBeInTheDocument()
+    expect(await screen.findByText('No hay consultas para mostrar.')).toBeInTheDocument()
+  })
+  it('descarta una carga de historial que llega después de desmontar', async () => {
+    const pendiente = diferida(), servicio = servicioConsultasFixture(clienteConsulta)
+    servicio.listar = vi.fn(() => pendiente.promise)
+    const vista = montar(servicio); vista.unmount()
+    await act(async () => pendiente.resolve({ datos: [consultaFixture()], pagina: 1, total: 1, totalPaginas: 1 }))
+    expect(screen.queryByText(consultaFixture().asunto)).not.toBeInTheDocument()
+  })
+})

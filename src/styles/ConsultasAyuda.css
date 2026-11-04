@@ -1,0 +1,20 @@
+.centro-consultas { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); min-width: 0; }
+.consultas-contenido { display: grid; gap: 20px; }
+.consultas-tarjeta { padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); min-width: 0; overflow-wrap: anywhere; }
+.consultas-tarjeta fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.consultas-tarjeta :is(input, select, textarea) { display: block; box-sizing: border-box; width: 100%; max-width: 100%; margin: 6px 0 16px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text-h); font: inherit; }
+.consultas-tarjeta textarea { min-height: 140px; resize: vertical; }
+.consultas-tarjeta :is(button, input, select, textarea):focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.consultas-tarjeta :is(button, select) { min-height: 44px; }
+.consultas-tarjeta button { padding: 10px 16px; margin: 4px 4px 4px 0; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--page-bg); font: inherit; cursor: pointer; }
+.consultas-tarjeta button:disabled { opacity: .55; cursor: default; }
+.consultas-lista { list-style: none; padding: 0; }
+.consultas-lista li { padding-block: 16px; border-bottom: 1px solid var(--border); }
+.consultas-lista h4 { margin: 0; }
+.consultas-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.consultas-acciones p { flex-basis: 100%; order: -1; margin: 0; }
+.consultas-acciones button { flex: 1 1 100px; margin: 0; }
+.consultas-mensaje { white-space: pre-wrap; }
+@media (max-width: 600px) {
+  .consultas-tarjeta { padding: 16px; }
+}

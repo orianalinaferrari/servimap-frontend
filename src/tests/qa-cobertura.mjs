@@ -61,6 +61,7 @@ try {
   await ejecutar('scripts/qa/build-estatico.mjs', [], env)
   // Capturar también el runner de ayuda: sus comprobaciones deben llegar al LCOV de CI.
   await ejecutar('scripts/qa/faqs-ayuda.mjs', [], env)
+  await ejecutar('src/tests/qa-consultas.mjs', [], env)
 } finally {
   await server.close()
 }
