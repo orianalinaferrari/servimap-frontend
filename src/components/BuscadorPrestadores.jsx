@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { listarPrestadores } from '../services/prestadoresService'
+import { prepararFiltrosRemotos } from '../services/filtrosRemotosPrestadores'
 import FichaPrestadorRemota from './FichaPrestadorRemota'
 import { MapaPrestadores } from './mapa/MapaPrestadores'
 import { DetallePrestador } from './DetallePrestador'
@@ -38,14 +39,18 @@ export function BuscadorPrestadores({ prestadores, paginaInicial, calificaciones
   const [revision, setRevision] = useState(0)
   const [consultaFallida, setConsultaFallida] = useState(null)
   const resultadosRef = useRef(null)
-  const consulta = JSON.stringify({ page: pagina, q: termino.trim(), oficioId: catalogoOficios?.find((oficio) => oficio.nombre === filtros.oficio)?.id, calificacionMin: filtros.calificacionMinima, disponible: filtros.soloDisponibles ? true : undefined })
-  const consultaInicial = pagina === 1 && !termino.trim() && !filtros.oficio && !filtros.calificacionMinima && !filtros.soloDisponibles
+  const zonasId = useId()
+  const filtrosRemotos = paginaInicial?.filtrosRemotos ?? remotos?.resultado.filtrosRemotos ?? false
+  const preparados = prepararFiltrosRemotos({ zona: filtros.zona, presupuesto: filtros.precioMaximo })
+  const errorFiltros = filtrosRemotos ? Object.values(preparados.errores)[0] : ''
+  const consulta = JSON.stringify({ page: pagina, q: termino.trim(), oficioId: catalogoOficios?.find((oficio) => oficio.nombre === filtros.oficio)?.id, calificacionMin: filtros.calificacionMinima, disponible: filtros.soloDisponibles ? true : undefined, ...(filtrosRemotos ? preparados.parametros : {}) })
+  const consultaInicial = pagina === 1 && !termino.trim() && !filtros.oficio && !filtros.calificacionMinima && !filtros.soloDisponibles && (!filtrosRemotos || Object.keys(preparados.parametros).length === 0)
   const usarInicial = Boolean(paginaInicial && !remotos && revision === 0 && consultaInicial)
-  const paginaActual = remotos?.consulta === consulta ? remotos.resultado : usarInicial ? paginaInicial : null
-  const metadatos = paginaActual ?? remotos?.resultado ?? paginaInicial
-  const pendiente = Boolean(catalogoOficios && !paginaActual && consultaFallida !== consulta)
+  const paginaActual = errorFiltros ? null : remotos?.consulta === consulta ? remotos.resultado : usarInicial ? paginaInicial : null
+  const metadatos = errorFiltros ? null : paginaActual ?? remotos?.resultado ?? paginaInicial
+  const pendiente = Boolean(!errorFiltros && catalogoOficios && !paginaActual && consultaFallida !== consulta)
   useEffect(() => {
-    if (!catalogoOficios || usarInicial) return
+    if (!catalogoOficios || usarInicial || errorFiltros) return
     let vigente = true
     const temporizador = setTimeout(async () => {
       setConsultaCargando(consulta); setErrorRemoto('')
@@ -56,19 +61,19 @@ export function BuscadorPrestadores({ prestadores, paginaInicial, calificaciones
       finally { if (vigente) setConsultaCargando(null) }
     }, 300)
     return () => { vigente = false; clearTimeout(temporizador) }
-  }, [catalogoOficios, consulta, revision, usarInicial])
-  const listaActual = paginaActual?.registros ?? (metadatos?.paginada ? SIN_REGISTROS : prestadores)
+  }, [catalogoOficios, consulta, revision, usarInicial, errorFiltros])
+  const listaActual = errorFiltros ? SIN_REGISTROS : paginaActual?.registros ?? (metadatos?.paginada ? SIN_REGISTROS : prestadores)
   const precioNegativo =
     filtros.precioMaximo !== '' && Number(filtros.precioMaximo) < 0
   const opciones = obtenerOpcionesFiltros([...prestadores, ...listaActual])
   if (filtros.zona && !opciones.zonas.includes(filtros.zona)) opciones.zonas.push(filtros.zona)
   if (catalogoOficios) opciones.oficios = catalogoOficios.map((oficio) => oficio.nombre)
-  const resultados = useMemo(() => aplicarFiltrosPrestadores(listaActual, paginaActual?.paginada ? '' : termino,
-    paginaActual?.paginada ? { zona: filtros.zona, precioMaximo: filtros.precioMaximo } : filtros), [listaActual, termino, filtros, paginaActual])
+  const resultados = useMemo(() => filtrosRemotos ? listaActual : aplicarFiltrosPrestadores(listaActual, paginaActual?.paginada ? '' : termino,
+    paginaActual?.paginada ? { zona: filtros.zona, precioMaximo: filtros.precioMaximo } : filtros), [listaActual, termino, filtros, paginaActual, filtrosRemotos])
   // /mapa sigue siendo independiente: no se conocen sus filtros globales.
   const marcadoresVisibles = marcadoresPublicos ?? resultados
-  const filtrosLocales = Boolean(filtros.zona || filtros.precioMaximo !== '')
-  const cargando = consultaCargando === consulta || pendiente
+  const filtrosLocales = !filtrosRemotos && Boolean(filtros.zona || filtros.precioMaximo !== '')
+  const cargando = !errorFiltros && (consultaCargando === consulta || pendiente)
   const errorActual = consultaFallida === consulta ? errorRemoto : ''
 
   const prestadorSeleccionado = prestadores.find(
@@ -139,7 +144,13 @@ export function BuscadorPrestadores({ prestadores, paginaInicial, calificaciones
 
           <div className="filtros-campo">
             <label htmlFor="filtro-zona">Zona</label>
-            <select
+            {filtrosRemotos ? <>
+              <input id="filtro-zona" type="text" list={zonasId} maxLength={100} value={filtros.zona}
+                onChange={evento => actualizarFiltro('zona', evento.target.value)} aria-invalid={Boolean(preparados.errores.zona)} aria-describedby={`${zonasId}-ayuda`} placeholder="Sin filtro de zona" />
+              <datalist id={zonasId}>{opciones.zonas.map(zona => <option key={zona} value={zona} />)}</datalist>
+              <p id={`${zonasId}-ayuda`}>Escribí la zona exacta. Las sugerencias son parciales; podés buscar una zona que no figure.</p>
+              {preparados.errores.zona && <p role="alert">{preparados.errores.zona}</p>}
+            </> : <select
               id="filtro-zona"
               value={filtros.zona}
               onChange={(evento) => actualizarFiltro('zona', evento.target.value)}
@@ -148,22 +159,24 @@ export function BuscadorPrestadores({ prestadores, paginaInicial, calificaciones
               {opciones.zonas.map((zona) => (
                 <option key={zona} value={zona}>{zona}</option>
               ))}
-            </select>
+            </select>}
           </div>
 
           <div className="filtros-campo">
             <label htmlFor="filtro-precio">Precio máximo</label>
             <input
               id="filtro-precio"
-              type="number"
+              type={filtrosRemotos ? 'text' : 'number'}
+              inputMode="decimal"
               min="0"
-              step="1000"
+              step={filtrosRemotos ? undefined : '1000'}
               placeholder="Sin límite"
               value={filtros.precioMaximo}
               onChange={(evento) => actualizarFiltro('precioMaximo', evento.target.value)}
-              aria-invalid={precioNegativo}
+              aria-invalid={filtrosRemotos ? Boolean(preparados.errores.presupuesto) : precioNegativo}
             />
-            {precioNegativo && (
+            {filtrosRemotos && preparados.errores.presupuesto && <p role="alert">{preparados.errores.presupuesto}</p>}
+            {!filtrosRemotos && precioNegativo && (
               <p role="alert">El precio máximo no puede ser negativo.</p>
             )}
           </div>
@@ -217,7 +230,9 @@ export function BuscadorPrestadores({ prestadores, paginaInicial, calificaciones
 
       <section className="directorio-resultados" ref={resultadosRef} aria-labelledby="directorio-resultados-titulo">
         <div className="directorio-resultados-cabecera"><h2 id="directorio-resultados-titulo">Prestadores encontrados</h2><p role="status">Mostrando {resultados.length} {resultados.length === 1 ? 'resultado' : 'resultados'}</p></div>
-        {catalogoOficios && <p className="directorio-aclaracion">Zona y precio máximo se aplican solo a los registros de la página recibida. Puede haber coincidencias en otras páginas. Las zonas disponibles provienen de los registros recibidos.</p>}
+        {catalogoOficios && <p className="directorio-aclaracion">{filtrosRemotos
+          ? 'Zona y precio máximo se aplican en el servidor antes de paginar. El total incluye todos los filtros del listado.'
+          : 'Zona y precio máximo se aplican solo a los registros de la página recibida. Puede haber coincidencias en otras páginas. Las zonas disponibles provienen de los registros recibidos.'}</p>}
         {metadatos?.paginada ? <>
           <p>Total informado por el servidor{paginaActual ? '' : ' en la última consulta confirmada'}: {metadatos.totalRegistros}{filtrosLocales ? ' (sin aplicar zona ni precio máximo).' : '.'}</p>
           {metadatos.totalPaginas === 0 ? <p>No hay páginas de resultados.</p> : <nav className="directorio-paginacion" aria-label="Paginación de prestadores">
@@ -228,7 +243,7 @@ export function BuscadorPrestadores({ prestadores, paginaInicial, calificaciones
           {pagina > 1 && !cargando && (errorActual || paginaActual?.registros.length === 0) && <button type="button" onClick={() => setPagina(1)}>Volver a la primera página</button>}
         </> : paginaActual && <p>Respuesta sin paginación: se muestran los registros recibidos; el total global no está disponible.</p>}
       {resultados.length === 0 ? (
-        !cargando && !errorActual && <p>{catalogoOficios && (paginaActual?.paginada || filtrosLocales)
+        !cargando && !errorActual && !errorFiltros && <p>{catalogoOficios && (paginaActual?.paginada || filtrosLocales)
           ? paginaActual?.totalRegistros === 0 ? 'No se encontraron prestadores para los filtros enviados al servidor.' : 'No hay coincidencias en esta página. Puede haber resultados en otras páginas.'
           : 'No se encontraron prestadores con los criterios seleccionados.'}</p>
       ) : (
