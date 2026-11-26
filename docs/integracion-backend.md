@@ -27,6 +27,7 @@ Los IDs de usuario, perfil de prestador, oficio y solicitud son strings distinto
 | Registro | POST `/api/auth/register` | `{nombre,dni,email,password,rol}` → usuario, 201. DNI normalizado sin puntos/espacios, 7–8 dígitos; password ≥8; rol CLIENTE/PRESTADOR. 409 para DNI/email duplicados. |
 | Login | POST `/api/auth/login` | `{email,password}` → `{token,usuario}`. 400/401/403. |
 | Sesión | GET `/api/auth/me` | Bearer → usuario con DNI del dueño; 401/404 invalidan sesión. |
+| Contraseña | PATCH `/api/auth/me/password` | CLIENTE/PRESTADOR; JSON `{passwordActual,passwordNueva}` → `{mensaje:"Contraseña actualizada"}`. Sin revocación de otros JWT. Backend PR #54 pendiente de despliegue; ver [corrección #8](cambio-contrasena-usuario.md). |
 | Catálogo | GET `/api/oficios` | Array de oficios activos `{id,nombre,categoria,activo}`, público. |
 | Directorio | GET `/api/prestadores` | Filtros `q`, `oficioId`, `calificacionMin`, `disponible`, `limit` (máx. 50). Oficios por objeto y reputación se adaptan a la UI existente. |
 | Ficha | GET `/api/prestadores/:id` | Datos públicos, contactos, reputación, comentarios sin moderados. |

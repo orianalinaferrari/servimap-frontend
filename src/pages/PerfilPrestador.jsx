@@ -3,6 +3,7 @@ import { VistaPerfilPrestador } from '../components/prestador/VistaPerfilPrestad
 import { obtenerMiPerfil, actualizarMiPerfil, obtenerMisCalificaciones } from '../services/prestadoresService'
 import { FormularioPerfilPrestador } from '../components/prestador/FormularioPerfilPrestador'
 import { IconoPrestador } from '../components/prestador/IconoPrestador'
+import CambioContrasena from '../components/perfil/CambioContrasena'
 
 export default function PerfilPrestador() {
   const [perfil, setPerfil] = useState(null)
@@ -28,6 +29,7 @@ export default function PerfilPrestador() {
     {error && <div role="alert"><p>{error}</p><button onClick={() => setRevision((n) => n + 1)}>Reintentar perfil</button></div>}
     {!perfil && !error && <p role="status">Cargando perfil...</p>}
     {perfil && (editando ? <FormularioPerfilPrestador perfil={perfil} enSitio onGuardar={guardar} onCancelar={() => setEditando(false)} /> : <VistaPerfilPrestador perfil={perfil} onEditar={() => { setEditando(true); setMensaje('') }} />)}
+    <CambioContrasena />
     <section className="prestador-tarjeta prestador-calificaciones"><h2><IconoPrestador tipo="estrella" />Calificaciones recibidas</h2>
       {errorComentarios && <p role="alert">{errorComentarios}</p>}
       {calificaciones.length === 0 && !errorComentarios && <p>Todavía no hay comentarios</p>}

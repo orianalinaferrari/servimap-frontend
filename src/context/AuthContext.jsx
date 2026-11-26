@@ -7,6 +7,7 @@ import {
   iniciarSesion,
   cerrarSesion,
   obtenerSesion,
+  cambiarContrasenaCuenta,
 } from '../services/authService'
 
 export function AuthProvider({ children }) {
@@ -14,6 +15,7 @@ export function AuthProvider({ children }) {
   const [cargando, setCargando] = useState(true)
   const [sesionExpirada, setSesionExpirada] = useState(false)
   const version = useRef(0)
+  const [claveSesion, setClaveSesion] = useState(0)
   const [fotoSesion, setFotoSesion] = useState(null)
   const esPrestador = normalizarRol(usuario?.rol) === ROLES.PRESTADOR
 
@@ -40,6 +42,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const expirar = () => {
       version.current += 1
+      setClaveSesion(clave => clave + 1)
       setUsuario(null)
       setFotoSesion(null)
       setSesionExpirada(true)
@@ -103,10 +106,24 @@ export function AuthProvider({ children }) {
     return sesion
   }, [])
 
+  const cambiarContrasena = useCallback(async (datos) => {
+    const actual = version.current
+    const token = obtenerToken()
+    if (!token || !usuario?.id || ![ROLES.CLIENTE, ROLES.PRESTADOR].includes(normalizarRol(usuario.rol))) {
+      throw new Error('Debés iniciar sesión para cambiar tu contraseña.')
+    }
+    const confirmacion = await cambiarContrasenaCuenta(datos, { token })
+    if (actual !== version.current || obtenerToken() !== token) {
+      throw new Error('La sesión cambió durante la operación. No se confirma el cambio en esta sesión.')
+    }
+    return confirmacion
+  }, [usuario])
+
   async function login(email, contrasena) {
     const sesion = await iniciarSesion(email, contrasena)
 
     version.current += 1
+    setClaveSesion(clave => clave + 1)
     setFotoSesion(null)
     setUsuario(sesion)
     setSesionExpirada(false)
@@ -118,6 +135,7 @@ export function AuthProvider({ children }) {
     await cerrarSesion()
 
     version.current += 1
+    setClaveSesion(clave => clave + 1)
     setFotoSesion(null)
     setUsuario(null)
     setSesionExpirada(false)
@@ -132,6 +150,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         revalidarSesion,
+        cambiarContrasena,
+        claveSesion,
         sesionExpirada,
         autenticado: Boolean(usuario),
       }}

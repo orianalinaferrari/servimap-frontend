@@ -245,6 +245,7 @@ Ocultar un comentario exige motivo no vacío de hasta 200 caracteres y respuesta
 - Registro: nombre y apellido en un campo, email, DNI, contraseña, confirmación y CLIENTE/PRESTADOR.
 - DNI: se eliminan puntos/espacios; se requieren 7 u 8 dígitos. Email se normaliza a minúsculas; contraseña de al menos 8 caracteres y confirmación coincidente.
 - La confirmación no se envía a la API. Un registro exitoso invita a iniciar sesión y limpia contraseña/DNI del formulario.
+- Corrección #8: CLIENTE y PRESTADOR pueden cambiar su contraseña desde la sección «Seguridad de la cuenta» de su perfil. Usa únicamente PATCH `/api/auth/me/password`, con contraseña actual, nueva (mínimo 8, distinta) y confirmación local, sin trim. Solo confirma éxito tras respuesta válida; no cierra otras sesiones. Backend PR #54 pendiente de despliegue e integración real. Ver [contrato y validación](docs/cambio-contrasena-usuario.md).
 - Login recibe JWT/usuario. El token se guarda en `sessionStorage`, clave `servimap-jwt`; no se persisten el usuario ni su DNI.
 - Sobrevive a recargar la pestaña mientras sea válido. No usa `localStorage` ni garantiza sincronización entre pestañas.
 - Se comprueba `exp` para anticipar vencimiento y se consulta `/api/auth/me` para recuperar/revalidar identidad. Decodificar `exp` no verifica la firma: esa es responsabilidad del backend.
@@ -274,6 +275,7 @@ Las rutas se concatenan al origen. «Propio» significa que el backend verifica 
 | POST `/api/auth/register` | Público | `{nombre,dni,email,password,rol}`; usuario, 201. |
 | POST `/api/auth/login` | Público | `{email,password}`; `{token,usuario}`. |
 | GET `/api/auth/me` | Autenticado | Usuario vigente; no es búsqueda pública de personas. |
+| PATCH `/api/auth/me/password` | CLIENTE/PRESTADOR | Solo `{passwordActual,passwordNueva}`; confirma `{mensaje:"Contraseña actualizada"}`. Backend PR #54 pendiente de despliegue. |
 | GET `/api/oficios` | Público | Array activo: `id`, `nombre`, `categoria`, `activo`. |
 | GET `/api/prestadores` | Público | UI envía `limit=50`, `q`, `oficioId`, `calificacionMin`, `disponible` cuando corresponden. |
 | GET `/api/prestadores/:id` | Público | Ficha, contactos, reputación y comentarios públicos. |
