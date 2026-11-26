@@ -212,9 +212,9 @@ La landing presenta dos accesos con rol preseleccionado. El modal usa `dialog`, 
 
 ### Directorio y fichas
 
-Se cargan catálogo activo, prestadores y marcadores. Texto, oficio por ID, calificación mínima y disponibilidad disparan consultas remotas con espera de 300 ms. Zona y precio se aplican sobre el conjunto cargado; el precio compara el presupuesto del filtro con el precio mínimo del profesional.
+Se cargan catálogo activo, prestadores y marcadores. Texto, oficio por ID, calificación mínima y disponibilidad disparan consultas remotas con espera de 300 ms. Zona y precio se conservan locales por defecto; su integración remota requiere activar explícitamente el contrato backend #57 sobre un origen verificado.
 
-Se solicitan **50 prestadores por página**, con controles anterior/siguiente y totales del servidor. La respuesta antigua por array sigue admitida, sin controles ni totales globales ficticios. Zona y precio se aplican únicamente sobre la página recibida y la UI lo aclara. El mapa conserva su endpoint independiente y no se recorta a los IDs de la página: mientras se confirman su alcance y filtros, muestra las ubicaciones recibidas sin reflejar los filtros del listado. Ver [contrato, compatibilidad y validación pendiente](docs/paginacion-prestadores-backend.md).
+Se solicitan **50 prestadores por página**, con controles anterior/siguiente y totales del servidor. Sin activar #57 se admite el array antiguo sin totales globales y zona/precio filtran solo la página, con aclaración visible. Con activación verificada se envían `zona` y `presupuesto`, se usan los totales filtrados y no se vuelve a filtrar localmente; zona admite texto libre con sugerencias parciales. El mapa conserva sus reglas y endpoint independientes. Ver [paginación](docs/paginacion-prestadores-backend.md) y [activación de filtros remotos](docs/filtros-remotos-prestadores.md).
 
 La ficha remota muestra la información disponible, contactos, precios, reputación y comentarios no moderados. No se rellenan datos inexistentes con información ficticia.
 
@@ -388,7 +388,9 @@ Guardar en UTF-8 sin BOM. No sobrescribir configuración personal ni pegar crede
 
 | Variable/archivo | Uso |
 | --- | --- |
-| `VITE_API_URL` | Única variable de aplicación consumida por `src/`. Origen HTTP/HTTPS, **sin `/api` al final**. |
+| `VITE_API_URL` | Origen HTTP/HTTPS de la API, **sin `/api` al final**. |
+| `VITE_PRESTADORES_CONTRATO_FILTROS` | Opcional: `zona-presupuesto-v1`, solo después de verificar el despliegue #57. Ausente por defecto. |
+| `VITE_PRESTADORES_FILTROS_API_ORIGIN` | Opcional: debe coincidir exactamente con el origen de `VITE_API_URL`; obligatoria junto con la versión para activar filtros remotos. |
 | `.env.example` | Ejemplo público versionado con origen de la API publicada. |
 | `.env.local` | Configuración personal ignorada por Git. No publicar su contenido. |
 | `.env.production` | Predeterminado público de build; solo URL de API. |
@@ -666,7 +668,7 @@ Los hallazgos actuales se resumen en esta sección y las limitaciones en la sigu
 3. **Sin preview confirmada:** faltan URL, CORS exacto, assets y refresh remoto; configurar Vercel no prueba despliegue.
 4. **Mapa real sin marcadores al consultar:** varios profesionales representativos se probaron con fixtures, sin crearlos en producción.
 5. **Calificación tras recarga:** GET devuelve `calificada`, sin detalle completo de puntaje/comentario. Se impide duplicar; el detalle recién creado vive en la vista y puede perderse al recargar. No hay UI de edición de comentario.
-6. **Filtros con alcance parcial:** 50 por página, zona/precio locales y sin control de radio; geolocalizar/recentrar no filtra por cercanía. El mapa permanece independiente mientras se confirma su contrato de filtros.
+6. **Filtros con alcance parcial por defecto:** zona/precio siguen locales hasta verificar y activar el contrato #57. No se detecta soporte por el sobre paginado. El mapa permanece independiente y geolocalizar/recentrar no filtra por cercanía.
 7. **Perfil:** algunos campos guardados no se borran enviando vacío. Sin carga de archivos ni edición de nombre/email de cuenta.
 8. **Dispositivos/accesibilidad:** Chrome a cuatro anchos no certifica todos los navegadores, lectores de pantalla o contenidos.
 9. **Herramientas:** persiste el aviso de tamaño MapLibre; las alertas npm conocidas se corrigieron y el audit local final devuelve cero. Sigue pendiente confirmar las métricas Sonar de la nueva rama.
