@@ -1,5 +1,6 @@
 ﻿import { ApiError, apiRequest } from './apiClient'
 import { guardarToken, obtenerToken, eliminarToken } from './sesionToken'
+import { normalizarNombreUsuario } from '../utils/nombreUsuario'
 
 export async function iniciarSesion(email, contrasena) {
   const sesion = await apiRequest('/api/auth/login', {
@@ -15,6 +16,15 @@ export async function registrarUsuario(datos) {
 }
 
 export async function cerrarSesion() { eliminarToken() }
+
+export async function actualizarNombreCuenta({ nombre }, { token } = {}) {
+  const limpio = normalizarNombreUsuario(nombre)
+  const perfil = await apiRequest('/api/auth/me', { method: 'PATCH', token, json: { nombre: limpio } })
+  if (!perfil || Array.isArray(perfil) || !perfil.id || perfil.nombre !== limpio) {
+    throw new Error('El servidor no confirmó el nombre. Se conserva tu edición sin guardar.')
+  }
+  return perfil
+}
 
 export async function obtenerSesion() {
   if (!obtenerToken()) return null
