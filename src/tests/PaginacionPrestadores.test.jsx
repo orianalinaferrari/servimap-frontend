@@ -216,10 +216,11 @@ describe('Directorio paginado con HTTP simulado', () => {
     let fallo = true
     http.mockImplementation((url, config) => new URL(url).pathname === '/api/prestadores' && fallo ? Promise.resolve(respuesta({ registros: null })) : original(url, config))
     render(<DirectorioPrestadores />)
-    await screen.findByText('El servidor devolvió una paginación de prestadores no válida.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('El servidor devolvió una paginación de prestadores no válida.')
     fallo = false
     fireEvent.click(screen.getByRole('button', { name: 'Reintentar búsqueda' }))
-    await screen.findByText('Página 1 de 2')
+    expect(await screen.findByText('Página 1 de 2')).toBeVisible()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
   it('aísla un mapa malformado sin impedir la paginación del directorio', async () => {
     const original = http.getMockImplementation()
