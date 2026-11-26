@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { IconoPrestador } from '../components/prestador/IconoPrestador'
 import { obtenerIniciales } from '../utils/perfilUsuario'
+import EdicionNombreUsuario from '../components/perfil/EdicionNombreUsuario'
 
-// Solo lectura: Swagger no expone un endpoint para actualizar datos del CLIENTE.
 export default function PerfilCliente() {
   const { usuario } = useAuth()
   const iniciales = obtenerIniciales(usuario?.nombre)
@@ -22,7 +22,8 @@ export default function PerfilCliente() {
     </section>
     <section className="prestador-tarjeta"><h2><IconoPrestador tipo="usuario" />Datos personales</h2>
       <dl className="prestador-contactos">{datos.map(([etiqueta, valor, tipo]) => <div key={etiqueta}><span className="prestador-icono-suave"><IconoPrestador tipo={tipo} /></span><div><dt>{etiqueta}</dt><dd>{valor || 'No informado por el servidor'}</dd></div></div>)}</dl>
-      <p role="note">Estos datos son de solo lectura y el DNI no se puede modificar. Por ahora el servidor no ofrece una operación para actualizar los datos personales del cliente.</p>
+      <p role="note">Podés editar tu nombre; el DNI no se puede modificar. Email y rol también se mantienen sin cambios.</p>
     </section>
+    <EdicionNombreUsuario />
   </main>
 }

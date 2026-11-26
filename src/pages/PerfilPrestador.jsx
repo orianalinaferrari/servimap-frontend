@@ -1,17 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { VistaPerfilPrestador } from '../components/prestador/VistaPerfilPrestador'
 import { obtenerMiPerfil, actualizarMiPerfil, obtenerMisCalificaciones } from '../services/prestadoresService'
 import { FormularioPerfilPrestador } from '../components/prestador/FormularioPerfilPrestador'
 import { IconoPrestador } from '../components/prestador/IconoPrestador'
+import { AuthContext } from '../context/authContextInstance'
+import EdicionNombreUsuario from '../components/perfil/EdicionNombreUsuario'
 
 export default function PerfilPrestador() {
+  const auth = useContext(AuthContext)
   const [perfil, setPerfil] = useState(null)
   const [calificaciones, setCalificaciones] = useState([])
   const [editando, setEditando] = useState(false)
+  const [sesionEditandoNombre, setSesionEditandoNombre] = useState(null)
+  const identidadCuenta = `${auth?.claveSesion ?? 0}:${auth?.usuario?.id ?? ''}:${auth?.usuario?.rol ?? ''}`
+  const editandoNombre = sesionEditandoNombre === identidadCuenta
   const [error, setError] = useState('')
   const [errorComentarios, setErrorComentarios] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [revision, setRevision] = useState(0)
+  // Un GET profesional iniciado antes del PATCH no debe restituir el nombre anterior.
+  const perfilVisible = perfil && auth?.usuario?.nombre ? { ...perfil, nombre: auth.usuario.nombre } : perfil
   useEffect(() => {
     let activo = true
     obtenerMiPerfil().then((dato) => { if (activo) { setPerfil(dato); setError('') } }).catch((fallo) => { if (activo) setError(fallo.message) })
@@ -27,7 +35,8 @@ export default function PerfilPrestador() {
     {mensaje && <p role="status">{mensaje}</p>}
     {error && <div role="alert"><p>{error}</p><button onClick={() => setRevision((n) => n + 1)}>Reintentar perfil</button></div>}
     {!perfil && !error && <p role="status">Cargando perfil...</p>}
-    {perfil && (editando ? <FormularioPerfilPrestador perfil={perfil} enSitio onGuardar={guardar} onCancelar={() => setEditando(false)} /> : <VistaPerfilPrestador perfil={perfil} onEditar={() => { setEditando(true); setMensaje('') }} />)}
+    {perfilVisible && (editando ? <FormularioPerfilPrestador perfil={perfilVisible} enSitio onGuardar={guardar} onCancelar={() => setEditando(false)} /> : <VistaPerfilPrestador perfil={perfilVisible} onEditar={editandoNombre ? undefined : () => { setEditando(true); setMensaje('') }} />)}
+    {perfilVisible && <EdicionNombreUsuario deshabilitado={editando} onCambiarEdicion={valor => setSesionEditandoNombre(valor ? identidadCuenta : null)} />}
     <section className="prestador-tarjeta prestador-calificaciones"><h2><IconoPrestador tipo="estrella" />Calificaciones recibidas</h2>
       {errorComentarios && <p role="alert">{errorComentarios}</p>}
       {calificaciones.length === 0 && !errorComentarios && <p>Todavía no hay comentarios</p>}

@@ -7,6 +7,7 @@ import {
   iniciarSesion,
   cerrarSesion,
   obtenerSesion,
+  actualizarNombreCuenta,
 } from '../services/authService'
 
 export function AuthProvider({ children }) {
@@ -14,6 +15,7 @@ export function AuthProvider({ children }) {
   const [cargando, setCargando] = useState(true)
   const [sesionExpirada, setSesionExpirada] = useState(false)
   const version = useRef(0)
+  const [claveSesion, setClaveSesion] = useState(0)
   const [fotoSesion, setFotoSesion] = useState(null)
   const esPrestador = normalizarRol(usuario?.rol) === ROLES.PRESTADOR
 
@@ -40,6 +42,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const expirar = () => {
       version.current += 1
+      setClaveSesion(clave => clave + 1)
       setUsuario(null)
       setFotoSesion(null)
       setSesionExpirada(true)
@@ -103,10 +106,32 @@ export function AuthProvider({ children }) {
     return sesion
   }, [])
 
+  const actualizarNombre = useCallback(async (datos) => {
+    const actual = version.current
+    const token = obtenerToken()
+    if (!token || !usuario?.id || ![ROLES.CLIENTE, ROLES.PRESTADOR].includes(normalizarRol(usuario.rol))) {
+      throw new Error('Debés iniciar sesión para editar tu nombre.')
+    }
+    const confirmado = await actualizarNombreCuenta(datos, { token })
+    if (actual !== version.current || obtenerToken() !== token) {
+      throw new Error('La sesión cambió durante el guardado. Volvé a consultar tu perfil.')
+    }
+    if (confirmado.id !== usuario.id || normalizarRol(confirmado.rol) !== normalizarRol(usuario.rol) ||
+        ['email', 'dni', 'fechaRegistro'].some(campo => usuario[campo] !== undefined && confirmado[campo] !== usuario[campo])) {
+      throw new Error('El servidor no confirmó los datos de tu cuenta. Volvé a consultar tu perfil.')
+    }
+    // Invalida GET de sesión anteriores para que no restituyan el nombre viejo.
+    const confirmacion = ++version.current
+    setUsuario(anterior => version.current === confirmacion && anterior?.id === usuario.id
+      ? { ...anterior, nombre: confirmado.nombre } : anterior)
+    return confirmado
+  }, [usuario])
+
   async function login(email, contrasena) {
     const sesion = await iniciarSesion(email, contrasena)
 
     version.current += 1
+    setClaveSesion(clave => clave + 1)
     setFotoSesion(null)
     setUsuario(sesion)
     setSesionExpirada(false)
@@ -118,6 +143,7 @@ export function AuthProvider({ children }) {
     await cerrarSesion()
 
     version.current += 1
+    setClaveSesion(clave => clave + 1)
     setFotoSesion(null)
     setUsuario(null)
     setSesionExpirada(false)
@@ -132,6 +158,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         revalidarSesion,
+        actualizarNombre,
+        claveSesion,
         sesionExpirada,
         autenticado: Boolean(usuario),
       }}

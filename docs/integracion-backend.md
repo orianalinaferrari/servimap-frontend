@@ -27,6 +27,7 @@ Los IDs de usuario, perfil de prestador, oficio y solicitud son strings distinto
 | Registro | POST `/api/auth/register` | `{nombre,dni,email,password,rol}` → usuario, 201. DNI normalizado sin puntos/espacios, 7–8 dígitos; password ≥8; rol CLIENTE/PRESTADOR. 409 para DNI/email duplicados. |
 | Login | POST `/api/auth/login` | `{email,password}` → `{token,usuario}`. 400/401/403. |
 | Sesión | GET `/api/auth/me` | Bearer → usuario con DNI del dueño; 401/404 invalidan sesión. |
+| Nombre de cuenta | PATCH `/api/auth/me` | CLIENTE/PRESTADOR, Bearer y JSON `{nombre}`; trim, obligatorio, máximo 100. Devuelve el perfil plano. PR #54 pendiente de despliegue; ver [validación y pendientes](edicion-nombre-usuario.md). |
 | Catálogo | GET `/api/oficios` | Array de oficios activos `{id,nombre,categoria,activo}`, público. |
 | Directorio | GET `/api/prestadores` | Filtros `q`, `oficioId`, `calificacionMin`, `disponible`, `limit` (máx. 50). Oficios por objeto y reputación se adaptan a la UI existente. |
 | Ficha | GET `/api/prestadores/:id` | Datos públicos, contactos, reputación, comentarios sin moderados. |
@@ -50,7 +51,7 @@ El cliente envía `Authorization: Bearer` en operaciones autenticadas y `credent
 
 ## Diferencias explícitas respecto del prototipo
 
-- El backend tiene un solo `nombre`: el registro solicita nombre y apellido juntos. No acepta apellido o teléfono en registro. El teléfono/contacto puede editarse en el perfil del prestador; no hay endpoint para editar datos de cuenta o teléfono del cliente. No se finge guardar campos no admitidos.
+- El backend tiene un solo `nombre`: el registro solicita nombre y apellido juntos. Su edición usa exclusivamente PATCH `/api/auth/me` (PR #54, pendiente de despliegue). Email, DNI y rol permanecen intactos. No acepta apellido o teléfono en registro. El teléfono/contacto puede editarse en el perfil del prestador; no se implementa edición de teléfono del cliente.
 - No existe fecha preferida de solicitud: se reemplazó por contacto preferido admitido, sin enviar campos ignorados. La dirección es opcional.
 - No existe finalización en dos etapas ni confirmación del cliente: el prestador finaliza directamente una ACEPTADA. Se retiró esa acción ficticia del cliente. El cliente puede cancelar también ACEPTADAS.
 - No existen propuestas o presupuestos: no se implementaron.
