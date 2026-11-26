@@ -48,6 +48,10 @@ body:has(.directorio-pagina) { min-width: 0; background: #FAF8F4; }
 .directorio-pagina .mapa-sin-coordenadas { display: flex; align-items: center; gap: 12px; min-height: 50px; margin: 22px 0 0; padding: 12px 18px; background: #FADEE7; color: #8B1539; border-radius: 9px; font-size: 13px; font-weight: 400; }
 .directorio-pagina .mapa-sin-coordenadas svg { flex: 0 0 18px; width: 18px; height: 22px; }
 .directorio-resultados { scroll-margin-top: 24px; }
+.directorio-paginacion { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 16px 0; }
+.directorio-paginacion button { min-height: 44px; }
+.directorio-paginacion button:disabled { opacity: .55; cursor: default; }
+.directorio-aclaracion { font-size: 13px; line-height: 1.5; }
 .directorio-pagina .directorio-resultados-cabecera { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
 .directorio-pagina .directorio-resultados-cabecera h2 { margin: 0; font-size: 30px; line-height: 1.2; font-weight: 700; }
 .directorio-pagina .directorio-resultados-cabecera p { margin: 0; padding: 0; background: transparent; font-size: 12px; font-weight: 400; }

@@ -11,7 +11,19 @@ export const actualizarOficio = (id, datos) => apiRequest(`/api/oficios/${encode
 export const cambiarEstadoOficioRemoto = (id, activo) => apiRequest(`/api/oficios/${encodeURIComponent(id)}/estado`, { method: 'PATCH', json: { activo } })
 
 export function adaptarPrestador(datos) {
-  const oficiosCatalogo = datos.oficios || []
+  const formatoInvalido = () => { throw new Error('El servidor devolvió un formato de prestadores no reconocido.') }
+  if (!datos || typeof datos !== 'object' || Array.isArray(datos) ||
+      !['string', 'number'].includes(typeof datos.id) || !String(datos.id).trim() || (typeof datos.id === 'number' && !Number.isFinite(datos.id)) ||
+      typeof datos.nombre !== 'string' ||
+      ['zonaCobertura', 'descripcionProfesional', 'telefono', 'whatsapp', 'emailContacto', 'fotoPerfil'].some(campo => datos[campo] != null && typeof datos[campo] !== 'string')) formatoInvalido()
+  const oficiosCatalogo = datos.oficios ?? []
+  if (!Array.isArray(oficiosCatalogo) || oficiosCatalogo.some(oficio => !oficio || typeof oficio.nombre !== 'string') ||
+      (datos.comentarios != null && (!Array.isArray(datos.comentarios) || datos.comentarios.some(comentario =>
+        !comentario || !Number.isInteger(comentario.puntaje) || comentario.puntaje < 1 || comentario.puntaje > 5 ||
+        ['comentario', 'clienteNombre', 'fechaPublicacion'].some(campo => comentario[campo] != null && typeof comentario[campo] !== 'string')))) ||
+      (datos.reputacion != null && (typeof datos.reputacion !== 'object' || Array.isArray(datos.reputacion))) ||
+      (datos.reputacion?.promedio != null && (!Number.isFinite(datos.reputacion.promedio) || datos.reputacion.promedio < 0 || datos.reputacion.promedio > 5)) ||
+      ['serviciosFinalizados', 'totalCalificaciones'].some(campo => datos.reputacion?.[campo] != null && (!Number.isSafeInteger(datos.reputacion[campo]) || datos.reputacion[campo] < 0))) formatoInvalido()
   return {
     ...datos,
     oficiosCatalogo,
@@ -22,9 +34,39 @@ export function adaptarPrestador(datos) {
   }
 }
 
-export const listarPrestadores = async (parametros = {}) => (await apiRequest('/api/prestadores', { autenticar: false, parametros: { limit: 50, ...parametros } })).map(adaptarPrestador)
+export function normalizarPaginaPrestadores(respuesta) {
+  if (Array.isArray(respuesta)) {
+    return { registros: respuesta.map(adaptarPrestador), paginada: false, totalRegistros: null, pagina: null, limite: null, totalPaginas: null }
+  }
+  const entero = valor => Number.isSafeInteger(valor) && valor >= 0
+  if (!respuesta || !Array.isArray(respuesta.registros) ||
+      !entero(respuesta.totalRegistros) || !entero(respuesta.pagina) || respuesta.pagina < 1 ||
+      !entero(respuesta.limite) || respuesta.limite < 1 || respuesta.limite > 50 ||
+      !entero(respuesta.totalPaginas) || respuesta.totalPaginas !== Math.ceil(respuesta.totalRegistros / respuesta.limite) ||
+      respuesta.registros.length !== Math.max(0, Math.min(respuesta.limite, respuesta.totalRegistros - (respuesta.pagina - 1) * respuesta.limite))) {
+    throw new Error('El servidor devolvió una paginación de prestadores no válida.')
+  }
+  const registros = respuesta.registros.map(adaptarPrestador)
+  if (new Set(registros.map(registro => registro.id)).size !== registros.length) throw new Error('El servidor devolvió prestadores duplicados en la página.')
+  return { registros, paginada: true, totalRegistros: respuesta.totalRegistros, pagina: respuesta.pagina, limite: respuesta.limite, totalPaginas: respuesta.totalPaginas }
+}
+
+export async function listarPrestadores(parametros = {}) {
+  const consulta = { page: 1, limit: 50, ...parametros }
+  const resultado = normalizarPaginaPrestadores(await apiRequest('/api/prestadores', { autenticar: false, parametros: consulta }))
+  if (resultado.paginada && (resultado.pagina !== consulta.page || resultado.limite !== consulta.limit)) throw new Error('El servidor no confirmó la página solicitada.')
+  return resultado
+}
 export const obtenerPrestador = async (id) => adaptarPrestador(await apiRequest(`/api/prestadores/${encodeURIComponent(id)}`, { autenticar: false }))
-export const listarMarcadores = async (parametros = {}) => (await apiRequest('/api/prestadores/mapa', { autenticar: false, parametros })).map((dato) => ({ ...dato, oficios: dato.oficioPrincipal ? [dato.oficioPrincipal] : [] }))
+export async function listarMarcadores(parametros = {}) {
+  const datos = await apiRequest('/api/prestadores/mapa', { autenticar: false, parametros })
+  if (!Array.isArray(datos) || datos.some(dato => !dato ||
+      !['string', 'number'].includes(typeof dato.id) || typeof dato.nombre !== 'string' ||
+      ['oficioPrincipal', 'zonaCobertura'].some(campo => dato[campo] != null && typeof dato[campo] !== 'string'))) {
+    throw new Error('El servidor devolvió ubicaciones públicas no válidas.')
+  }
+  return datos.map(dato => ({ ...dato, oficios: dato.oficioPrincipal ? [dato.oficioPrincipal] : [] }))
+}
 export const obtenerMiPerfil = () => apiRequest('/api/prestadores/me', { cache: 'no-store' })
 export async function actualizarMiPerfil(datos) {
   const token = obtenerToken()
