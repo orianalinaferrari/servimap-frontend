@@ -1,6 +1,7 @@
 ﻿import { apiRequest } from './apiClient'
 
 import { obtenerToken } from './sesionToken'
+import { filtrosRemotosPrestadoresHabilitados, prepararFiltrosRemotos } from './filtrosRemotosPrestadores'
 
 export const EVENTO_PERFIL_PRESTADOR_ACTUALIZADO = 'servimap:perfil-prestador-actualizado'
 
@@ -52,10 +53,17 @@ export function normalizarPaginaPrestadores(respuesta) {
 }
 
 export async function listarPrestadores(parametros = {}) {
-  const consulta = { page: 1, limit: 50, ...parametros }
+  const filtrosRemotos = filtrosRemotosPrestadoresHabilitados()
+  const { zona, presupuesto, ...resto } = parametros
+  const preparados = prepararFiltrosRemotos({ zona, presupuesto })
+  const error = Object.values(preparados.errores)[0]
+  if (error) throw new Error(error)
+  if (!filtrosRemotos && Object.keys(preparados.parametros).length) throw new Error('El contrato de filtros remotos todavía no está habilitado para esta API.')
+  const consulta = { page: 1, limit: 50, ...resto, ...preparados.parametros }
   const resultado = normalizarPaginaPrestadores(await apiRequest('/api/prestadores', { autenticar: false, parametros: consulta }))
+  if (filtrosRemotos && !resultado.paginada) throw new Error('La API devolvió el contrato anterior aunque los filtros remotos están activados. No se pueden confirmar sus resultados.')
   if (resultado.paginada && (resultado.pagina !== consulta.page || resultado.limite !== consulta.limit)) throw new Error('El servidor no confirmó la página solicitada.')
-  return resultado
+  return { ...resultado, filtrosRemotos }
 }
 export const obtenerPrestador = async (id) => adaptarPrestador(await apiRequest(`/api/prestadores/${encodeURIComponent(id)}`, { autenticar: false }))
 export async function listarMarcadores(parametros = {}) {

@@ -40,11 +40,12 @@ registros vacíos y los totales correspondientes. No se cambia el contrato de
 
 ## Limitaciones explícitas y decisiones pendientes
 
-Zona y presupuesto se conservan como filtros locales sobre la página recibida.
-No se envían parámetros nuevos ni se atribuyen sus coincidencias al total remoto.
-La UI avisa que puede haber coincidencias en otras páginas; las opciones de zona
-provienen de registros recibidos, no de un catálogo global confirmado. El backend
-debe confirmar soporte/semántica remota antes de ofrecer búsqueda global por ellos.
+Zona y presupuesto se conservan como filtros locales por defecto sobre la página
+recibida, sin atribuir sus coincidencias al total remoto. La integración del contrato
+backend #57 queda preparada bajo activación explícita de versión y origen, después
+de verificar su despliegue; no se infiere por el sobre paginado. En modo remoto no
+se vuelve a filtrar la página y la zona admite texto libre con sugerencias parciales.
+Ver [activación, compatibilidad y evidencias necesarias](filtros-remotos-prestadores.md).
 
 El mapa conserva su endpoint independiente, sin parámetros de filtros nuevos y
 sin intersectar marcadores con los IDs de la página. Presenta las ubicaciones
