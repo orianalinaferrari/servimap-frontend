@@ -18,7 +18,9 @@ export default function DirectorioPrestadores() {
       ])
       if (!activo) return
       if (directorio.status === 'fulfilled') {
-        setDatos({ prestadores: directorio.value[0], oficios: directorio.value[1], marcadores: mapa.status === 'fulfilled' ? mapa.value : [] })
+        if (!Array.isArray(directorio.value[1]) || directorio.value[1].some(oficio => !oficio || typeof oficio.nombre !== 'string')) {
+          setDatos(null); setError('El servidor devolvió un catálogo de oficios no válido.')
+        } else setDatos({ pagina: directorio.value[0], oficios: directorio.value[1], marcadores: mapa.status === 'fulfilled' ? mapa.value : [] })
       } else { setDatos(null); setError(directorio.reason.message) }
       if (mapa.status === 'rejected') setErrorMapa(mapa.reason.message)
       setCargando(false)
@@ -30,7 +32,7 @@ export default function DirectorioPrestadores() {
     {cargando && <p role="status">Cargando prestadores...</p>}
     {error && <div role="alert"><p>{error}</p><button onClick={reintentar}>Reintentar búsqueda</button></div>}
     {errorMapa && <div role="alert"><p>No se pudieron cargar las ubicaciones públicas: {errorMapa}</p><button onClick={reintentar}>Reintentar ubicaciones</button></div>}
-    {!cargando && datos && <BuscadorPrestadores prestadores={datos.prestadores} catalogoOficios={datos.oficios} marcadoresPublicos={datos.marcadores} />}
-    {!cargando && datos && <p>Se muestran hasta 50 prestadores. El mapa usa únicamente ubicaciones públicas aproximadas.</p>}
+    {!cargando && datos && <BuscadorPrestadores prestadores={datos.pagina.registros} paginaInicial={datos.pagina} catalogoOficios={datos.oficios} marcadoresPublicos={datos.marcadores} />}
+    {!cargando && datos && <p>El mapa usa únicamente ubicaciones públicas aproximadas.</p>}
   </>
 }

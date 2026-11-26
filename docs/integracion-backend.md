@@ -28,9 +28,9 @@ Los IDs de usuario, perfil de prestador, oficio y solicitud son strings distinto
 | Login | POST `/api/auth/login` | `{email,password}` → `{token,usuario}`. 400/401/403. |
 | Sesión | GET `/api/auth/me` | Bearer → usuario con DNI del dueño; 401/404 invalidan sesión. |
 | Catálogo | GET `/api/oficios` | Array de oficios activos `{id,nombre,categoria,activo}`, público. |
-| Directorio | GET `/api/prestadores` | Filtros `q`, `oficioId`, `calificacionMin`, `disponible`, `limit` (máx. 50). Oficios por objeto y reputación se adaptan a la UI existente. |
+| Directorio | GET `/api/prestadores` | `page` desde 1 y `limit` 1–50; respuesta `registros,totalRegistros,pagina,limite,totalPaginas`. Compatibilidad temporal con array sin totales globales. Filtros `q`, `oficioId`, `calificacionMin`, `disponible`; zona/precio siguen locales. Ver [contrato y límites](paginacion-prestadores-backend.md). |
 | Ficha | GET `/api/prestadores/:id` | Datos públicos, contactos, reputación, comentarios sin moderados. |
-| Mapa | GET `/api/prestadores/mapa` | Público, hasta 200 disponibles; coordenadas ya redondeadas a 2 decimales y `oficioPrincipal`. Nunca se consulta `/me` para construir marcadores. |
+| Mapa | GET `/api/prestadores/mapa` | Array público independiente, coordenadas aproximadas y `oficioPrincipal`. No se recorta a la página del listado ni se envían filtros no confirmados. Alcance definitivo pendiente del backend. Nunca se consulta `/me` para construir marcadores. |
 | Perfil | GET/PUT `/api/prestadores/me` | PRESTADOR. PUT: descripción profesional, foto, zona, coordenadas numéricas, precios, teléfono, WhatsApp, email de contacto y disponible. |
 | Oficios propios | PUT `/api/prestadores/me/oficios` | PRESTADOR, `{oficioIds:[...]}`; reemplaza selección. Lista vacía permitida. |
 | Comentarios recibidos | GET `/api/prestadores/me/calificaciones` | PRESTADOR, array sin moderados. |
@@ -55,7 +55,7 @@ El cliente envía `Authorization: Bearer` en operaciones autenticadas y `credent
 - No existe finalización en dos etapas ni confirmación del cliente: el prestador finaliza directamente una ACEPTADA. Se retiró esa acción ficticia del cliente. El cliente puede cancelar también ACEPTADAS.
 - No existen propuestas o presupuestos: no se implementaron.
 - El perfil privado admite coordenadas exactas; solo su dueño las ve al editar. El mapa usa exclusivamente `/api/prestadores/mapa`, sin mezclarlas con el perfil privado.
-- El backend limita el directorio a 50 por búsqueda y el mapa a 200. Se aplican filtros de oficio/texto/calificación/disponibilidad en la API; zona y precio siguen filtrando los resultados actuales en frontend porque no son filtros del contrato. No hay cursor/paginación para prometer un catálogo ilimitado.
+- El directorio pagina de a 50 con totales del backend; la compatibilidad con arrays antiguos no ofrece páginas ni totales globales. Zona y precio filtran únicamente la página recibida. El mapa muestra sus ubicaciones públicas de forma independiente y con alcance/filtros definitivos pendientes de confirmación. Ver [paginación](paginacion-prestadores-backend.md).
 - `/api/solicitudes` devuelve `calificada`, pero no el ID/puntaje/comentario de esa calificación. Tras recargar se puede impedir duplicarla; no recuperar su detalle ni editarla desde esa lista sin ampliar el contrato. El servicio de edición existe, sin inventar un endpoint de consulta del cliente. Tampoco se inventan nombres de clientes en comentarios públicos; administración muestra IDs si no vienen nombres.
 - Campos numéricos vacíos en edición se omiten para conservar el valor: la validación actual del backend no acepta `null` para borrarlos.
 

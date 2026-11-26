@@ -42,7 +42,7 @@ describe('Búsqueda con zona opcional del contrato público', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
     expect(screen.getByText('Mostrando 2 resultados')).toBeInTheDocument()
   })
-  it('combina filtros, mantiene las tarjetas y sincroniza marcadores al abrir la ficha', async () => {
+  it('combina filtros y conserva marcadores independientes al abrir la ficha', async () => {
     render(<DirectorioPrestadores />)
     await screen.findByRole('button', { name: sinZona.nombre })
     fireEvent.change(screen.getByLabelText('Buscar prestador'), { target: { value: 'PLÓM' } })
@@ -52,7 +52,7 @@ describe('Búsqueda con zona opcional del contrato público', () => {
     fireEvent.click(screen.getByLabelText('Solo prestadores disponibles'))
     expect(screen.getByText('Mostrando 1 resultado')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: sinZona.nombre })).toBeInTheDocument()
-    expect(within(screen.getByRole('region', { name: 'Marcadores de prueba' })).getAllByRole('button')).toHaveLength(1)
+    expect(within(screen.getByRole('region', { name: 'Marcadores de prueba' })).getAllByRole('button')).toHaveLength(2)
     fireEvent.click(screen.getByRole('button', { name: 'Marcador p1' }))
     await screen.findByRole('heading', { name: sinZona.nombre })
     expect(screen.getByRole('button', { name: 'Solicitar servicio' })).toBeEnabled()

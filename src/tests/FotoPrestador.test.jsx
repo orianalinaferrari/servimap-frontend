@@ -52,7 +52,7 @@ describe.each(['ficha pública', 'perfil autenticado'])('Foto en %s desde HTTP',
 })
 
 it('conserva fotoPerfil al adaptar listado y usa el ícono de respaldo en sus tarjetas', async () => {
-  const lista = await listarPrestadores()
+  const { registros: lista } = await listarPrestadores()
   expect(lista[0].fotoPerfil).toBe(foto)
   const { container, rerender } = render(<BuscadorPrestadores prestadores={lista} />)
   fireEvent.error(container.querySelector('img'))
@@ -94,7 +94,7 @@ it.each(['https://imagenes.example.test/nueva.webp', 'http://imagenes.example.te
     expect(nuevaVista.container.querySelector('.prestador-avatar')).toHaveTextContent('NP')
   }
   nuevaVista.unmount()
-  const lista = await listarPrestadores()
+  const { registros: lista } = await listarPrestadores()
   expect(lista[0].fotoPerfil).toBe(url)
   const tarjetas = render(<BuscadorPrestadores prestadores={lista} />)
   if (url) expect(tarjetas.container.querySelector('img')).toHaveAttribute('src', url)

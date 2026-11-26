@@ -31,7 +31,7 @@ describe('Directorio, ficha y mapa reales',()=>{
       if (path === '/api/prestadores/p1') return respuesta({ ...dato, comentarios: reputacion.promedio === null ? [] : [{ id: 'c1', puntaje: 5, comentario: 'Comentario público sin estado de moderación', fechaPublicacion: '2026-11-01' }] })
       return original(url, config)
     })
-    const lista = await listarPrestadores()
+    const { registros: lista } = await listarPrestadores()
     expect(lista[0].calificacionPromedio).toBe(reputacion.promedio)
     expect(lista[0].reputacion.totalCalificaciones).toBe(reputacion.totalCalificaciones)
     render(<DirectorioPrestadores />)
@@ -48,7 +48,7 @@ describe('Directorio, ficha y mapa reales',()=>{
   })
 
   it('adapta oficios por ID y reputación sin inventar precios',async()=>{
-    const lista=await listarPrestadores();expect(lista[0]).toMatchObject({oficios:['Plomero'],oficiosCatalogo:[{id:'o1',nombre:'Plomero'}],calificacionPromedio:4.5,trabajosFinalizados:2,precioMin:null})
+    const { registros: lista }=await listarPrestadores();expect(lista[0]).toMatchObject({oficios:['Plomero'],oficiosCatalogo:[{id:'o1',nombre:'Plomero'}],calificacionPromedio:4.5,trabajosFinalizados:2,precioMin:null})
     expect(new URL(http.mock.calls[0][0]).searchParams.get('limit')).toBe('50')
     expect(http.mock.calls[0][1].headers?.Authorization).toBeUndefined()
   })
