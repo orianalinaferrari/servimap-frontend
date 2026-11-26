@@ -33,5 +33,11 @@ Resultado: ✅ Pasa · ❌ Falla
 
 ## Pruebas automáticas
 
+La corrección #2 agrega casos automatizados de paginación y regresión en
+`src/tests/PaginacionPrestadores.test.jsx`. El contrato, compatibilidad con arrays,
+límites del mapa/filtros y validación pendiente en preview están en
+[paginación de prestadores](paginacion-prestadores-backend.md). Estos casos usan
+HTTP simulado y no modifican los resultados manuales históricos anteriores.
+
 Además de estas pruebas manuales, se ejecutaron **322 tests automáticos** (Vitest + Testing Library) al integrar temporalmente F-26 con la rama `develop`. Los 322 tests pasaron correctamente.
 La moderación de comentarios y el panel de administración necesitan una sesión de Administrador, así que se prueban con tests automáticos (`ModeracionComentarios.test.jsx`, `PanelAdministracion.test.jsx`) hasta que el backend esté conectado.
