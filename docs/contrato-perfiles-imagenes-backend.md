@@ -1,8 +1,15 @@
 # Contrato propuesto: datos de cuenta y fotografías de perfil
 
 Fecha de auditoría: 03/11/2026. **Especificación para acordar, no implementación.**
-Solo se crea este documento. No se modifican backend, frontend productivo, tests,
-CI o almacenamiento; no se crean cuentas ni se instalan SDK o proveedores.
+Actualización de alcance (25/11/2026): la propuesta de edición de nombre de este
+documento es histórica y queda sustituida por el contrato confirmado del backend
+PR #54: `PATCH /api/auth/me`, solo `{nombre}`, obligatorio tras trim y máximo 100.
+La implementación frontend y sus pendientes se describen en
+[Edición de nombre de usuario](edicion-nombre-usuario.md). No se implementan las
+propuestas de fotografías de este documento. El PR #54 sigue pendiente de despliegue.
+
+La auditoría original solo creó este documento: no modificó backend, frontend
+productivo, tests, CI o almacenamiento, ni creó cuentas o instaló SDK/proveedores.
 
 ## 1. Estado actual verificado
 

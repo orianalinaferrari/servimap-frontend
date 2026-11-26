@@ -64,7 +64,7 @@ El administrador no hereda las operaciones de cliente o prestador. La UI restrin
 
 1. Elegir «Empezar como cliente» en la landing, o explorar servicios sin sesión.
 2. Registrarse y luego iniciar sesión; el registro no inicia sesión automáticamente.
-3. El login lleva a `/cliente`. El avatar con iniciales del header abre «Mi perfil» (`/cliente/perfil`): nombre, email, DNI y fecha de alta de `GET /api/auth/me`, de solo lectura.
+3. El login lleva a `/cliente`. El avatar con iniciales del header abre «Mi perfil» (`/cliente/perfil`): nombre, email, DNI y fecha de alta de `GET /api/auth/me`. Solo el nombre es editable mediante `PATCH /api/auth/me` (backend PR #54, pendiente de despliegue).
 4. Buscar un prestador, abrir su ficha y pulsar «Solicitar servicio» si está disponible.
 5. Seleccionar un oficio ofrecido, describir el trabajo y, opcionalmente, indicar dirección/contacto preferido.
 6. Consultar «Mis solicitudes», abrir el detalle y cancelar una pendiente o aceptada con confirmación.
@@ -188,7 +188,7 @@ Referencias: [rutas](src/routes/AppRoutes.jsx), [HTTP](src/services/apiClient.js
 | `/prestadores` | Público | Directorio, mapa, ficha y estado de creación de solicitud. |
 | `/cliente` | CLIENTE | Panel de accesos. |
 | `/cliente/solicitudes` | CLIENTE | Historial, detalle, cancelación y calificación. |
-| `/cliente/perfil` | CLIENTE | Datos personales de solo lectura (DNI no editable). |
+| `/cliente/perfil` | CLIENTE | Edición del nombre; email, DNI, rol y fecha de alta sin cambios. |
 | `/prestador` | PRESTADOR | Resumen y actividad reciente. |
 | `/prestador/solicitudes` | PRESTADOR | Pedidos recibidos y transiciones. |
 | `/prestador/perfil` | PRESTADOR | Perfil propio y edición. |
@@ -220,7 +220,7 @@ La ficha remota muestra la información disponible, contactos, precios, reputaci
 
 ### Cliente
 
-«Mi perfil» muestra los datos de `GET /api/auth/me` sin campos editables. **Dependencia del backend:** Swagger no ofrece un endpoint para actualizar datos del cliente o del usuario (solo `PUT /api/prestadores/me`); hasta que exista, el frontend no simula guardados (ni localStorage ni estado temporal). Pedido al equipo backend: por ejemplo `PUT /api/usuarios/me` con los campos editables y sus validaciones, manteniendo el DNI inmutable.
+«Mi perfil» permite editar únicamente el nombre con `PATCH /api/auth/me`. Requiere nombre no vacío tras trim y hasta 100 caracteres. Solo una respuesta confirmada actualiza la sesión, el encabezado y el perfil; un rechazo conserva el borrador sin anunciar guardado. Email, DNI y rol no se envían ni se modifican. **Dependencia:** desplegar backend PR #54 y verificar la integración real. Ver [contrato y validación de edición de nombre](docs/edicion-nombre-usuario.md).
 
 El panel ofrece accesos; no tiene contadores. El historial muestra oficio, prestador, identificador, estado y detalle. Crear una solicitud utiliza los IDs reales del perfil y del oficio obtenidos de la ficha; el nombre del oficio solo sirve para selección/presentación.
 
@@ -274,6 +274,7 @@ Las rutas se concatenan al origen. «Propio» significa que el backend verifica 
 | POST `/api/auth/register` | Público | `{nombre,dni,email,password,rol}`; usuario, 201. |
 | POST `/api/auth/login` | Público | `{email,password}`; `{token,usuario}`. |
 | GET `/api/auth/me` | Autenticado | Usuario vigente; no es búsqueda pública de personas. |
+| PATCH `/api/auth/me` | CLIENTE/PRESTADOR | Solo `{nombre}`; perfil plano confirmado. Backend PR #54 pendiente de despliegue. |
 | GET `/api/oficios` | Público | Array activo: `id`, `nombre`, `categoria`, `activo`. |
 | GET `/api/prestadores` | Público | UI envía `limit=50`, `q`, `oficioId`, `calificacionMin`, `disponible` cuando corresponden. |
 | GET `/api/prestadores/:id` | Público | Ficha, contactos, reputación y comentarios públicos. |
@@ -650,7 +651,7 @@ La revisión por patrones no detectó claves privadas, credenciales de base ni t
 | Verificado contra API publicada | Lecturas públicas, rechazos protegidos y CORS/preflight; sin escrituras reales. |
 | Pendiente | E2E autenticado real, base autorizada, preview/CORS, cobertura global >=90% (78,46% local; los scripts QA manuales concentran 640 de 883 elementos sin cubrir), duplicación 0% y aceptación de accesibilidad. |
 | Parcial | Búsqueda geográfica, filtros sobre conjuntos limitados y detalle de calificación tras recarga. |
-| Fuera del alcance implementado | Edición del perfil de cliente (falta endpoint backend; existe la vista de solo lectura), propuestas/presupuestos, pagos, chat, agenda/fecha preferida, carga de fotos, refresh token y finalización confirmada por cliente. |
+| Fuera del alcance implementado | Edición de otros datos de cuenta aparte del nombre, propuestas/presupuestos, pagos, chat, agenda/fecha preferida, carga de fotos, refresh token y finalización confirmada por cliente. |
 
 - **CRÍTICOS:** ninguno confirmado en el frontend revisado; no se requirieron correcciones funcionales.
 - **IMPORTANTES:** cobertura global y ratings Sonar pendientes de confirmar tras las correcciones; validación autenticada/deploy pendientes; alcance geográfico parcial. Corregido: el login ya no vuelve a la landing; cada rol entra a su panel (`/cliente`, `/prestador`, `/admin`) o a la ruta protegida de origen solo si pertenece a ese rol.
@@ -667,7 +668,7 @@ Los hallazgos actuales se resumen en esta sección y las limitaciones en la sigu
 4. **Mapa real sin marcadores al consultar:** varios profesionales representativos se probaron con fixtures, sin crearlos en producción.
 5. **Calificación tras recarga:** GET devuelve `calificada`, sin detalle completo de puntaje/comentario. Se impide duplicar; el detalle recién creado vive en la vista y puede perderse al recargar. No hay UI de edición de comentario.
 6. **Búsqueda limitada:** 50 por consulta, zona/precio locales y sin radio; geolocalizar/recentrar no filtra por cercanía.
-7. **Perfil:** algunos campos guardados no se borran enviando vacío. Sin carga de archivos ni edición de nombre/email de cuenta.
+7. **Perfil:** algunos campos guardados no se borran enviando vacío. Sin carga de archivos ni edición de email de cuenta. La edición del nombre requiere backend PR #54 desplegado.
 8. **Dispositivos/accesibilidad:** Chrome a cuatro anchos no certifica todos los navegadores, lectores de pantalla o contenidos.
 9. **Herramientas:** persiste el aviso de tamaño MapLibre; las alertas npm conocidas se corrigieron y el audit local final devuelve cero. Sigue pendiente confirmar las métricas Sonar de la nueva rama.
 
